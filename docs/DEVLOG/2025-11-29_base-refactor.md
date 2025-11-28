@@ -171,3 +171,33 @@ base/auth の再構築を安全に、ドキュメント準拠で進められる�
 
 必要に応じてこのファイルを更新しながら使うこと。
 
+---
+
+## Progress
+
+- [x] (2025-11-29 10:00) 既存コード・docs の調査完了
+- [x] (2025-11-29 11:00) DDD観点での設計方針を固める
+- [x] (2025-11-29 12:30) domain 層の実装（user ID/表示名/アイコン）
+- [x] (2025-11-29 13:30) usecase 層の実装（LINE loginフロー、命名をUsecaseに統一）
+- [x] (2025-11-29 14:30) adapter 層の実装（HTTP/CORS/リダイレクト）
+- [x] (2025-11-29 15:00) infra 層の実装（LINE APIクライアント）
+- [x] (2025-11-29 16:00) テスト & 動作確認（ユニットテスト追加、go test ./...）
+- [x] (2025-11-29 17:00) リファクタリング & 後片付け（Phase1クローズ手順）
+
+## Decision Log
+
+- Decision: LINE loginのユースケースは`usecase/linelogin/line_login.go`にまとめ、曖昧なService命名を避ける  
+  - Rationale: ExecPlan/DDDで「Usecase=Application Service」と定義しており、責務を明瞭にするため  
+  - Date/Author: 2025-11-29 / taiichi
+- Decision: state管理はHMACペイロードのみで完結（外部ストアなし）  
+  - Rationale: 旧実装踏襲で挙動を変えないため  
+  - Date/Author: 2025-11-29 / taiichi
+- Decision: JWT発行はUsecase内TokenIssuerに閉じ、他ユースケース共通化はPhase2以降に検討  
+  - Rationale: Phase1スコープで重複が無く、小さくまとめるため  
+  - Date/Author: 2025-11-29 / taiichi
+
+## Surprises & Discoveries
+
+- Observation: もともとExecPlan本文にProgress/Decisionセクションが無かったため追記した  
+  - Evidence: docs/DEVLOG/2025-11-29_base-refactor.md 末尾に追加  
+  - Files: docs/DEVLOG/2025-11-29_base-refactor.md

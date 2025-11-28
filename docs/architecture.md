@@ -138,12 +138,17 @@ infra/
 apps/<app>/backend/
   cmd/
     api/            # HTTP サーバ起動
-  domain/           # ドメインモデル（Entity/VO/RepositoryIF/DomainService）
-  usecase/          # アプリケーションサービス・ユースケース
-  adapter/          # HTTP/gRPC/CLI/Webhook 等の I/O
-  infra/            # DB/外部API/ストレージ等の技術詳細
-  internal/         # backend 内部の補助コード（必要なら）
+  internal/
+    domain/           # ドメインモデル（Entity/VO/RepositoryIF/DomainService）
+    usecase/          # アプリケーションサービス・ユースケース
+    adapter/          # HTTP/gRPC/CLI/Webhook 等の I/O
+    infra/            # DB/外部API/ストレージ等の技術詳細
 ```
+
+backend 以下のレイヤー（domain/usecase/adapter/infra）は
+Go の internal 機能で外部モジュールからの import を禁止する。
+各サービスは API / gRPC / Message 経由でのみ他サービスと連携するため、
+ドメインロジックを外部に漏らさないことを保証する。
 
 base/* の backend も同様の構造を採用する。
 

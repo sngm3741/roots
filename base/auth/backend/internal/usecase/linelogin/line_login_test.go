@@ -58,87 +58,109 @@ func (f *fakeTokenIssuer) Issue(u *lineuser.User) (string, int, error) {
 	return f.token, 3600, nil
 }
 
-func TestUsecase_Start_AllowsKnownOrigin(t *testing.T) {
+// テーブル駆動で Start/Callback の主要分岐を検証。
+func TestUsecase_Flows(t *testing.T) {
+	t.Parallel()
+
 	stateMgr := NewHMACStateManager([]byte("secret"), time.Minute)
-	line := &fakeLineClient{authURL: "https://line.example.com/authorize"}
-	tokens := &fakeTokenIssuer{token: "app-token"}
+	stateMgr.now = func() time.Time { return time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC) }
 
-	uc := NewUsecase(stateMgr, line, tokens, map[string]struct{}{"https://app.example.com": {}}, "")
-
-	out, err := uc.Start(context.Background(), "https://app.example.com")
-	if err != nil {
-		t.Fatalf("Start error: %v", err)
+	tests := []struct {
+		name        string
+		setup       func() *Usecase
+		origin      string
+		code        string
+		state       string
+		wantSuccess bool
+		wantErr     error
+		wantMessage string
+	}{
+		{
+			name: "Start: 許可オリジンで認可URLを返す",
+			setup: func() *Usecase {
+				return NewUsecase(stateMgr, &fakeLineClient{authURL: "https://line.example"}, &fakeTokenIssuer{token: "app-token"}, map[string]struct{}{"https://allowed": {}}, "")
+			},
+			origin:      "https://allowed",
+			wantSuccess: true,
+		},
+		{
+			name: "Callback: 正常にJWTを返す",
+			setup: func() *Usecase {
+				return NewUsecase(stateMgr, &fakeLineClient{authURL: "https://line.example", accessToken: "at", profileID: "U123", profileName: "Taro"}, &fakeTokenIssuer{token: "app-token"}, map[string]struct{}{"https://allowed": {}}, "https://fallback")
+			},
+			state:       mustIssueState(stateMgr, "https://allowed"),
+			code:        "code",
+			wantSuccess: true,
+		},
+		{
+			name: "Callback: state検証失敗でエラー文言",
+			setup: func() *Usecase {
+				return NewUsecase(stateMgr, &fakeLineClient{}, &fakeTokenIssuer{}, nil, "https://fallback")
+			},
+			state:       "invalid",
+			code:        "code",
+			wantSuccess: false,
+			wantMessage: "無効なログイン試行です。再度お試しください。",
+		},
+		{
+			name: "Callback: token取得失敗でリトライ案内",
+			setup: func() *Usecase {
+				return NewUsecase(stateMgr, &fakeLineClient{tokenErr: errors.New("fail")}, &fakeTokenIssuer{}, nil, "https://fallback")
+			},
+			state:       mustIssueState(stateMgr, "https://origin"),
+			code:        "code",
+			wantSuccess: false,
+			wantMessage: "LINE認証との通信に失敗しました。時間を置いて再度お試しください。",
+		},
 	}
-	if out.AuthorizationURL == "" || out.State == "" {
-		t.Fatalf("unexpected output: %+v", out)
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			uc := tt.setup()
+			if tt.code == "" && tt.state == "" {
+				out, err := uc.Start(context.Background(), tt.origin)
+				if tt.wantErr != nil {
+					if err == nil || !errors.Is(err, tt.wantErr) {
+						t.Fatalf("expected err %v, got %v", tt.wantErr, err)
+					}
+					return
+				}
+				if err != nil {
+					t.Fatalf("Start error: %v", err)
+				}
+				if out.AuthorizationURL == "" || out.State == "" {
+					t.Fatalf("missing output: %+v", out)
+				}
+				return
+			}
+
+			res, err := uc.Callback(context.Background(), tt.code, tt.state)
+			if tt.wantErr != nil {
+				if err == nil || !errors.Is(err, tt.wantErr) {
+					t.Fatalf("expected err %v, got %v", tt.wantErr, err)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("Callback error: %v", err)
+			}
+			if res.Success != tt.wantSuccess {
+				t.Fatalf("success mismatch: %+v", res)
+			}
+			if tt.wantMessage != "" && res.ErrorMessage != tt.wantMessage {
+				t.Fatalf("expected message %q, got %q", tt.wantMessage, res.ErrorMessage)
+			}
+		})
 	}
 }
 
-func TestUsecase_Start_RejectsUnknownOrigin(t *testing.T) {
-	stateMgr := NewHMACStateManager([]byte("secret"), time.Minute)
-	line := &fakeLineClient{authURL: "https://line.example.com/authorize"}
-	tokens := &fakeTokenIssuer{token: "app-token"}
-
-	uc := NewUsecase(stateMgr, line, tokens, map[string]struct{}{"https://allowed.example.com": {}}, "")
-
-	if _, err := uc.Start(context.Background(), "https://other.example.com"); err == nil {
-		t.Fatalf("expected error for disallowed origin")
-	}
-}
-
-func TestUsecase_Callback_Success(t *testing.T) {
-	stateMgr := NewHMACStateManager([]byte("secret"), time.Minute)
-	fixed := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
-	stateMgr.now = func() time.Time { return fixed }
-
-	line := &fakeLineClient{
-		authURL:     "https://line.example.com/authorize",
-		accessToken: "line-access-token",
-		profileID:   "U123",
-		profileName: "Taro",
-	}
-	tokens := &fakeTokenIssuer{token: "app-token"}
-
-	uc := NewUsecase(stateMgr, line, tokens, map[string]struct{}{"https://app.example.com": {}}, "https://fallback.example.com")
-
-	state, _, err := stateMgr.Issue("https://app.example.com")
+func mustIssueState(m *HMACStateManager, origin string) string {
+	state, _, err := m.Issue(origin)
 	if err != nil {
-		t.Fatalf("issue state: %v", err)
+		panic(err)
 	}
-
-	result, err := uc.Callback(context.Background(), "auth-code", state)
-	if err != nil {
-		t.Fatalf("Callback error: %v", err)
-	}
-	if !result.Success {
-		t.Fatalf("expected success, got failure: %+v", result)
-	}
-	if result.Payload == nil || result.Payload.AccessToken != "app-token" {
-		t.Fatalf("unexpected payload: %+v", result.Payload)
-	}
-	if result.Payload.LineUser.ID != "U123" {
-		t.Fatalf("unexpected user id: %+v", result.Payload.LineUser)
-	}
-}
-
-func TestUsecase_Callback_TokenError(t *testing.T) {
-	stateMgr := NewHMACStateManager([]byte("secret"), time.Minute)
-	stateMgr.now = func() time.Time { return time.Now().UTC() }
-	line := &fakeLineClient{tokenErr: errors.New("token fail")}
-	tokens := &fakeTokenIssuer{token: "app-token"}
-
-	uc := NewUsecase(stateMgr, line, tokens, nil, "https://fallback.example.com")
-
-	state, _, _ := stateMgr.Issue("https://app.example.com")
-
-	result, err := uc.Callback(context.Background(), "auth-code", state)
-	if err != nil {
-		t.Fatalf("Callback error: %v", err)
-	}
-	if result.Success {
-		t.Fatalf("expected failure, got success")
-	}
-	if result.ErrorMessage == "" {
-		t.Fatalf("expected error message")
-	}
+	return state
 }
