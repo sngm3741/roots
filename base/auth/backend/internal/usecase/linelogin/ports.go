@@ -3,7 +3,7 @@ package linelogin
 import (
 	"context"
 
-	"github.com/sngm3741/roots/base/auth/internal/domain/user"
+	"github.com/sngm3741/roots/base/auth/internal/domain/lineuser"
 )
 
 // LineClient はLINE OAuth/API呼び出しのポート定義。
@@ -22,7 +22,7 @@ type LineToken struct {
 
 // LineProfile はLINEプロフィールAPIの結果をユースケース向けに整形したもの。
 type LineProfile struct {
-	ID          user.ID
+	ID          lineuser.ID
 	DisplayName string
 	AvatarURL   string
 }

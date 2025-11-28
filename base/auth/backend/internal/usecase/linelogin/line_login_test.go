@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sngm3741/roots/base/auth/internal/domain/user"
+	"github.com/sngm3741/roots/base/auth/internal/domain/lineuser"
 )
 
 type fakeLineClient struct {
@@ -38,7 +38,7 @@ func (f *fakeLineClient) FetchProfile(ctx context.Context, accessToken string) (
 	if f.profileErr != nil {
 		return nil, f.profileErr
 	}
-	id, _ := user.NewID(f.profileID)
+	id, _ := lineuser.NewID(f.profileID)
 	return &LineProfile{
 		ID:          id,
 		DisplayName: f.profileName,
@@ -51,7 +51,7 @@ type fakeTokenIssuer struct {
 	err   error
 }
 
-func (f *fakeTokenIssuer) Issue(u *user.User) (string, int, error) {
+func (f *fakeTokenIssuer) Issue(u *lineuser.User) (string, int, error) {
 	if f.err != nil {
 		return "", 0, f.err
 	}

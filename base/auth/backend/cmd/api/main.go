@@ -10,51 +10,95 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+
 	httpadapter "github.com/sngm3741/roots/base/auth/internal/adapter/http"
 	"github.com/sngm3741/roots/base/auth/internal/config"
 	infraline "github.com/sngm3741/roots/base/auth/internal/infra/external/line"
+	infratwitter "github.com/sngm3741/roots/base/auth/internal/infra/external/twitter"
 	"github.com/sngm3741/roots/base/auth/internal/usecase/linelogin"
+	"github.com/sngm3741/roots/base/auth/internal/usecase/twitterlogin"
 )
 
 // main はDIを行いHTTPサーバーを起動する。
 func main() {
-	cfg, err := config.Load()
+	lineCfg, err := config.Load()
 	if err != nil {
 		log.Fatalf("failed to load config: %v", err)
+	}
+	twitterCfg, err := config.LoadTwitter()
+	if err != nil {
+		log.Fatalf("failed to load twitter config: %v", err)
 	}
 
 	logger := log.New(os.Stdout, "[auth-line] ", log.LstdFlags|log.Lmsgprefix)
 
 	httpClient := &http.Client{
-		Timeout: cfg.HTTPTimeout,
+		Timeout: lineCfg.HTTPTimeout,
 	}
 
-	stateMgr := linelogin.NewHMACStateManager(cfg.StateSecret, cfg.StateTTL)
-	tokenIssuer := linelogin.NewJWTIssuer(cfg.JWTSecret, cfg.JWTIssuer, cfg.JWTAudience, cfg.JWTExpiresIn)
+	stateMgr := linelogin.NewHMACStateManager(lineCfg.StateSecret, lineCfg.StateTTL)
+	tokenIssuer := linelogin.NewJWTIssuer(lineCfg.JWTSecret, lineCfg.JWTIssuer, lineCfg.JWTAudience, lineCfg.JWTExpiresIn)
 	lineClient := infraline.NewClient(
 		httpClient,
-		cfg.ChannelID,
-		cfg.ChannelSecret,
-		cfg.RedirectURI,
-		cfg.AuthorizeEndpoint,
-		cfg.TokenEndpoint,
-		cfg.ProfileEndpoint,
-		cfg.BotPrompt,
-		cfg.Scopes,
+		lineCfg.ChannelID,
+		lineCfg.ChannelSecret,
+		lineCfg.RedirectURI,
+		lineCfg.AuthorizeEndpoint,
+		lineCfg.TokenEndpoint,
+		lineCfg.ProfileEndpoint,
+		lineCfg.BotPrompt,
+		lineCfg.Scopes,
 	)
 
-	usecase := linelogin.NewUsecase(stateMgr, lineClient, tokenIssuer, cfg.AllowedOrigins, cfg.DefaultRedirectOrigin)
-	handler := httpadapter.NewHandler(usecase, cfg.AllowedOrigins, cfg.DefaultRedirectOrigin, cfg.RedirectPath, cfg.HTTPTimeout, logger)
+	usecase := linelogin.NewUsecase(stateMgr, lineClient, tokenIssuer, lineCfg.AllowedOrigins, lineCfg.DefaultRedirectOrigin)
+	handler := httpadapter.NewHandler(usecase, lineCfg.AllowedOrigins, lineCfg.DefaultRedirectOrigin, lineCfg.RedirectPath, lineCfg.HTTPTimeout, logger)
+
+	twitterHTTPClient := &http.Client{
+		Timeout: twitterCfg.HTTPTimeout,
+	}
+	twitterStateMgr := twitterlogin.NewHMACStateManager(twitterCfg.StateSecret, twitterCfg.StateTTL)
+	twitterTokenIssuer := twitterlogin.NewJWTIssuer(twitterCfg.JWTSecret, twitterCfg.JWTIssuer, twitterCfg.JWTAudience, twitterCfg.JWTExpiresIn)
+	twitterClient := infratwitter.NewClient(
+		twitterHTTPClient,
+		twitterCfg.ClientID,
+		twitterCfg.ClientSecret,
+		twitterCfg.RedirectURI,
+		twitterCfg.AuthorizeEndpoint,
+		twitterCfg.TokenEndpoint,
+		twitterCfg.ProfileEndpoint,
+		twitterCfg.Scopes,
+	)
+	twitterUsecase := twitterlogin.NewUsecase(twitterStateMgr, twitterClient, twitterTokenIssuer, twitterCfg.AllowedOrigins, twitterCfg.DefaultRedirectOrigin)
+	twitterHandler := httpadapter.NewTwitterHandler(twitterUsecase, twitterCfg.AllowedOrigins, twitterCfg.DefaultRedirectOrigin, twitterCfg.RedirectPath, twitterCfg.HTTPTimeout, logger)
+
+	router := chi.NewRouter()
+	router.Use(middleware.RequestID)
+	router.Use(middleware.RealIP)
+	router.Use(middleware.Recoverer)
+	router.Use(middleware.Timeout(30 * time.Second))
+	router.Use(middleware.RequestLogger(&middleware.DefaultLogFormatter{
+		Logger:  logger,
+		NoColor: true,
+	}))
+	router.Get("/healthz", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{"status":"ok"}`))
+	})
+	handler.RegisterRoutes(router)
+	twitterHandler.RegisterRoutes(router)
 
 	httpServer := &http.Server{
-		Addr:              cfg.HTTPAddr,
-		Handler:           handler.Routes(),
+		Addr:              lineCfg.HTTPAddr,
+		Handler:           router,
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 
 	errChan := make(chan error, 1)
 	go func() {
-		logger.Printf("HTTP サーバーを %s で待ち受けます", cfg.HTTPAddr)
+		logger.Printf("HTTP サーバーを %s で待ち受けます", lineCfg.HTTPAddr)
 		errChan <- httpServer.ListenAndServe()
 	}()
 

@@ -51,7 +51,14 @@ func NewHandler(
 	}
 }
 
-// Routes はルーターを組み立てて返す。
+// RegisterRoutes は既存のルーターにLINE用エンドポイントを登録する（/healthzは含まない）。
+func (h *Handler) RegisterRoutes(r chi.Router) {
+	r.Options("/line/login", h.handlePreflight)
+	r.Post("/line/login", h.handleLoginStart)
+	r.Get("/line/callback", h.handleCallback)
+}
+
+// Routes は新しいルーターを組み立てて返す（従来互換）。
 func (h *Handler) Routes() http.Handler {
 	router := chi.NewRouter()
 	router.Use(middleware.RequestID)
@@ -64,9 +71,7 @@ func (h *Handler) Routes() http.Handler {
 	}))
 
 	router.Get("/healthz", h.handleHealthz)
-	router.Options("/line/login", h.handlePreflight)
-	router.Post("/line/login", h.handleLoginStart)
-	router.Get("/line/callback", h.handleCallback)
+	h.RegisterRoutes(router)
 
 	return router
 }

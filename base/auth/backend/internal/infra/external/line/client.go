@@ -10,7 +10,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/sngm3741/roots/base/auth/internal/domain/user"
+	"github.com/sngm3741/roots/base/auth/internal/domain/lineuser"
 	"github.com/sngm3741/roots/base/auth/internal/usecase/linelogin"
 )
 
@@ -129,7 +129,7 @@ func (c *Client) FetchProfile(ctx context.Context, accessToken string) (*linelog
 	if err := json.NewDecoder(resp.Body).Decode(&profile); err != nil {
 		return nil, fmt.Errorf("line profile: decode response: %w", err)
 	}
-	lineID, err := user.NewID(profile.UserID)
+	lineID, err := lineuser.NewID(profile.UserID)
 	if err != nil {
 		return nil, err
 	}

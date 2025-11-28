@@ -5,7 +5,7 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/sngm3741/roots/base/auth/internal/domain/user"
+	"github.com/sngm3741/roots/base/auth/internal/domain/lineuser"
 )
 
 var (
@@ -138,7 +138,7 @@ func (u *Usecase) Callback(ctx context.Context, code, stateParam string) (*Callb
 		}, nil
 	}
 
-	uProfile, err := user.New(profile.ID, profile.DisplayName, profile.AvatarURL)
+	uProfile, err := lineuser.New(profile.ID, profile.DisplayName, profile.AvatarURL)
 	if err != nil {
 		return nil, err
 	}

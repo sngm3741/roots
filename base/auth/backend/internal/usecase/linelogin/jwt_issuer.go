@@ -8,12 +8,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/sngm3741/roots/base/auth/internal/domain/user"
+	"github.com/sngm3741/roots/base/auth/internal/domain/lineuser"
 )
 
 // TokenIssuer はアプリケーション用トークンの発行を抽象化する。
 type TokenIssuer interface {
-	Issue(u *user.User) (string, int, error)
+	Issue(u *lineuser.User) (string, int, error)
 }
 
 // JWTIssuer はHS256でJWTを発行する実装。
@@ -36,7 +36,7 @@ func NewJWTIssuer(secret []byte, issuer, audience string, expiresIn time.Duratio
 	}
 }
 
-func (i *JWTIssuer) Issue(u *user.User) (string, int, error) {
+func (i *JWTIssuer) Issue(u *lineuser.User) (string, int, error) {
 	if len(i.secret) == 0 {
 		return "", 0, fmt.Errorf("token issuer: secret is empty")
 	}
