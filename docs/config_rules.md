@@ -1,6 +1,6 @@
 # Config Rules — Project Roots
 
-このドキュメントは Project Roots における  
+このドキュメントは Project Roots における
 **環境変数（.env）および設定ファイルのルール** を定義する。
 
 目的は：
