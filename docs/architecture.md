@@ -130,7 +130,7 @@ infra/
 - adapter
 - infra
 
-詳細ルールは `docs/DDD/` に定義し、本書では位置づけのみ記述する。
+詳細ルールは `docs/ddd/` に定義し、本書では位置づけのみ記述する。
 
 ### 2.1 Backend ディレクトリ構成（標準）
 
@@ -152,26 +152,26 @@ Go の internal 機能で外部モジュールからの import を禁止する�
 
 base/* の backend も同様の構造を採用する。
 
-### 2.2 レイヤー概要（詳細は docs/DDD/）
+### 2.2 レイヤー概要（詳細は docs/ddd/）
 
 - `domain`  
   → ビジネスルール・ユビキタス言語。外部技術は一切知らない。  
-  → 詳細：`docs/DDD/layers/domain.md`, `docs/DDD/modeling/*.md`
+  → 詳細：`docs/DDD/layers/domain.md`, `docs/ddd/modeling/*.md`
 
 - `usecase`  
   → ユースケース単位のアプリケーションロジック。  
   → トランザクション境界の管理。  
-  → 詳細：`docs/DDD/layers/usecase.md`, `docs/DDD/rules/data-access.md`
+  → 詳細：`docs/ddd/layers/usecase.md`, `docs/ddd/rules/data-access.md`
 
 - `adapter`  
   → HTTP/gRPC/CLI/Webhook など I/O の境界。  
   → DTO の定義、エラーマッピング、認証情報の抽出。  
-  → 詳細：`docs/DDD/layers/adapter.md`
+  → 詳細：`docs/ddd/layers/adapter.md`
 
 - `infra`  
   → DB 永続化・キャッシュ・外部API・ストレージ・Clock/IDGenerator。  
   → domain/usecase から見えるのは interface のみ。  
-  → 詳細：`docs/DDD/layers/infra.md`
+  → 詳細：`docs/ddd/layers/infra.md`
 
 ### 2.3 依存方向
 
@@ -236,7 +236,7 @@ apps/<app-name>/
 - バックエンド構造は「2. Backend Architecture」に従う。
 - DDD のグローバルルールから外れたい場合は **apps/<app>/docs/ddd_notes.md** に理由を明記する。
 - アプリ固有の運用・仕様・用語は apps/<app>/docs/ に閉じ込め、  
-  `docs/DDD/` や `docs/architecture.md` には影響を与えない。
+  `docs/ddd/` や `docs/architecture.md` には影響を与えない。
 
 ---
 
@@ -348,7 +348,7 @@ infra/
 例：
 
 ```txt
-docs/DDD/
+docs/ddd/
   index.md
   layers/
     overview.md

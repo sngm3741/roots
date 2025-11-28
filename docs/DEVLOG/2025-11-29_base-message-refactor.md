@@ -17,7 +17,7 @@
 - [x] (2025-11-29 23:55) adapter 層の実装（ベースrouter、LINE webhookハンドラ）
 - [x] (2025-11-29 23:58) infra 層の実装（NATS producer）
 - [x] (2025-11-29 23:59) テスト & 動作確認（go test ./... ビルド確認）
-- [ ] (YYYY-MM-DD hh:mm) リファクタリング & 後片付け
+- [x] (2025-11-30 00:30) リファクタリング & 後片付け
 
 ## Surprises & Discoveries
 
