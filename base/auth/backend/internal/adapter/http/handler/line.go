@@ -20,8 +20,8 @@ import (
 	"github.com/sngm3741/roots/base/auth/internal/usecase/linelogin"
 )
 
-// Handler はHTTP経由のLINEログイン入口をまとめる。
-type Handler struct {
+// LineHandler はHTTP経由のLINEログイン入口をまとめる。
+type LineHandler struct {
 	usecase         *linelogin.Usecase
 	allowedOrigins  map[string]struct{}
 	redirectBuilder *RedirectBuilder
@@ -29,20 +29,20 @@ type Handler struct {
 	httpTimeout     time.Duration
 }
 
-// NewHandler はHTTPハンドラを初期化する。
-func NewHandler(
+// NewLineHandler はLINE用ハンドラを初期化する。
+func NewLineHandler(
 	usecase *linelogin.Usecase,
 	allowedOrigins map[string]struct{},
 	defaultRedirectOrigin string,
 	redirectPath string,
 	httpTimeout time.Duration,
 	logger *log.Logger,
-) *Handler {
+) *LineHandler {
 	copiedOrigins := make(map[string]struct{}, len(allowedOrigins))
 	for k, v := range allowedOrigins {
 		copiedOrigins[k] = v
 	}
-	return &Handler{
+	return &LineHandler{
 		usecase:         usecase,
 		allowedOrigins:  copiedOrigins,
 		redirectBuilder: NewRedirectBuilder(defaultRedirectOrigin, redirectPath),
@@ -51,15 +51,15 @@ func NewHandler(
 	}
 }
 
-// RegisterRoutes は既存のルーターにLINE用エンドポイントを登録する（/healthzは含まない）。
-func (h *Handler) RegisterRoutes(r chi.Router) {
+// RegisterLineRoutes は既存のルーターにLINE用エンドポイントを登録する（/healthzは含まない）。
+func (h *LineHandler) RegisterLineRoutes(r chi.Router) {
 	r.Options("/line/login", h.handlePreflight)
 	r.Post("/line/login", h.handleLoginStart)
 	r.Get("/line/callback", h.handleCallback)
 }
 
 // Routes は新しいルーターを組み立てて返す（従来互換）。
-func (h *Handler) Routes() http.Handler {
+func (h *LineHandler) Routes() http.Handler {
 	router := chi.NewRouter()
 	router.Use(middleware.RequestID)
 	router.Use(middleware.RealIP)
@@ -71,12 +71,12 @@ func (h *Handler) Routes() http.Handler {
 	}))
 
 	router.Get("/healthz", h.handleHealthz)
-	h.RegisterRoutes(router)
+	h.RegisterLineRoutes(router)
 
 	return router
 }
 
-func (h *Handler) handleHealthz(w http.ResponseWriter, r *http.Request) {
+func (h *LineHandler) handleHealthz(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet && r.Method != http.MethodHead {
 		w.Header().Set("Allow", "GET, HEAD")
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
@@ -90,7 +90,7 @@ func (h *Handler) handleHealthz(w http.ResponseWriter, r *http.Request) {
 	_, _ = io.WriteString(w, `{"status":"ok"}`)
 }
 
-func (h *Handler) handlePreflight(w http.ResponseWriter, r *http.Request) {
+func (h *LineHandler) handlePreflight(w http.ResponseWriter, r *http.Request) {
 	origin := r.Header.Get("Origin")
 	if !h.isOriginAllowed(origin) {
 		http.Error(w, "forbidden", http.StatusForbidden)
@@ -112,7 +112,7 @@ type loginResponse struct {
 }
 
 // handleLoginStart はログイン開始要求を受け付け、認可URLとstateを返す。
-func (h *Handler) handleLoginStart(w http.ResponseWriter, r *http.Request) {
+func (h *LineHandler) handleLoginStart(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	headerOrigin := r.Header.Get("Origin")
@@ -168,7 +168,7 @@ func (h *Handler) handleLoginStart(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *Handler) handleCallback(w http.ResponseWriter, r *http.Request) {
+func (h *LineHandler) handleCallback(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), h.httpTimeout)
 	defer cancel()
 
@@ -183,7 +183,7 @@ func (h *Handler) handleCallback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	loginRes := loginResult{
-		Type:    loginResultMessageType,
+		Type:    lineLoginResultMessageType,
 		Success: result.Success,
 		State:   result.State,
 		Origin:  result.Origin,
@@ -214,7 +214,7 @@ func (h *Handler) handleCallback(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, target, http.StatusSeeOther)
 }
 
-const loginResultMessageType = "line-login-result"
+const lineLoginResultMessageType = "line-login-result"
 
 type loginResult struct {
 	Type    string              `json:"type"`
@@ -287,7 +287,7 @@ func (b *RedirectBuilder) Build(result loginResult) (string, error) {
 	return base.String(), nil
 }
 
-func (h *Handler) renderFallbackPage(w http.ResponseWriter, result loginResult) {
+func (h *LineHandler) renderFallbackPage(w http.ResponseWriter, result loginResult) {
 	message := "LINEログインが完了しました。元の画面に戻ってください。"
 	if !result.Success && result.Error != "" {
 		message = result.Error
@@ -325,7 +325,7 @@ func (h *Handler) renderFallbackPage(w http.ResponseWriter, result loginResult) 
 	_, _ = io.WriteString(w, page)
 }
 
-func (h *Handler) isOriginAllowed(origin string) bool {
+func (h *LineHandler) isOriginAllowed(origin string) bool {
 	if origin == "" {
 		return false
 	}
@@ -337,7 +337,7 @@ func (h *Handler) isOriginAllowed(origin string) bool {
 }
 
 // applyCORSHeaders は許可済みオリジンに対してCORSレスポンスヘッダを付与する。
-func (h *Handler) applyCORSHeaders(w http.ResponseWriter, origin string) {
+func (h *LineHandler) applyCORSHeaders(w http.ResponseWriter, origin string) {
 	if !h.isOriginAllowed(origin) {
 		return
 	}

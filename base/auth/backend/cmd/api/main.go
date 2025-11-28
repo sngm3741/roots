@@ -13,7 +13,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 
-	httpadapter "github.com/sngm3741/roots/base/auth/internal/adapter/http"
+	httpadapter "github.com/sngm3741/roots/base/auth/internal/adapter/http/handler"
 	"github.com/sngm3741/roots/base/auth/internal/config"
 	infraline "github.com/sngm3741/roots/base/auth/internal/infra/external/line"
 	infratwitter "github.com/sngm3741/roots/base/auth/internal/infra/external/twitter"
@@ -52,8 +52,8 @@ func main() {
 		lineCfg.Scopes,
 	)
 
-	usecase := linelogin.NewUsecase(stateMgr, lineClient, tokenIssuer, lineCfg.AllowedOrigins, lineCfg.DefaultRedirectOrigin)
-	handler := httpadapter.NewHandler(usecase, lineCfg.AllowedOrigins, lineCfg.DefaultRedirectOrigin, lineCfg.RedirectPath, lineCfg.HTTPTimeout, logger)
+	lineUsecase := linelogin.NewUsecase(stateMgr, lineClient, tokenIssuer, lineCfg.AllowedOrigins, lineCfg.DefaultRedirectOrigin)
+	lineHandler := httpadapter.NewLineHandler(lineUsecase, lineCfg.AllowedOrigins, lineCfg.DefaultRedirectOrigin, lineCfg.RedirectPath, lineCfg.HTTPTimeout, logger)
 
 	twitterHTTPClient := &http.Client{
 		Timeout: twitterCfg.HTTPTimeout,
@@ -87,7 +87,7 @@ func main() {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(`{"status":"ok"}`))
 	})
-	handler.RegisterRoutes(router)
+	lineHandler.RegisterLineRoutes(router)
 	twitterHandler.RegisterRoutes(router)
 
 	httpServer := &http.Server{

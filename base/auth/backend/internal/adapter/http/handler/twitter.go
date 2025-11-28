@@ -192,10 +192,7 @@ func (h *TwitterHandler) handlePreflight(w http.ResponseWriter, r *http.Request)
 	w.WriteHeader(http.StatusNoContent)
 }
 
-const (
-	twitterLoginResultMessageType = "oauth-login-result"
-	twitterHashPrefix             = "#oauth-login="
-)
+const twitterLoginResultMessageType = "oauth-login-result"
 
 type twitterLoginResult struct {
 	Type    string                     `json:"type"`
@@ -263,7 +260,7 @@ func (h *TwitterHandler) buildRedirectURL(result twitterLoginResult) (string, er
 	}
 
 	encoded := base64.RawURLEncoding.EncodeToString(data)
-	base.Fragment = strings.TrimPrefix(twitterHashPrefix, "#") + encoded
+	base.Fragment = "oauth-login=" + encoded
 
 	return base.String(), nil
 }
