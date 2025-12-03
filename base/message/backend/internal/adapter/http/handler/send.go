@@ -11,18 +11,17 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 
 	"github.com/sngm3741/roots/base/message/internal/domain/message"
-	"github.com/sngm3741/roots/base/message/internal/usecase/ingress"
 )
 
 // SendHandler は外部からの送信要求を受け付ける。
 type SendHandler struct {
-	service *ingress.Service
-	timeout time.Duration
+	resolver IngressTenantResolver
+	timeout  time.Duration
 }
 
 // NewSendHandler はSendHandlerを初期化する。
-func NewSendHandler(service *ingress.Service, timeout time.Duration) *SendHandler {
-	return &SendHandler{service: service, timeout: timeout}
+func NewSendHandler(resolver IngressTenantResolver, timeout time.Duration) *SendHandler {
+	return &SendHandler{resolver: resolver, timeout: timeout}
 }
 
 // Router は /send を登録したルーターを返す。
@@ -42,16 +41,28 @@ type sendRequest struct {
 }
 
 func (h *SendHandler) sendMessage(w http.ResponseWriter, r *http.Request) {
+	tenantID := TenantFromContext(r.Context())
+	if tenantID == "" {
+		http.Error(w, "tenant is required", http.StatusBadRequest)
+		return
+	}
+
 	var req sendRequest
 	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 1<<20)).Decode(&req); err != nil {
 		http.Error(w, "invalid request body", http.StatusBadRequest)
 		return
 	}
 
-	ctx, cancel := h.requestContext(r.Context())
+	deps, err := h.resolver.ResolveIngress(tenantID)
+	if err != nil {
+		http.Error(w, "unknown tenant", http.StatusBadRequest)
+		return
+	}
+
+	ctx, cancel := h.requestContext(r.Context(), deps.Timeout)
 	defer cancel()
 
-	if err := h.service.Send(ctx, req.Destination, req.UserID, req.Text); err != nil {
+	if err := deps.Service.Send(ctx, req.Destination, req.UserID, req.Text); err != nil {
 		switch {
 		case errors.Is(err, message.ErrEmptyDestination),
 			errors.Is(err, message.ErrEmptyUserID),
@@ -68,8 +79,11 @@ func (h *SendHandler) sendMessage(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(map[string]string{"status": "accepted"})
 }
 
-func (h *SendHandler) requestContext(parent context.Context) (context.Context, context.CancelFunc) {
-	t := h.timeout
+func (h *SendHandler) requestContext(parent context.Context, override time.Duration) (context.Context, context.CancelFunc) {
+	t := override
+	if t <= 0 {
+		t = h.timeout
+	}
 	if t <= 0 {
 		t = 5 * time.Second
 	}

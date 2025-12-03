@@ -1,0 +1,25 @@
+message:
+  tenantA:
+    natsURL: nats://nats:4222
+    lineSubject: line.events
+    discordSubject: discord.incoming
+    line:
+      pushEndpoint: https://api.line.me/v2/bot/message/push
+      channelToken: tenantA-line-token
+    discord:
+      webhookURL: https://discord.com/api/webhooks/xxxxx/yyyyy
+      username: "[自動]tenantA"
+      avatarURL: ""
+    defaultDestination: line
+    ingressTimeout: 5s
+    workerHTTPTimeout: 5s
+  tenantB:
+    natsURL: nats://nats:4222
+    discordSubject: discord.incoming.b
+    discord:
+      webhookURL: https://discord.com/api/webhooks/xxxxx/zzzzz
+      username: "[自動]tenantB"
+      avatarURL: ""
+    defaultDestination: discord
+    ingressTimeout: 5s
+    workerHTTPTimeout: 5s

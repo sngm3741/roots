@@ -10,23 +10,21 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 
+	"github.com/sngm3741/roots/base/message/internal/adapter/http/handler"
 	"github.com/sngm3741/roots/base/message/internal/domain/lineevent"
-	"github.com/sngm3741/roots/base/message/internal/infra/nats"
 )
 
 // LineWebhookHandler はLINE Webhookを受け取りNATSに中継する。
 type LineWebhookHandler struct {
-	producer nats.Producer
-	subject  string
+	resolver handler.LineWebhookResolver
 	maxBody  int64
 	logger   func(format string, v ...any)
 }
 
 // NewLineWebhookHandler はLINE用ハンドラを初期化する。
-func NewLineWebhookHandler(producer nats.Producer, subject string, maxBody int64, logger func(format string, v ...any)) *LineWebhookHandler {
+func NewLineWebhookHandler(resolver handler.LineWebhookResolver, maxBody int64, logger func(format string, v ...any)) *LineWebhookHandler {
 	return &LineWebhookHandler{
-		producer: producer,
-		subject:  subject,
+		resolver: resolver,
 		maxBody:  maxBody,
 		logger:   logger,
 	}
@@ -38,6 +36,7 @@ func (h *LineWebhookHandler) Router() http.Handler {
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Recoverer)
+	r.Use(handler.WithTenant)
 	r.Post("/", h.handle)
 	return r
 }
@@ -61,6 +60,12 @@ type lineEventsRequest struct {
 var errLineNoEvents = errors.New("line: events empty")
 
 func (h *LineWebhookHandler) handle(w http.ResponseWriter, r *http.Request) {
+	tenantID := handler.TenantFromContext(r.Context())
+	if tenantID == "" {
+		http.Error(w, "tenant is required", http.StatusBadRequest)
+		return
+	}
+
 	body, err := readBody(r, h.maxBody)
 	if err != nil {
 		http.Error(w, "failed to read body", http.StatusBadRequest)
@@ -86,7 +91,13 @@ func (h *LineWebhookHandler) handle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.producer.Publish(r.Context(), h.subject, msg); err != nil {
+	deps, err := h.resolver.ResolveLineWebhook(tenantID)
+	if err != nil {
+		http.Error(w, "unknown tenant", http.StatusBadRequest)
+		return
+	}
+
+	if err := deps.Producer.Publish(r.Context(), deps.Subject, msg); err != nil {
 		h.logger("line publish error: %v", err)
 		http.Error(w, "failed to publish", http.StatusBadGateway)
 		return

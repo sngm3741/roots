@@ -6,3 +6,7 @@
   - リスク: 一社の障害やレートリミットが他プロバイダに波及、envが肥大化し事故リスク増。
   - 運用指針: config/handler/usecase/infra をプロバイダごとに明確に分離し、後でプロバイダ単位のバイナリ/コンテナに分割できるようにしておく（共通コードは内部ライブラリ化）。
   - 負荷やSLO要件が厳しくなった段階で、プロバイダごとのサービス分割を検討する。
+- マルチテナント方針:
+  - Hostの先頭ラベルからテナントIDを解決し（例: `tenantA.auth.example.com` → `tenantA`）、`AUTH_TENANT_CONFIG_PATH` で指す YAML (`infra/configs/templates/base/auth/tenants/example.yaml`) からテナント別の origin / redirect / credentials を読み込む。
+  - env には HTTPリスンアドレスと YAML パスのみを持たせ、テナント固有値は YAML に集約する。
+  - 依存が増えても `internal/adapter/http/handler.WithTenant` とテナントリゾルバを通して DI することで、プロバイダ分割や将来のファイル再ロードに備える。

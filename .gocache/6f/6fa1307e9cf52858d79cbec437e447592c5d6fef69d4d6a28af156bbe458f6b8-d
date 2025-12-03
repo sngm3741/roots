@@ -1,0 +1,34 @@
+=== RUN   TestUsecase_Flows
+=== PAUSE TestUsecase_Flows
+=== RUN   TestHMACStateManager_IssueVerify
+=== PAUSE TestHMACStateManager_IssueVerify
+=== CONT  TestUsecase_Flows
+=== CONT  TestHMACStateManager_IssueVerify
+=== RUN   TestHMACStateManager_IssueVerify/正常:_発行したstateを即検証できる
+=== RUN   TestUsecase_Flows/Start:_許可オリジンで認可URLを返す
+=== PAUSE TestHMACStateManager_IssueVerify/正常:_発行したstateを即検証できる
+=== PAUSE TestUsecase_Flows/Start:_許可オリジンで認可URLを返す
+=== RUN   TestUsecase_Flows/Callback:_正常にJWTを返す
+=== PAUSE TestUsecase_Flows/Callback:_正常にJWTを返す
+=== RUN   TestHMACStateManager_IssueVerify/期限切れ:_TTL超過でエラー
+=== PAUSE TestHMACStateManager_IssueVerify/期限切れ:_TTL超過でエラー
+=== CONT  TestHMACStateManager_IssueVerify/正常:_発行したstateを即検証できる
+=== RUN   TestUsecase_Flows/Callback:_state検証失敗でエラー文言
+=== PAUSE TestUsecase_Flows/Callback:_state検証失敗でエラー文言
+=== RUN   TestUsecase_Flows/Callback:_token取得失敗でリトライ案内
+=== PAUSE TestUsecase_Flows/Callback:_token取得失敗でリトライ案内
+=== CONT  TestUsecase_Flows/Start:_許可オリジンで認可URLを返す
+=== CONT  TestHMACStateManager_IssueVerify/期限切れ:_TTL超過でエラー
+=== CONT  TestUsecase_Flows/Callback:_token取得失敗でリトライ案内
+--- PASS: TestHMACStateManager_IssueVerify (0.00s)
+    --- PASS: TestHMACStateManager_IssueVerify/正常:_発行したstateを即検証できる (0.00s)
+    --- PASS: TestHMACStateManager_IssueVerify/期限切れ:_TTL超過でエラー (0.00s)
+=== CONT  TestUsecase_Flows/Callback:_state検証失敗でエラー文言
+=== CONT  TestUsecase_Flows/Callback:_正常にJWTを返す
+--- PASS: TestUsecase_Flows (0.00s)
+    --- PASS: TestUsecase_Flows/Start:_許可オリジンで認可URLを返す (0.00s)
+    --- PASS: TestUsecase_Flows/Callback:_token取得失敗でリトライ案内 (0.00s)
+    --- PASS: TestUsecase_Flows/Callback:_state検証失敗でエラー文言 (0.00s)
+    --- PASS: TestUsecase_Flows/Callback:_正常にJWTを返す (0.00s)
+PASS
+ok  	github.com/sngm3741/roots/base/auth/internal/usecase/linelogin	1.300s

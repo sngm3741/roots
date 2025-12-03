@@ -1,0 +1,22 @@
+=== RUN   TestTenantResolver
+=== PAUSE TestTenantResolver
+=== CONT  TestTenantResolver
+=== RUN   TestTenantResolver/line_enabled
+=== PAUSE TestTenantResolver/line_enabled
+=== RUN   TestTenantResolver/line_disabled
+=== PAUSE TestTenantResolver/line_disabled
+=== RUN   TestTenantResolver/twitter_enabled
+=== PAUSE TestTenantResolver/twitter_enabled
+=== RUN   TestTenantResolver/twitter_disabled
+=== PAUSE TestTenantResolver/twitter_disabled
+=== CONT  TestTenantResolver/line_enabled
+=== CONT  TestTenantResolver/twitter_enabled
+=== CONT  TestTenantResolver/twitter_disabled
+=== CONT  TestTenantResolver/line_disabled
+--- PASS: TestTenantResolver (0.00s)
+    --- PASS: TestTenantResolver/line_enabled (0.00s)
+    --- PASS: TestTenantResolver/twitter_enabled (0.00s)
+    --- PASS: TestTenantResolver/twitter_disabled (0.00s)
+    --- PASS: TestTenantResolver/line_disabled (0.00s)
+PASS
+ok  	github.com/sngm3741/roots/base/auth/cmd/api	0.419s

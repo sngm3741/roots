@@ -1,0 +1,5 @@
+# test log
+getenv TMPDIR
+open /var/folders/cb/pmvx9kqd7yqgfsb4wt4rlz3w0000gn/T/TestTenantResolver636868093/001/tenants.yaml
+open /var/folders/cb/pmvx9kqd7yqgfsb4wt4rlz3w0000gn/T/TestTenantResolver636868093/001/tenants.yaml
+open /var/folders/cb/pmvx9kqd7yqgfsb4wt4rlz3w0000gn/T

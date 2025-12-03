@@ -1,0 +1,22 @@
+=== RUN   TestIngressResolver
+=== PAUSE TestIngressResolver
+=== RUN   TestIngressResolver_Close
+=== PAUSE TestIngressResolver_Close
+=== CONT  TestIngressResolver
+=== CONT  TestIngressResolver_Close
+=== RUN   TestIngressResolver/line+discord_OK
+=== PAUSE TestIngressResolver/line+discord_OK
+=== RUN   TestIngressResolver/discord_only_OK
+=== PAUSE TestIngressResolver/discord_only_OK
+=== RUN   TestIngressResolver/subjects_empty_error
+=== PAUSE TestIngressResolver/subjects_empty_error
+=== CONT  TestIngressResolver/line+discord_OK
+=== CONT  TestIngressResolver/subjects_empty_error
+=== CONT  TestIngressResolver/discord_only_OK
+--- PASS: TestIngressResolver (0.00s)
+    --- PASS: TestIngressResolver/line+discord_OK (0.00s)
+    --- PASS: TestIngressResolver/subjects_empty_error (0.00s)
+    --- PASS: TestIngressResolver/discord_only_OK (0.00s)
+--- PASS: TestIngressResolver_Close (0.01s)
+PASS
+ok  	github.com/sngm3741/roots/base/message/cmd/ingress	0.368s

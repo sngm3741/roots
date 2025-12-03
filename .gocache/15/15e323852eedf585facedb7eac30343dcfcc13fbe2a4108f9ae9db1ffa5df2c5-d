@@ -1,0 +1,14 @@
+=== RUN   TestUploadHandler_HandleUpload
+=== PAUSE TestUploadHandler_HandleUpload
+=== CONT  TestUploadHandler_HandleUpload
+=== RUN   TestUploadHandler_HandleUpload/正常にアップロード
+=== PAUSE TestUploadHandler_HandleUpload/正常にアップロード
+=== RUN   TestUploadHandler_HandleUpload/fileフィールドなしで400
+=== PAUSE TestUploadHandler_HandleUpload/fileフィールドなしで400
+=== CONT  TestUploadHandler_HandleUpload/正常にアップロード
+=== CONT  TestUploadHandler_HandleUpload/fileフィールドなしで400
+--- PASS: TestUploadHandler_HandleUpload (0.00s)
+    --- PASS: TestUploadHandler_HandleUpload/fileフィールドなしで400 (0.00s)
+    --- PASS: TestUploadHandler_HandleUpload/正常にアップロード (0.00s)
+PASS
+ok  	github.com/sngm3741/roots/base/storage/internal/adapter/http/handler	0.357s

@@ -1,0 +1,14 @@
+=== RUN   TestMessageNew
+=== PAUSE TestMessageNew
+=== CONT  TestMessageNew
+=== RUN   TestMessageNew/正常
+=== PAUSE TestMessageNew/正常
+=== RUN   TestMessageNew/内容空でエラー
+=== PAUSE TestMessageNew/内容空でエラー
+=== CONT  TestMessageNew/正常
+=== CONT  TestMessageNew/内容空でエラー
+--- PASS: TestMessageNew (0.00s)
+    --- PASS: TestMessageNew/正常 (0.00s)
+    --- PASS: TestMessageNew/内容空でエラー (0.00s)
+PASS
+ok  	github.com/sngm3741/roots/base/message/internal/domain/discordmsg	0.926s

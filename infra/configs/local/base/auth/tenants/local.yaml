@@ -1,0 +1,28 @@
+auth:
+  local:
+    allowedOrigins:
+      - https://app.localhost
+    defaultRedirectOrigin: https://app.localhost
+    redirectPath: /auth/result
+    line:
+      channelID: dummy-line-channel
+      channelSecret: dummy-line-secret
+      redirectURI: https://app.localhost/auth/line/callback
+      scopes: ["profile", "openid"]
+      stateSecret: local-line-state
+      stateTTL: 10m
+      jwtSecret: local-line-jwt
+      jwtIssuer: auth-line
+      jwtAudience: app-local
+      jwtExpiresIn: 24h
+    twitter:
+      clientID: dummy-twitter-client
+      clientSecret: dummy-twitter-secret
+      redirectURI: https://app.localhost/auth/twitter/callback
+      scopes: ["tweet.read"]
+      stateSecret: local-twitter-state
+      stateTTL: 10m
+      jwtSecret: local-twitter-jwt
+      jwtIssuer: auth-twitter
+      jwtAudience: app-local
+      jwtExpiresIn: 24h

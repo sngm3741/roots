@@ -1,0 +1,42 @@
+=== RUN   TestSendHandler
+=== PAUSE TestSendHandler
+=== RUN   TestWithTenant
+=== PAUSE TestWithTenant
+=== RUN   TestTenantFromContext
+=== PAUSE TestTenantFromContext
+=== CONT  TestSendHandler
+=== CONT  TestTenantFromContext
+--- PASS: TestTenantFromContext (0.00s)
+=== RUN   TestSendHandler/正常
+=== PAUSE TestSendHandler/正常
+=== RUN   TestSendHandler/tenantなしで400
+=== PAUSE TestSendHandler/tenantなしで400
+=== RUN   TestSendHandler/バリデーションエラーで400
+=== CONT  TestWithTenant
+=== PAUSE TestSendHandler/バリデーションエラーで400
+=== RUN   TestWithTenant/hostからtenant抽出
+=== RUN   TestSendHandler/内部エラーで500
+=== PAUSE TestWithTenant/hostからtenant抽出
+=== PAUSE TestSendHandler/内部エラーで500
+=== RUN   TestWithTenant/空ホストで400
+=== PAUSE TestWithTenant/空ホストで400
+=== CONT  TestWithTenant/hostからtenant抽出
+=== RUN   TestSendHandler/ボディ不正で400
+=== CONT  TestWithTenant/空ホストで400
+=== PAUSE TestSendHandler/ボディ不正で400
+--- PASS: TestWithTenant (0.00s)
+    --- PASS: TestWithTenant/hostからtenant抽出 (0.00s)
+    --- PASS: TestWithTenant/空ホストで400 (0.00s)
+=== CONT  TestSendHandler/正常
+=== CONT  TestSendHandler/ボディ不正で400
+=== CONT  TestSendHandler/バリデーションエラーで400
+=== CONT  TestSendHandler/内部エラーで500
+=== CONT  TestSendHandler/tenantなしで400
+--- PASS: TestSendHandler (0.00s)
+    --- PASS: TestSendHandler/ボディ不正で400 (0.00s)
+    --- PASS: TestSendHandler/正常 (0.00s)
+    --- PASS: TestSendHandler/バリデーションエラーで400 (0.00s)
+    --- PASS: TestSendHandler/内部エラーで500 (0.00s)
+    --- PASS: TestSendHandler/tenantなしで400 (0.00s)
+PASS
+ok  	github.com/sngm3741/roots/base/message/internal/adapter/http/handler	1.612s

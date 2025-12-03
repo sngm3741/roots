@@ -3,10 +3,13 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
+	"sync"
 	"syscall"
 	"time"
 
@@ -17,67 +20,48 @@ import (
 	"github.com/sngm3741/roots/base/auth/internal/config"
 	infraline "github.com/sngm3741/roots/base/auth/internal/infra/external/line"
 	infratwitter "github.com/sngm3741/roots/base/auth/internal/infra/external/twitter"
+	"github.com/sngm3741/roots/base/auth/internal/tenant"
 	"github.com/sngm3741/roots/base/auth/internal/usecase/linelogin"
 	"github.com/sngm3741/roots/base/auth/internal/usecase/twitterlogin"
 )
 
+const (
+	lineAuthorizeEndpoint    = "https://access.line.me/oauth2/v2.1/authorize"
+	lineTokenEndpoint        = "https://api.line.me/oauth2/v2.1/token"
+	lineProfileEndpoint      = "https://api.line.me/v2/profile"
+	defaultLineBotPrompt     = ""
+	twitterAuthorizeEndpoint = "https://twitter.com/i/oauth2/authorize"
+	twitterTokenEndpoint     = "https://api.twitter.com/2/oauth2/token"
+	twitterProfileEndpoint   = "https://api.twitter.com/2/users/me"
+)
+
 // main はDIを行いHTTPサーバーを起動する。
 func main() {
-	lineCfg, err := config.Load()
+	appCfg, err := config.Load()
 	if err != nil {
 		log.Fatalf("failed to load config: %v", err)
 	}
-	twitterCfg, err := config.LoadTwitter()
+
+	loader, err := tenant.NewLoader(appCfg.TenantConfigPath)
 	if err != nil {
-		log.Fatalf("failed to load twitter config: %v", err)
+		log.Fatalf("failed to load tenant config: %v", err)
 	}
 
-	logger := log.New(os.Stdout, "[auth-line] ", log.LstdFlags|log.Lmsgprefix)
+	logger := log.New(os.Stdout, "[auth] ", log.LstdFlags|log.Lmsgprefix)
 
 	httpClient := &http.Client{
-		Timeout: lineCfg.HTTPTimeout,
+		Timeout: appCfg.HTTPTimeout,
 	}
 
-	stateMgr := linelogin.NewHMACStateManager(lineCfg.StateSecret, lineCfg.StateTTL)
-	tokenIssuer := linelogin.NewJWTIssuer(lineCfg.JWTSecret, lineCfg.JWTIssuer, lineCfg.JWTAudience, lineCfg.JWTExpiresIn)
-	lineClient := infraline.NewClient(
-		httpClient,
-		lineCfg.ChannelID,
-		lineCfg.ChannelSecret,
-		lineCfg.RedirectURI,
-		lineCfg.AuthorizeEndpoint,
-		lineCfg.TokenEndpoint,
-		lineCfg.ProfileEndpoint,
-		lineCfg.BotPrompt,
-		lineCfg.Scopes,
-	)
-
-	lineUsecase := linelogin.NewUsecase(stateMgr, lineClient, tokenIssuer, lineCfg.AllowedOrigins, lineCfg.DefaultRedirectOrigin)
-	lineHandler := httpadapter.NewLineHandler(lineUsecase, lineCfg.AllowedOrigins, lineCfg.DefaultRedirectOrigin, lineCfg.RedirectPath, lineCfg.HTTPTimeout, logger)
-
-	twitterHTTPClient := &http.Client{
-		Timeout: twitterCfg.HTTPTimeout,
-	}
-	twitterStateMgr := twitterlogin.NewHMACStateManager(twitterCfg.StateSecret, twitterCfg.StateTTL)
-	twitterTokenIssuer := twitterlogin.NewJWTIssuer(twitterCfg.JWTSecret, twitterCfg.JWTIssuer, twitterCfg.JWTAudience, twitterCfg.JWTExpiresIn)
-	twitterClient := infratwitter.NewClient(
-		twitterHTTPClient,
-		twitterCfg.ClientID,
-		twitterCfg.ClientSecret,
-		twitterCfg.RedirectURI,
-		twitterCfg.AuthorizeEndpoint,
-		twitterCfg.TokenEndpoint,
-		twitterCfg.ProfileEndpoint,
-		twitterCfg.Scopes,
-	)
-	twitterUsecase := twitterlogin.NewUsecase(twitterStateMgr, twitterClient, twitterTokenIssuer, twitterCfg.AllowedOrigins, twitterCfg.DefaultRedirectOrigin)
-	twitterHandler := httpadapter.NewTwitterHandler(twitterUsecase, twitterCfg.AllowedOrigins, twitterCfg.DefaultRedirectOrigin, twitterCfg.RedirectPath, twitterCfg.HTTPTimeout, logger)
+	resolver := newTenantResolver(loader, httpClient, logger.Printf)
+	lineHandler := httpadapter.NewLineHandler(resolver, appCfg.HTTPTimeout, logger)
+	twitterHandler := httpadapter.NewTwitterHandler(resolver, appCfg.HTTPTimeout, logger)
 
 	router := chi.NewRouter()
 	router.Use(middleware.RequestID)
 	router.Use(middleware.RealIP)
 	router.Use(middleware.Recoverer)
-	router.Use(middleware.Timeout(30 * time.Second))
+	router.Use(middleware.Timeout(appCfg.HTTPTimeout))
 	router.Use(middleware.RequestLogger(&middleware.DefaultLogFormatter{
 		Logger:  logger,
 		NoColor: true,
@@ -87,18 +71,21 @@ func main() {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(`{"status":"ok"}`))
 	})
-	lineHandler.RegisterLineRoutes(router)
-	twitterHandler.RegisterRoutes(router)
+	router.Group(func(r chi.Router) {
+		r.Use(httpadapter.WithTenant)
+		lineHandler.RegisterLineRoutes(r)
+		twitterHandler.RegisterRoutes(r)
+	})
 
 	httpServer := &http.Server{
-		Addr:              lineCfg.HTTPAddr,
+		Addr:              appCfg.HTTPAddr,
 		Handler:           router,
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 
 	errChan := make(chan error, 1)
 	go func() {
-		logger.Printf("HTTP サーバーを %s で待ち受けます", lineCfg.HTTPAddr)
+		logger.Printf("HTTP サーバーを %s で待ち受けます", appCfg.HTTPAddr)
 		errChan <- httpServer.ListenAndServe()
 	}()
 
@@ -127,4 +114,120 @@ func waitForShutdown(httpServer *http.Server, errChan <-chan error, logger *log.
 		logger.Printf("HTTP サーバーのシャットダウンに失敗しました: %v", err)
 	}
 	logger.Println("シャットダウンが完了しました。")
+}
+
+type tenantResolver struct {
+	loader          *tenant.Loader
+	httpClient      *http.Client
+	lineCache       sync.Map
+	twitterCache    sync.Map
+	logf            func(string, ...any)
+	lineDisabled    sync.Map
+	twitterDisabled sync.Map
+}
+
+func newTenantResolver(loader *tenant.Loader, httpClient *http.Client, logf func(string, ...any)) *tenantResolver {
+	return &tenantResolver{
+		loader:     loader,
+		httpClient: httpClient,
+		logf:       logf,
+	}
+}
+
+func (r *tenantResolver) ResolveLine(tenantID string) (httpadapter.LineTenantDeps, error) {
+	if v, ok := r.lineCache.Load(tenantID); ok {
+		return v.(httpadapter.LineTenantDeps), nil
+	}
+
+	cfg, ok := r.loader.AuthConfig(tenantID)
+	if !ok {
+		return httpadapter.LineTenantDeps{}, fmt.Errorf("tenant %s not found", tenantID)
+	}
+
+	lineCfg := cfg.Line
+	if lineCfg.ChannelID == "" || lineCfg.ChannelSecret == "" || lineCfg.RedirectURI == "" {
+		if _, logged := r.lineDisabled.LoadOrStore(tenantID, struct{}{}); !logged && r.logf != nil {
+			r.logf("tenant %s: LINE auth disabled (missing credentials)", tenantID)
+		}
+		return httpadapter.LineTenantDeps{}, httpadapter.ErrLineDisabled
+	}
+
+	allowed := toSet(cfg.AllowedOrigins)
+	stateMgr := linelogin.NewHMACStateManager([]byte(lineCfg.StateSecret), lineCfg.StateTTL)
+	tokenIssuer := linelogin.NewJWTIssuer([]byte(lineCfg.JWTSecret), lineCfg.JWTIssuer, lineCfg.JWTAudience, lineCfg.JWTExpiresIn)
+	lineClient := infraline.NewClient(
+		r.httpClient,
+		lineCfg.ChannelID,
+		lineCfg.ChannelSecret,
+		lineCfg.RedirectURI,
+		lineAuthorizeEndpoint,
+		lineTokenEndpoint,
+		lineProfileEndpoint,
+		defaultLineBotPrompt,
+		lineCfg.Scopes,
+	)
+
+	usecase := linelogin.NewUsecase(stateMgr, lineClient, tokenIssuer, allowed, cfg.DefaultRedirectOrigin)
+	deps := httpadapter.LineTenantDeps{
+		Usecase:               usecase,
+		AllowedOrigins:        allowed,
+		DefaultRedirectOrigin: cfg.DefaultRedirectOrigin,
+		RedirectPath:          cfg.RedirectPath,
+	}
+	r.lineCache.Store(tenantID, deps)
+	return deps, nil
+}
+
+func (r *tenantResolver) ResolveTwitter(tenantID string) (httpadapter.TwitterTenantDeps, error) {
+	if v, ok := r.twitterCache.Load(tenantID); ok {
+		return v.(httpadapter.TwitterTenantDeps), nil
+	}
+
+	cfg, ok := r.loader.AuthConfig(tenantID)
+	if !ok {
+		return httpadapter.TwitterTenantDeps{}, fmt.Errorf("tenant %s not found", tenantID)
+	}
+
+	tw := cfg.Twitter
+	if tw.ClientID == "" || tw.RedirectURI == "" {
+		if _, logged := r.twitterDisabled.LoadOrStore(tenantID, struct{}{}); !logged && r.logf != nil {
+			r.logf("tenant %s: Twitter auth disabled (missing credentials)", tenantID)
+		}
+		return httpadapter.TwitterTenantDeps{}, httpadapter.ErrTwitterDisabled
+	}
+
+	allowed := toSet(cfg.AllowedOrigins)
+	stateMgr := twitterlogin.NewHMACStateManager([]byte(tw.StateSecret), tw.StateTTL)
+	tokenIssuer := twitterlogin.NewJWTIssuer([]byte(tw.JWTSecret), tw.JWTIssuer, tw.JWTAudience, tw.JWTExpiresIn)
+	twitterClient := infratwitter.NewClient(
+		r.httpClient,
+		tw.ClientID,
+		tw.ClientSecret,
+		tw.RedirectURI,
+		twitterAuthorizeEndpoint,
+		twitterTokenEndpoint,
+		twitterProfileEndpoint,
+		tw.Scopes,
+	)
+	usecase := twitterlogin.NewUsecase(stateMgr, twitterClient, tokenIssuer, allowed, cfg.DefaultRedirectOrigin)
+	deps := httpadapter.TwitterTenantDeps{
+		Usecase:               usecase,
+		AllowedOrigins:        allowed,
+		DefaultRedirectOrigin: cfg.DefaultRedirectOrigin,
+		RedirectPath:          cfg.RedirectPath,
+	}
+	r.twitterCache.Store(tenantID, deps)
+	return deps, nil
+}
+
+func toSet(values []string) map[string]struct{} {
+	set := make(map[string]struct{}, len(values))
+	for _, v := range values {
+		val := strings.TrimSpace(v)
+		if val == "" {
+			continue
+		}
+		set[val] = struct{}{}
+	}
+	return set
 }

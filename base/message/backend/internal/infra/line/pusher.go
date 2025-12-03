@@ -7,8 +7,6 @@ import (
 	"net/http"
 	"strings"
 	"time"
-
-	"github.com/sngm3741/roots/base/message/internal/config"
 )
 
 // Pusher はLINE Messaging APIへメッセージを送信するポート実装。
@@ -23,10 +21,10 @@ type pusher struct {
 }
 
 // NewPusher はLINE Push APIクライアントを生成する。
-func NewPusher(cfg config.LineConfig, timeout time.Duration) Pusher {
+func NewPusher(endpoint, channelToken string, timeout time.Duration) Pusher {
 	return &pusher{
-		endpoint: strings.TrimSpace(cfg.PushEndpoint),
-		token:    strings.TrimSpace(cfg.ChannelToken),
+		endpoint: strings.TrimSpace(endpoint),
+		token:    strings.TrimSpace(channelToken),
 		client:   &http.Client{Timeout: timeout},
 	}
 }

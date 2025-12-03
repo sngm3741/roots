@@ -7,8 +7,6 @@ import (
 	"net/http"
 	"strings"
 	"time"
-
-	"github.com/sngm3741/roots/base/message/internal/config"
 )
 
 // Sender はDiscord Webhookへメッセージを送信するポート実装。
@@ -24,11 +22,11 @@ type sender struct {
 }
 
 // NewSender はDiscord Webhook送信クライアントを生成する。
-func NewSender(cfg config.DiscordConfig, timeout time.Duration) Sender {
+func NewSender(webhookURL, username, avatarURL string, timeout time.Duration) Sender {
 	return &sender{
-		webhookURL: strings.TrimSpace(cfg.WebhookURL),
-		username:   strings.TrimSpace(cfg.Username),
-		avatarURL:  strings.TrimSpace(cfg.AvatarURL),
+		webhookURL: strings.TrimSpace(webhookURL),
+		username:   strings.TrimSpace(username),
+		avatarURL:  strings.TrimSpace(avatarURL),
 		client:     &http.Client{Timeout: timeout},
 	}
 }

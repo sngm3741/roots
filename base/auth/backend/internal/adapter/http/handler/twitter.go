@@ -20,32 +20,21 @@ import (
 
 // TwitterHandler はTwitterログインのHTTP境界をまとめる。
 type TwitterHandler struct {
-	usecase         *twitterlogin.Usecase
-	allowedOrigins  map[string]struct{}
-	redirectBuilder *RedirectBuilder
-	logger          *log.Logger
-	httpTimeout     time.Duration
+	resolver    TwitterTenantResolver
+	logger      *log.Logger
+	httpTimeout time.Duration
 }
 
 // NewTwitterHandler はTwitter用ハンドラを初期化する。
 func NewTwitterHandler(
-	usecase *twitterlogin.Usecase,
-	allowedOrigins map[string]struct{},
-	defaultRedirectOrigin string,
-	redirectPath string,
+	resolver TwitterTenantResolver,
 	httpTimeout time.Duration,
 	logger *log.Logger,
 ) *TwitterHandler {
-	copiedOrigins := make(map[string]struct{}, len(allowedOrigins))
-	for k, v := range allowedOrigins {
-		copiedOrigins[k] = v
-	}
 	return &TwitterHandler{
-		usecase:         usecase,
-		allowedOrigins:  copiedOrigins,
-		redirectBuilder: NewRedirectBuilder(defaultRedirectOrigin, redirectPath),
-		logger:          logger,
-		httpTimeout:     httpTimeout,
+		resolver:    resolver,
+		logger:      logger,
+		httpTimeout: httpTimeout,
 	}
 }
 
@@ -54,6 +43,24 @@ func (h *TwitterHandler) RegisterRoutes(r chi.Router) {
 	r.Options("/twitter/login", h.handlePreflight)
 	r.Post("/twitter/login", h.handleLoginStart)
 	r.Get("/twitter/callback", h.handleCallback)
+}
+
+func (h *TwitterHandler) depsFromRequest(w http.ResponseWriter, r *http.Request) (TwitterTenantDeps, error) {
+	tenantID := TenantFromContext(r.Context())
+	if strings.TrimSpace(tenantID) == "" {
+		http.Error(w, "tenant is required", http.StatusBadRequest)
+		return TwitterTenantDeps{}, errors.New("tenant missing")
+	}
+	deps, err := h.resolver.ResolveTwitter(tenantID)
+	if err != nil {
+		if errors.Is(err, ErrTwitterDisabled) {
+			http.Error(w, "twitter auth is disabled for this tenant", http.StatusNotFound)
+			return TwitterTenantDeps{}, err
+		}
+		http.Error(w, "unknown tenant", http.StatusBadRequest)
+		return TwitterTenantDeps{}, err
+	}
+	return deps, nil
 }
 
 type twitterLoginRequest struct {
@@ -69,6 +76,11 @@ type twitterLoginResponse struct {
 func (h *TwitterHandler) handleLoginStart(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
+	deps, err := h.depsFromRequest(w, r)
+	if err != nil {
+		return
+	}
+
 	headerOrigin := r.Header.Get("Origin")
 
 	var req twitterLoginRequest
@@ -83,7 +95,7 @@ func (h *TwitterHandler) handleLoginStart(w http.ResponseWriter, r *http.Request
 		origin = strings.TrimSpace(headerOrigin)
 	}
 
-	if origin != "" && !h.isOriginAllowed(origin) {
+	if origin != "" && !h.isOriginAllowed(deps.AllowedOrigins, origin) {
 		h.logger.Printf("twitter login start rejected: origin %q not allowed", origin)
 		http.Error(w, "origin not allowed", http.StatusForbidden)
 		return
@@ -93,12 +105,12 @@ func (h *TwitterHandler) handleLoginStart(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	h.applyCORSHeaders(w, origin)
+	h.applyCORSHeaders(deps.AllowedOrigins, w, origin)
 
 	ctx, cancel := context.WithTimeout(r.Context(), h.httpTimeout)
 	defer cancel()
 
-	out, err := h.usecase.Start(ctx, origin)
+	out, err := deps.Usecase.Start(ctx, origin)
 	if err != nil {
 		if errors.Is(err, twitterlogin.ErrOriginNotAllowed) {
 			http.Error(w, "origin not allowed", http.StatusForbidden)
@@ -124,6 +136,11 @@ func (h *TwitterHandler) handleLoginStart(w http.ResponseWriter, r *http.Request
 
 // handleCallback はTwitterのコールバックを処理し、リダイレクトを返す。
 func (h *TwitterHandler) handleCallback(w http.ResponseWriter, r *http.Request) {
+	deps, err := h.depsFromRequest(w, r)
+	if err != nil {
+		return
+	}
+
 	ctx, cancel := context.WithTimeout(r.Context(), h.httpTimeout)
 	defer cancel()
 
@@ -139,14 +156,15 @@ func (h *TwitterHandler) handleCallback(w http.ResponseWriter, r *http.Request) 
 			State:   stateParam,
 			Error:   fmt.Sprintf("X認証がキャンセルされました: %s", errorCode),
 		}
-		if payload, err := h.usecaseCallbackDecode(stateParam); err == nil {
+		if payload, err := deps.Usecase.DecodeState(stateParam); err == nil {
 			result.Origin = payload.Origin
 		}
-		h.redirectWithResult(w, r, result)
+		builder := NewRedirectBuilder(deps.DefaultRedirectOrigin, deps.RedirectPath)
+		h.redirectWithResult(w, r, result, builder, deps.Usecase.DecodeState)
 		return
 	}
 
-	result, err := h.usecase.Callback(ctx, code, stateParam)
+	result, err := deps.Usecase.Callback(ctx, code, stateParam)
 	if err != nil {
 		h.logger.Printf("twitter callback handling failed: %v", err)
 		http.Error(w, "failed to handle callback", http.StatusInternalServerError)
@@ -176,17 +194,22 @@ func (h *TwitterHandler) handleCallback(w http.ResponseWriter, r *http.Request) 
 		loginRes.Error = result.ErrorMessage
 	}
 
-	h.redirectWithResult(w, r, loginRes)
+	builder := NewRedirectBuilder(deps.DefaultRedirectOrigin, deps.RedirectPath)
+	h.redirectWithResult(w, r, loginRes, builder, deps.Usecase.DecodeState)
 }
 
 // handlePreflight はCORSプリフライトを処理する。
 func (h *TwitterHandler) handlePreflight(w http.ResponseWriter, r *http.Request) {
+	deps, err := h.depsFromRequest(w, r)
+	if err != nil {
+		return
+	}
 	origin := r.Header.Get("Origin")
-	if !h.isOriginAllowed(origin) {
+	if !h.isOriginAllowed(deps.AllowedOrigins, origin) {
 		http.Error(w, "forbidden", http.StatusForbidden)
 		return
 	}
-	h.applyCORSHeaders(w, origin)
+	h.applyCORSHeaders(deps.AllowedOrigins, w, origin)
 	w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	w.WriteHeader(http.StatusNoContent)
@@ -217,30 +240,36 @@ type twitterLoginUser struct {
 	AvatarURL   string `json:"avatarUrl,omitempty"`
 }
 
-func (h *TwitterHandler) usecaseCallbackDecode(state string) (*twitterlogin.StatePayload, error) {
-	return h.usecase.DecodeState(state)
-}
-
 // redirectWithResult は結果をフラグメントに載せてリダイレクトする。
-func (h *TwitterHandler) redirectWithResult(w http.ResponseWriter, r *http.Request, result twitterLoginResult) {
-	target, err := h.buildRedirectURL(result)
+func (h *TwitterHandler) redirectWithResult(
+	w http.ResponseWriter,
+	r *http.Request,
+	result twitterLoginResult,
+	builder *RedirectBuilder,
+	decodeState func(string) (*twitterlogin.StatePayload, error),
+) {
+	target, err := h.buildRedirectURL(result, builder, decodeState)
 	if err != nil {
 		h.logger.Printf("failed to build twitter redirect URL: %v", err)
-		h.renderFallbackPage(w, result)
+		h.renderFallbackPage(w, result, builder)
 		return
 	}
 	http.Redirect(w, r, target, http.StatusSeeOther)
 }
 
-func (h *TwitterHandler) buildRedirectURL(result twitterLoginResult) (string, error) {
+func (h *TwitterHandler) buildRedirectURL(
+	result twitterLoginResult,
+	builder *RedirectBuilder,
+	decodeState func(string) (*twitterlogin.StatePayload, error),
+) (string, error) {
 	origin := strings.TrimSpace(result.Origin)
-	if origin == "" && result.State != "" {
-		if payload, err := h.usecaseCallbackDecode(result.State); err == nil {
+	if origin == "" && result.State != "" && decodeState != nil {
+		if payload, err := decodeState(result.State); err == nil {
 			origin = payload.Origin
 		}
 	}
 	if origin == "" {
-		origin = h.redirectBuilder.defaultOrigin
+		origin = builder.defaultOrigin
 	}
 	if origin == "" {
 		return "", fmt.Errorf("redirect origin is empty")
@@ -251,7 +280,7 @@ func (h *TwitterHandler) buildRedirectURL(result twitterLoginResult) (string, er
 		return "", fmt.Errorf("invalid redirect origin %q: %w", origin, err)
 	}
 
-	base.Path = h.redirectBuilder.redirectPath
+	base.Path = builder.redirectPath
 	base.RawQuery = ""
 
 	data, err := json.Marshal(result)
@@ -265,15 +294,15 @@ func (h *TwitterHandler) buildRedirectURL(result twitterLoginResult) (string, er
 	return base.String(), nil
 }
 
-func (h *TwitterHandler) renderFallbackPage(w http.ResponseWriter, result twitterLoginResult) {
+func (h *TwitterHandler) renderFallbackPage(w http.ResponseWriter, result twitterLoginResult, builder *RedirectBuilder) {
 	message := "Xログインが完了しました。元の画面に戻ってください。"
 	if !result.Success && result.Error != "" {
 		message = result.Error
 	}
 
 	var linkHTML string
-	if h.redirectBuilder.defaultOrigin != "" {
-		link := strings.TrimRight(h.redirectBuilder.defaultOrigin, "/") + h.redirectBuilder.redirectPath
+	if builder.defaultOrigin != "" {
+		link := strings.TrimRight(builder.defaultOrigin, "/") + builder.redirectPath
 		linkHTML = fmt.Sprintf(
 			`<p><a href="%s">こちらをタップして戻ってください。</a></p>`,
 			template.HTMLEscapeString(link),
@@ -313,20 +342,20 @@ func (h *TwitterHandler) renderFallbackPage(w http.ResponseWriter, result twitte
 	_, _ = w.Write([]byte(html))
 }
 
-func (h *TwitterHandler) isOriginAllowed(origin string) bool {
+func (h *TwitterHandler) isOriginAllowed(allowed map[string]struct{}, origin string) bool {
 	if origin == "" {
 		return false
 	}
-	if len(h.allowedOrigins) == 0 {
+	if len(allowed) == 0 {
 		return true
 	}
-	_, ok := h.allowedOrigins[origin]
+	_, ok := allowed[origin]
 	return ok
 }
 
 // applyCORSHeaders は許可済みオリジンに対してCORSレスポンスヘッダを付与する。
-func (h *TwitterHandler) applyCORSHeaders(w http.ResponseWriter, origin string) {
-	if !h.isOriginAllowed(origin) {
+func (h *TwitterHandler) applyCORSHeaders(allowed map[string]struct{}, w http.ResponseWriter, origin string) {
+	if !h.isOriginAllowed(allowed, origin) {
 		return
 	}
 	w.Header().Set("Access-Control-Allow-Origin", origin)

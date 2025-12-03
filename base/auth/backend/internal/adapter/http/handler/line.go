@@ -22,32 +22,21 @@ import (
 
 // LineHandler はHTTP経由のLINEログイン入口をまとめる。
 type LineHandler struct {
-	usecase         *linelogin.Usecase
-	allowedOrigins  map[string]struct{}
-	redirectBuilder *RedirectBuilder
-	logger          *log.Logger
-	httpTimeout     time.Duration
+	resolver    LineTenantResolver
+	logger      *log.Logger
+	httpTimeout time.Duration
 }
 
 // NewLineHandler はLINE用ハンドラを初期化する。
 func NewLineHandler(
-	usecase *linelogin.Usecase,
-	allowedOrigins map[string]struct{},
-	defaultRedirectOrigin string,
-	redirectPath string,
+	resolver LineTenantResolver,
 	httpTimeout time.Duration,
 	logger *log.Logger,
 ) *LineHandler {
-	copiedOrigins := make(map[string]struct{}, len(allowedOrigins))
-	for k, v := range allowedOrigins {
-		copiedOrigins[k] = v
-	}
 	return &LineHandler{
-		usecase:         usecase,
-		allowedOrigins:  copiedOrigins,
-		redirectBuilder: NewRedirectBuilder(defaultRedirectOrigin, redirectPath),
-		logger:          logger,
-		httpTimeout:     httpTimeout,
+		resolver:    resolver,
+		logger:      logger,
+		httpTimeout: httpTimeout,
 	}
 }
 
@@ -76,6 +65,24 @@ func (h *LineHandler) Routes() http.Handler {
 	return router
 }
 
+func (h *LineHandler) depsFromRequest(w http.ResponseWriter, r *http.Request) (LineTenantDeps, error) {
+	tenantID := TenantFromContext(r.Context())
+	if strings.TrimSpace(tenantID) == "" {
+		http.Error(w, "tenant is required", http.StatusBadRequest)
+		return LineTenantDeps{}, errors.New("tenant missing")
+	}
+	deps, err := h.resolver.ResolveLine(tenantID)
+	if err != nil {
+		if errors.Is(err, ErrLineDisabled) {
+			http.Error(w, "line auth is disabled for this tenant", http.StatusNotFound)
+			return LineTenantDeps{}, err
+		}
+		http.Error(w, "unknown tenant", http.StatusBadRequest)
+		return LineTenantDeps{}, err
+	}
+	return deps, nil
+}
+
 func (h *LineHandler) handleHealthz(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet && r.Method != http.MethodHead {
 		w.Header().Set("Allow", "GET, HEAD")
@@ -91,12 +98,16 @@ func (h *LineHandler) handleHealthz(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *LineHandler) handlePreflight(w http.ResponseWriter, r *http.Request) {
+	deps, err := h.depsFromRequest(w, r)
+	if err != nil {
+		return
+	}
 	origin := r.Header.Get("Origin")
-	if !h.isOriginAllowed(origin) {
+	if !h.isOriginAllowed(deps.AllowedOrigins, origin) {
 		http.Error(w, "forbidden", http.StatusForbidden)
 		return
 	}
-	h.applyCORSHeaders(w, origin)
+	h.applyCORSHeaders(deps.AllowedOrigins, w, origin)
 	w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	w.WriteHeader(http.StatusNoContent)
@@ -115,6 +126,11 @@ type loginResponse struct {
 func (h *LineHandler) handleLoginStart(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
+	deps, err := h.depsFromRequest(w, r)
+	if err != nil {
+		return
+	}
+
 	headerOrigin := r.Header.Get("Origin")
 
 	var req loginRequest
@@ -129,7 +145,7 @@ func (h *LineHandler) handleLoginStart(w http.ResponseWriter, r *http.Request) {
 		origin = strings.TrimSpace(headerOrigin)
 	}
 
-	if origin != "" && !h.isOriginAllowed(origin) {
+	if origin != "" && !h.isOriginAllowed(deps.AllowedOrigins, origin) {
 		h.logger.Printf("login start rejected: origin %q not allowed", origin)
 		http.Error(w, "origin not allowed", http.StatusForbidden)
 		return
@@ -139,12 +155,12 @@ func (h *LineHandler) handleLoginStart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.applyCORSHeaders(w, origin)
+	h.applyCORSHeaders(deps.AllowedOrigins, w, origin)
 
 	ctx, cancel := context.WithTimeout(r.Context(), h.httpTimeout)
 	defer cancel()
 
-	out, err := h.usecase.Start(ctx, origin)
+	out, err := deps.Usecase.Start(ctx, origin)
 	if err != nil {
 		if errors.Is(err, linelogin.ErrOriginNotAllowed) {
 			http.Error(w, "origin not allowed", http.StatusForbidden)
@@ -169,13 +185,18 @@ func (h *LineHandler) handleLoginStart(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *LineHandler) handleCallback(w http.ResponseWriter, r *http.Request) {
+	deps, err := h.depsFromRequest(w, r)
+	if err != nil {
+		return
+	}
+
 	ctx, cancel := context.WithTimeout(r.Context(), h.httpTimeout)
 	defer cancel()
 
 	stateParam := r.URL.Query().Get("state")
 	code := r.URL.Query().Get("code")
 
-	result, err := h.usecase.Callback(ctx, code, stateParam)
+	result, err := deps.Usecase.Callback(ctx, code, stateParam)
 	if err != nil {
 		h.logger.Printf("callback handling failed: %v", err)
 		http.Error(w, "failed to handle callback", http.StatusInternalServerError)
@@ -204,10 +225,11 @@ func (h *LineHandler) handleCallback(w http.ResponseWriter, r *http.Request) {
 		loginRes.Error = result.ErrorMessage
 	}
 
-	target, err := h.redirectBuilder.Build(loginRes)
+	builder := NewRedirectBuilder(deps.DefaultRedirectOrigin, deps.RedirectPath)
+	target, err := builder.Build(loginRes)
 	if err != nil {
 		h.logger.Printf("failed to build redirect URL: %v", err)
-		h.renderFallbackPage(w, loginRes)
+		h.renderFallbackPage(w, loginRes, builder.defaultOrigin, builder.redirectPath)
 		return
 	}
 
@@ -287,15 +309,19 @@ func (b *RedirectBuilder) Build(result loginResult) (string, error) {
 	return base.String(), nil
 }
 
-func (h *LineHandler) renderFallbackPage(w http.ResponseWriter, result loginResult) {
+func (h *LineHandler) renderFallbackPage(w http.ResponseWriter, result loginResult, defaultOrigin, redirectPath string) {
 	message := "LINEログインが完了しました。元の画面に戻ってください。"
 	if !result.Success && result.Error != "" {
 		message = result.Error
 	}
 
 	var linkHTML string
-	if h.redirectBuilder.defaultOrigin != "" {
-		link := strings.TrimRight(h.redirectBuilder.defaultOrigin, "/") + h.redirectBuilder.redirectPath
+	targetOrigin := defaultOrigin
+	if result.Origin != "" {
+		targetOrigin = result.Origin
+	}
+	if targetOrigin != "" {
+		link := strings.TrimRight(targetOrigin, "/") + redirectPath
 		linkHTML = fmt.Sprintf(
 			`<p><a href="%s">こちらをタップしてトップページに戻ってください。</a></p>`,
 			template.HTMLEscapeString(link),
@@ -325,20 +351,20 @@ func (h *LineHandler) renderFallbackPage(w http.ResponseWriter, result loginResu
 	_, _ = io.WriteString(w, page)
 }
 
-func (h *LineHandler) isOriginAllowed(origin string) bool {
+func (h *LineHandler) isOriginAllowed(allowed map[string]struct{}, origin string) bool {
 	if origin == "" {
 		return false
 	}
-	if len(h.allowedOrigins) == 0 {
+	if len(allowed) == 0 {
 		return true
 	}
-	_, ok := h.allowedOrigins[origin]
+	_, ok := allowed[origin]
 	return ok
 }
 
 // applyCORSHeaders は許可済みオリジンに対してCORSレスポンスヘッダを付与する。
-func (h *LineHandler) applyCORSHeaders(w http.ResponseWriter, origin string) {
-	if !h.isOriginAllowed(origin) {
+func (h *LineHandler) applyCORSHeaders(allowed map[string]struct{}, w http.ResponseWriter, origin string) {
+	if !h.isOriginAllowed(allowed, origin) {
 		return
 	}
 	w.Header().Set("Access-Control-Allow-Origin", origin)

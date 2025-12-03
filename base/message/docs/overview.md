@@ -9,3 +9,7 @@ httpのフレームワークはgoのchiを使用する
   - 旧実装は `__before/base-services/messenger-service/*` にある。
   - Webhook/API と Worker は別エントリポイント（例: `cmd/webhook`, `cmd/worker`）に分割し、NATS等で疎結合を維持する方針。Dockerも用途ごとに分ける。
   - 外部送信API(ingress)も `cmd/ingress` として分離し、宛先に応じてNATS subjectへpublishする。
+- マルチテナント方針:
+  - Host先頭ラベルでテナントIDを解決し、`MESSAGE_TENANT_CONFIG_PATH` で指す YAML (`infra/configs/templates/base/message/tenants/example.yaml`) から NATS URL / subject / Line token / Discord webhook / デフォルト宛先を取得する。
+  - ingress/webhook はテナントごとに NATS publisher を引き当てて publish、worker はテナントごとに NATS購読を張り credentials を切り替える。NATS URL が同じ場合はコネクションをプール共有する。
+  - env には HTTPアドレスと YAML パス程度のみを保持し、テナント固有値は YAML に集約する。
