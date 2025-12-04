@@ -53,3 +53,20 @@ func TestLineWorker_Subscribe_CallbackError(t *testing.T) {
 	w := NewLineWorker("subject", p, func(format string, v ...any) {})
 	_ = w // subscribe is not invoked because it requires live NATS; handled in integration env.
 }
+
+func TestLineWorker_HandleMessage_LongText(t *testing.T) {
+	p := &fakeLinePusher{}
+	w := NewLineWorker("subject", p, func(format string, v ...any) {})
+
+	long := make([]byte, 4000)
+	for i := range long {
+		long[i] = 'b'
+	}
+	payload := []byte(`{"destination":"dest","eventType":"message","userId":"U1","message":{"message":"` + string(long) + `"},"receivedAt":"2025-01-01T00:00:00Z"}`)
+	if err := w.handleMessage(payload); err != nil {
+		t.Fatalf("unexpected error for long text: %v", err)
+	}
+	if len(p.calls) != 1 || p.calls[0].text != string(long) {
+		t.Fatalf("unexpected calls: %+v", p.calls)
+	}
+}

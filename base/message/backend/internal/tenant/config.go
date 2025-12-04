@@ -17,7 +17,6 @@ type MessageTenant struct {
 	NATSURL            string        `yaml:"natsURL"`
 	LineSubject        string        `yaml:"lineSubject"`
 	DiscordSubject     string        `yaml:"discordSubject"`
-	DefaultDestination string        `yaml:"defaultDestination"`
 	IngressTimeout     time.Duration `yaml:"ingressTimeout"`
 	WorkerHTTPTimeout  time.Duration `yaml:"workerHTTPTimeout"`
 	Line               LineConfig    `yaml:"line"`

@@ -40,10 +40,9 @@ services:
       MESSAGE_INGRESS_HTTP_ADDR: ":8080"
       MESSAGE_HTTP_TIMEOUT: 30s
       MESSAGE_INGRESS_TIMEOUT: 5s
-      MESSAGE_TENANT_CONFIG_PATH: /config/tenant.yaml
-      MESSAGE_DEFAULT_TENANT: local
+      MESSAGE_TENANT_CONFIG_PATH: /config
     volumes:
-      - ../../configs/local/base/message/tenant.yaml:/config/tenant.yaml:ro
+      - ../../configs/local/base/message/tenants:/config:ro
     ports:
       - "8083:8080"
     depends_on:
@@ -59,9 +58,9 @@ services:
       MESSAGE_WEBHOOK_HTTP_ADDR: ":8080"
       MESSAGE_HTTP_TIMEOUT: 30s
       MESSAGE_WEBHOOK_MAX_BODY: 1048576
-      MESSAGE_TENANT_CONFIG_PATH: /config/tenant.yaml
+      MESSAGE_TENANT_CONFIG_PATH: /config
     volumes:
-      - ../../configs/local/base/message/tenant.yaml:/config/tenant.yaml:ro
+      - ../../configs/local/base/message/tenants:/config:ro
     depends_on:
       - nats
 
@@ -72,9 +71,9 @@ services:
       args:
         BIN: worker
     environment:
-      MESSAGE_TENANT_CONFIG_PATH: /config/tenant.yaml
+      MESSAGE_TENANT_CONFIG_PATH: /config
     volumes:
-      - ../../configs/local/base/message/tenant.yaml:/config/tenant.yaml:ro
+      - ../../configs/local/base/message/tenants:/config:ro
     depends_on:
       - nats
 
@@ -103,7 +102,7 @@ services:
   nginx:
     image: nginx:1.27
     ports:
-      - "80:80"
+      - "8084:80"
     volumes:
       - ../../configs/local/reverse-proxy/conf.d:/etc/nginx/conf.d:ro
     depends_on:

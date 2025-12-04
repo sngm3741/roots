@@ -54,8 +54,7 @@ func main() {
 	})
 
 	r.Group(func(r chi.Router) {
-		defaultTenant := strings.TrimSpace(os.Getenv("MESSAGE_DEFAULT_TENANT"))
-		r.Use(handler.WithTenantOrDefault(defaultTenant))
+		r.Use(handler.WithTenant)
 		r.Mount("/", sendHandler.Router())
 	})
 
@@ -131,7 +130,7 @@ func (r *ingressResolver) ResolveIngress(tenantID string) (handler.IngressTenant
 	service := ingress.NewService(publisher, ingress.Subjects{
 		Line:    cfg.LineSubject,
 		Discord: cfg.DiscordSubject,
-	}, cfg.DefaultDestination)
+	})
 
 	deps := handler.IngressTenantDeps{
 		Service: service,

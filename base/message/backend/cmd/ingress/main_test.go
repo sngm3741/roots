@@ -27,8 +27,8 @@ func TestIngressResolver(t *testing.T) {
       webhookURL: https://discord.com/api/webhooks/x/y
       username: bot
       avatarURL: ""
-    defaultDestination: line
     ingressTimeout: 5s
+    workerHTTPTimeout: 5s
   discordOnly:
     natsURL: nats://example:4222
     discordSubject: discord.only
@@ -36,11 +36,8 @@ func TestIngressResolver(t *testing.T) {
       webhookURL: https://discord.com/api/webhooks/x/z
       username: bot
       avatarURL: ""
-    defaultDestination: discord
     ingressTimeout: 5s
-  empty:
-    natsURL: nats://example:4222
-    defaultDestination: line
+    workerHTTPTimeout: 5s
 `
 	dir := t.TempDir()
 	path := filepath.Join(dir, "tenants.yaml")
@@ -64,7 +61,6 @@ func TestIngressResolver(t *testing.T) {
 	}{
 		{name: "line+discord OK", tenantID: "both"},
 		{name: "discord only OK", tenantID: "discordOnly"},
-		{name: "subjects empty error", tenantID: "empty", wantError: true},
 	}
 
 	for _, tt := range tests {
@@ -90,7 +86,15 @@ func TestIngressResolver(t *testing.T) {
 
 func TestIngressResolver_Close(t *testing.T) {
 	t.Parallel()
-	cfg := `message: {}` // empty but valid YAML for close path
+	cfg := `message:
+  dummy:
+    natsURL: nats://example:4222
+    discordSubject: discord.only
+    discord:
+      webhookURL: https://discord.com/api/webhooks/x/z
+    ingressTimeout: 5s
+    workerHTTPTimeout: 5s
+`
 	dir := t.TempDir()
 	path := filepath.Join(dir, "t.yaml")
 	if err := os.WriteFile(path, []byte(cfg), 0o644); err != nil {
@@ -103,4 +107,68 @@ func TestIngressResolver_Close(t *testing.T) {
 	resolver := newIngressResolver(loader)
 	resolver.Close() // should not panic
 	time.Sleep(10 * time.Millisecond)
+}
+
+// NATS接続のキャッシュがURL単位で働くことを確認する。
+func TestIngressResolver_NatsConnCache(t *testing.T) {
+	t.Parallel()
+	cfg := `message:
+  a:
+    natsURL: nats://example:4222
+    discordSubject: discord.a
+    discord:
+      webhookURL: https://discord.com/api/webhooks/x/a
+    ingressTimeout: 5s
+    workerHTTPTimeout: 5s
+  b:
+    natsURL: nats://example:4222
+    lineSubject: line.b
+    line:
+      pushEndpoint: https://api.line.me/v2/bot/message/push
+      channelToken: tok
+    ingressTimeout: 5s
+    workerHTTPTimeout: 5s
+  c:
+    natsURL: nats://another:4222
+    discordSubject: discord.c
+    discord:
+      webhookURL: https://discord.com/api/webhooks/x/c
+    ingressTimeout: 5s
+    workerHTTPTimeout: 5s
+`
+	dir := t.TempDir()
+	path := filepath.Join(dir, "t.yaml")
+	if err := os.WriteFile(path, []byte(cfg), 0o644); err != nil {
+		t.Fatalf("write cfg: %v", err)
+	}
+	loader, err := tenant.NewLoader(path)
+	if err != nil {
+		t.Fatalf("loader: %v", err)
+	}
+
+	dialCount := map[string]int{}
+	resolver := newIngressResolver(loader)
+	resolver.dial = func(url string) (*natsgo.Conn, error) {
+		dialCount[url]++
+		return &natsgo.Conn{}, nil
+	}
+
+	// 同一URLの2テナントで1回だけdialされることを確認。
+	if _, err := resolver.ResolveIngress("a"); err != nil {
+		t.Fatalf("resolve a: %v", err)
+	}
+	if _, err := resolver.ResolveIngress("b"); err != nil {
+		t.Fatalf("resolve b: %v", err)
+	}
+	// 異なるURLは新規dialされる。
+	if _, err := resolver.ResolveIngress("c"); err != nil {
+		t.Fatalf("resolve c: %v", err)
+	}
+
+	if got := dialCount["nats://example:4222"]; got != 1 {
+		t.Fatalf("expected 1 dial for shared URL, got %d", got)
+	}
+	if got := dialCount["nats://another:4222"]; got != 1 {
+		t.Fatalf("expected 1 dial for another URL, got %d", got)
+	}
 }

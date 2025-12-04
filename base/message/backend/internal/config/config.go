@@ -31,7 +31,6 @@ type WorkerConfig struct {
 // IngressConfig は送信API側で使う設定。
 type IngressConfig struct {
 	HTTPAddr           string
-	DefaultDestination string
 	LineSubject        string
 	DiscordSubject     string
 	RequestTimeout     time.Duration
@@ -151,11 +150,10 @@ func LoadIngress() (AppConfig, error) {
 			URL: getEnv("NATS_URL", "nats://nats:4222"),
 		},
 		Ingress: IngressConfig{
-			HTTPAddr:           getEnv("MESSENGER_HTTP_ADDR", ":8080"),
-			DefaultDestination: strings.TrimSpace(os.Getenv("MESSENGER_DEFAULT_DESTINATION")),
-			LineSubject:        getEnv("MESSENGER_LINE_EVENTS_SUBJECT", "line.events"),
-			DiscordSubject:     getEnv("MESSENGER_DISCORD_INCOMING_SUBJECT", "discord.incoming"),
-			RequestTimeout:     parseDuration("MESSENGER_INGRESS_TIMEOUT", 5*time.Second),
+			HTTPAddr:       getEnv("MESSENGER_HTTP_ADDR", ":8080"),
+			LineSubject:    getEnv("MESSENGER_LINE_EVENTS_SUBJECT", "line.events"),
+			DiscordSubject: getEnv("MESSENGER_DISCORD_INCOMING_SUBJECT", "discord.incoming"),
+			RequestTimeout: parseDuration("MESSENGER_INGRESS_TIMEOUT", 5*time.Second),
 		},
 	}
 	if err := validateIngress(cfg); err != nil {

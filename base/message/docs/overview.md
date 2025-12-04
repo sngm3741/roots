@@ -13,3 +13,7 @@ httpのフレームワークはgoのchiを使用する
   - Host先頭ラベルでテナントIDを解決し、`MESSAGE_TENANT_CONFIG_PATH` で指す YAML (`infra/configs/templates/base/message/tenants/example.yaml`) から NATS URL / subject / Line token / Discord webhook / デフォルト宛先を取得する。
   - ingress/webhook はテナントごとに NATS publisher を引き当てて publish、worker はテナントごとに NATS購読を張り credentials を切り替える。NATS URL が同じ場合はコネクションをプール共有する。
   - env には HTTPアドレスと YAML パス程度のみを保持し、テナント固有値は YAML に集約する。
+- 逆プロキシ (ローカル):
+  - `infra/configs/local/reverse-proxy/conf.d/base.conf` で `*.auth.localhost` / `*.message.localhost` / `*.webhook.localhost` / `storage.localhost` を nginx で振り分ける。
+  - `(?<tenant>[^.]+)` をサブドメイン先頭から抜き出し、`Host` ヘッダをそのまま backend に渡すことで、ingress/webhook/auth が Host からテナントIDを判定できるようにしている。
+  - 実運用でもサブドメイン=テナントのDNS設定が前提。ローカルは compose の nginx を経由して本番と同じ解決手順を再現する。

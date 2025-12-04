@@ -9,8 +9,7 @@ coverage/
 # Environment files
 *.env
 **/.env
-infra/configs/*/*/message/tenant.yaml
-infra/configs/*/*/auth/tenant.yaml
+infra/configs/*/*/message/tenants/*.yaml
 
 # Node / frontend
 node_modules/

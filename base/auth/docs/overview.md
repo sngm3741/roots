@@ -10,3 +10,6 @@
   - Hostの先頭ラベルからテナントIDを解決し（例: `tenantA.auth.example.com` → `tenantA`）、`AUTH_TENANT_CONFIG_PATH` で指す YAML (`infra/configs/templates/base/auth/tenants/example.yaml`) からテナント別の origin / redirect / credentials を読み込む。
   - env には HTTPリスンアドレスと YAML パスのみを持たせ、テナント固有値は YAML に集約する。
   - 依存が増えても `internal/adapter/http/handler.WithTenant` とテナントリゾルバを通して DI することで、プロバイダ分割や将来のファイル再ロードに備える。
+- 逆プロキシ前提:
+  - ローカルでは `infra/configs/local/reverse-proxy/conf.d/base.conf` の nginx が `*.auth.localhost` を `auth:8080` に転送し、Hostヘッダを保持したまま渡す。これによりサブドメイン=テナントの解決を本番と同じ手順で再現する。
+  - 本番もサブドメインでテナントを識別するDNS/リバプロ設定が前提。Hostヘッダを改変しないことが必須。

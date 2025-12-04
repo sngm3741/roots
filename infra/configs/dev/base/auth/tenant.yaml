@@ -1,0 +1,28 @@
+auth:
+  dev:
+    allowedOrigins:
+      - https://app.dev.example.com
+    defaultRedirectOrigin: https://app.dev.example.com
+    redirectPath: /auth/result
+    line:
+      channelID: dev-line-channel
+      channelSecret: dev-line-secret
+      redirectURI: https://app.dev.example.com/auth/line/callback
+      scopes: ["profile", "openid"]
+      stateSecret: dev-line-state-secret
+      stateTTL: 10m
+      jwtSecret: dev-line-jwt-secret
+      jwtIssuer: auth-line
+      jwtAudience: app-dev-api
+      jwtExpiresIn: 24h
+    twitter:
+      clientID: dev-twitter-client
+      clientSecret: dev-twitter-secret
+      redirectURI: https://app.dev.example.com/auth/twitter/callback
+      scopes: ["tweet.read"]
+      stateSecret: dev-twitter-state-secret
+      stateTTL: 10m
+      jwtSecret: dev-twitter-jwt-secret
+      jwtIssuer: auth-twitter
+      jwtAudience: app-dev-api
+      jwtExpiresIn: 24h

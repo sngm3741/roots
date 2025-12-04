@@ -22,11 +22,17 @@ func TestWebhookResolver(t *testing.T) {
     line:
       pushEndpoint: https://api.line.me/v2/bot/message/push
       channelToken: tok
-    defaultDestination: line
     ingressTimeout: 5s
+    workerHTTPTimeout: 5s
+    discord:
+      webhookURL: https://example.invalid/webhook-a
   noLine:
     natsURL: nats://example:4222
-    defaultDestination: line
+    discordSubject: discord.b
+    discord:
+      webhookURL: https://example.invalid/webhook-b
+    ingressTimeout: 5s
+    workerHTTPTimeout: 5s
 `
 	dir := t.TempDir()
 	path := filepath.Join(dir, "tenants.yaml")

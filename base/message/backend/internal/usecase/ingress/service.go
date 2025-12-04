@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/sngm3741/roots/base/message/internal/domain/message"
@@ -23,25 +24,23 @@ type Subjects struct {
 
 // Service は送信要求を検証し、適切なサブジェクトにpublishする。
 type Service struct {
-	publisher   Publisher
-	subjects    Subjects
-	defaultDest string
+	publisher Publisher
+	subjects  Subjects
 }
 
 // NewService は送信サービスを生成する。
-func NewService(publisher Publisher, subjects Subjects, defaultDest string) *Service {
+func NewService(publisher Publisher, subjects Subjects) *Service {
 	return &Service{
-		publisher:   publisher,
-		subjects:    subjects,
-		defaultDest: defaultDest,
+		publisher: publisher,
+		subjects:  subjects,
 	}
 }
 
 // Send は宛先/本文を検証し、NATSにpublishする。
 func (s *Service) Send(ctx context.Context, destination, userID, text string) error {
-	dest := destination
+	dest := strings.TrimSpace(destination)
 	if dest == "" {
-		dest = s.defaultDest
+		return message.ErrEmptyDestination
 	}
 	msg, err := message.New(dest, userID, text, message.NowUTC())
 	if err != nil {

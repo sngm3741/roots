@@ -64,7 +64,7 @@ func TestTwitterHandler_LoginStart(t *testing.T) {
 
 			h.handleLoginStart(rr, req)
 			if rr.Code != tt.wantStatus {
-				t.Fatalf("status=%d want=%d", rr.Code, tt.wantStatus)
+				t.Fatalf("status=%d want=%d body=%s", rr.Code, tt.wantStatus, rr.Body.String())
 			}
 		})
 	}
