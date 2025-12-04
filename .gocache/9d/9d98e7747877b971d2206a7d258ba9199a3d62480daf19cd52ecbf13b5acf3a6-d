@@ -1,4 +1,0 @@
-./discord_worker.go
-./line_worker.go
-./discord_worker_test.go
-./line_worker_test.go

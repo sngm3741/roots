@@ -1,0 +1,15 @@
+message:
+  prod:
+    natsURL: nats://nats:4222
+    lineSubject: line.events
+    discordSubject: discord.incoming
+    line:
+      pushEndpoint: https://api.line.me/v2/bot/message/push
+      channelToken: prod-line-token
+    discord:
+      webhookURL: https://discord.com/api/webhooks/prod/prod
+      username: "[自動]prod"
+      avatarURL: ""
+    defaultDestination: line
+    ingressTimeout: 5s
+    workerHTTPTimeout: 5s

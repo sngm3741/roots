@@ -8,6 +8,6 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /out/app ./cmd/${BIN}
 
 FROM gcr.io/distroless/base-debian12:nonroot
 WORKDIR /app
-COPY --from=builder /out/app /app/${BIN}
+COPY --from=builder /out/app /app/app
 USER nonroot:nonroot
-ENTRYPOINT ["/app/${BIN}"]
+ENTRYPOINT ["/app/app"]

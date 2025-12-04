@@ -1,8 +1,0 @@
-=== RUN   TestParseLinePayload
---- PASS: TestParseLinePayload (0.00s)
-=== RUN   TestParseLinePayload_NoEvents
---- PASS: TestParseLinePayload_NoEvents (0.00s)
-=== RUN   TestParseLinePayload_InvalidJSON
---- PASS: TestParseLinePayload_InvalidJSON (0.00s)
-PASS
-ok  	github.com/sngm3741/roots/base/message/internal/usecase/webhook	2.620s

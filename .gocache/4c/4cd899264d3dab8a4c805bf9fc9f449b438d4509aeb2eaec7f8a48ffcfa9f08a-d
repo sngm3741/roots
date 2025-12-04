@@ -1,9 +1,0 @@
-# test log
-getenv TMPDIR
-getenv TMPDIR
-open /var/folders/cb/pmvx9kqd7yqgfsb4wt4rlz3w0000gn/T/TestIngressResolver1688600205/001/tenants.yaml
-open /var/folders/cb/pmvx9kqd7yqgfsb4wt4rlz3w0000gn/T/TestIngressResolver_Close2016366758/001/t.yaml
-open /var/folders/cb/pmvx9kqd7yqgfsb4wt4rlz3w0000gn/T/TestIngressResolver1688600205/001/tenants.yaml
-open /var/folders/cb/pmvx9kqd7yqgfsb4wt4rlz3w0000gn/T/TestIngressResolver_Close2016366758/001/t.yaml
-open /var/folders/cb/pmvx9kqd7yqgfsb4wt4rlz3w0000gn/T
-open /var/folders/cb/pmvx9kqd7yqgfsb4wt4rlz3w0000gn/T
