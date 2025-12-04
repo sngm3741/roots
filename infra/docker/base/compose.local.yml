@@ -24,9 +24,9 @@ services:
     environment:
       AUTH_HTTP_ADDR: ":8080"
       AUTH_HTTP_TIMEOUT: 30s
-      AUTH_TENANT_CONFIG_PATH: /config/tenants.yaml
+      AUTH_TENANT_CONFIG_PATH: /config/tenant.yaml
     volumes:
-      - ../../configs/local/base/auth/tenants/local.yaml:/config/tenants.yaml:ro
+      - ../../configs/local/base/auth/tenant.yaml:/config/tenant.yaml:ro
     depends_on:
       - nats
 
@@ -40,9 +40,12 @@ services:
       MESSAGE_INGRESS_HTTP_ADDR: ":8080"
       MESSAGE_HTTP_TIMEOUT: 30s
       MESSAGE_INGRESS_TIMEOUT: 5s
-      MESSAGE_TENANT_CONFIG_PATH: /config/tenants.yaml
+      MESSAGE_TENANT_CONFIG_PATH: /config/tenant.yaml
+      MESSAGE_DEFAULT_TENANT: local
     volumes:
-      - ../../configs/local/base/message/tenants/local.yaml:/config/tenants.yaml:ro
+      - ../../configs/local/base/message/tenant.yaml:/config/tenant.yaml:ro
+    ports:
+      - "8083:8080"
     depends_on:
       - nats
 
@@ -56,9 +59,9 @@ services:
       MESSAGE_WEBHOOK_HTTP_ADDR: ":8080"
       MESSAGE_HTTP_TIMEOUT: 30s
       MESSAGE_WEBHOOK_MAX_BODY: 1048576
-      MESSAGE_TENANT_CONFIG_PATH: /config/tenants.yaml
+      MESSAGE_TENANT_CONFIG_PATH: /config/tenant.yaml
     volumes:
-      - ../../configs/local/base/message/tenants/local.yaml:/config/tenants.yaml:ro
+      - ../../configs/local/base/message/tenant.yaml:/config/tenant.yaml:ro
     depends_on:
       - nats
 
@@ -69,9 +72,9 @@ services:
       args:
         BIN: worker
     environment:
-      MESSAGE_TENANT_CONFIG_PATH: /config/tenants.yaml
+      MESSAGE_TENANT_CONFIG_PATH: /config/tenant.yaml
     volumes:
-      - ../../configs/local/base/message/tenants/local.yaml:/config/tenants.yaml:ro
+      - ../../configs/local/base/message/tenant.yaml:/config/tenant.yaml:ro
     depends_on:
       - nats
 

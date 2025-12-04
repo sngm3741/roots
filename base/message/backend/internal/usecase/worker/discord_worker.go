@@ -44,7 +44,7 @@ func (w *DiscordWorker) Subscribe(nc *nats.Conn) error {
 type discordPayload struct {
 	Destination string    `json:"destination"`
 	UserID      string    `json:"userId"`
-	Message     string    `json:"message"`
+	Message     json.RawMessage `json:"message"`
 	ReceivedAt  time.Time `json:"receivedAt"`
 }
 
@@ -53,7 +53,10 @@ func (w *DiscordWorker) handleMessage(data []byte) error {
 	if err := json.Unmarshal(data, &payload); err != nil {
 		return fmt.Errorf("decode payload: %w", err)
 	}
-	text := strings.TrimSpace(payload.Message)
+	text, err := extractDiscordText(payload.Message)
+	if err != nil {
+		return err
+	}
 	if text == "" {
 		return errors.New("message empty")
 	}
@@ -62,6 +65,20 @@ func (w *DiscordWorker) handleMessage(data []byte) error {
 
 func (w *DiscordWorker) deliverToDiscord(text string) error {
 	return w.client.Send(text)
+}
+
+// extractDiscordText は RawMessage から message フィールドを取り出す。
+func extractDiscordText(raw json.RawMessage) (string, error) {
+	if len(raw) == 0 {
+		return "", errors.New("message empty")
+	}
+	var body struct {
+		Message string `json:"message"`
+	}
+	if err := json.Unmarshal(raw, &body); err != nil {
+		return "", err
+	}
+	return strings.TrimSpace(body.Message), nil
 }
 
 // BuildDiscordWorker はDiscordWorker購読をセットアップする。

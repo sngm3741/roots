@@ -54,7 +54,8 @@ func main() {
 	})
 
 	r.Group(func(r chi.Router) {
-		r.Use(handler.WithTenant)
+		defaultTenant := strings.TrimSpace(os.Getenv("MESSAGE_DEFAULT_TENANT"))
+		r.Use(handler.WithTenantOrDefault(defaultTenant))
 		r.Mount("/", sendHandler.Router())
 	})
 

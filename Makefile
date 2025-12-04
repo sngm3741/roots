@@ -1,5 +1,6 @@
 .PHONY: test test-auth test-message test-storage
 .PHONY: local-storage-up local-storage-down
+.PHONY: local-message-up local-message-down
 
 ROOT := $(CURDIR)
 GO ?= go
@@ -27,4 +28,12 @@ local-storage-up:
 
 # Storage-only 停止
 local-storage-down:
+	@docker compose -f infra/docker/base/compose.local.yml down
+
+# Message-only 起動（nats + message-ingress + message-worker）
+local-message-up:
+	@docker compose -f infra/docker/base/compose.local.yml up -d nats message-ingress message-worker
+
+# Message-only 停止
+local-message-down:
 	@docker compose -f infra/docker/base/compose.local.yml down
