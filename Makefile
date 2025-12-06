@@ -1,6 +1,7 @@
 .PHONY: test test-auth test-message test-storage
 .PHONY: local-storage-up local-storage-down
 .PHONY: local-message-up local-message-down
+.PHONY: encrypt-configs
 
 ROOT := $(CURDIR)
 GO ?= go
@@ -37,3 +38,15 @@ local-message-up:
 # Message-only 停止
 local-message-down:
 	@docker compose -f infra/docker/base/compose.local.yml down
+
+# infra/configs 配下の平文 .env / tenants/*.yaml を .enc.env / .enc.yaml に暗号化する
+# SOPS_AGE_KEY が未設定なら ~/.age/key.txt か ~/.config/sops/age/keys.txt から読み込む
+encrypt-configs:
+	@SOPS_CFG=$(ROOT)/.sops.yaml; \
+	if [ ! -f $$SOPS_CFG ]; then echo "missing $$SOPS_CFG"; exit 1; fi; \
+	if [ -z "$$SOPS_AGE_KEY" ]; then \
+	  if [ -f $$HOME/.age/key.txt ]; then export SOPS_AGE_KEY=$$(cat $$HOME/.age/key.txt); \
+	  elif [ -f $$HOME/.config/sops/age/keys.txt ]; then export SOPS_AGE_KEY=$$(grep -m1 '^AGE-SECRET-KEY-' $$HOME/.config/sops/age/keys.txt); \
+	  else echo "SOPS_AGE_KEY not set and no age key file found"; exit 1; fi; \
+	fi; \
+	SOPS_CONFIG=$$SOPS_CFG $(ROOT)/infra/scripts/config/encrypt_all.sh

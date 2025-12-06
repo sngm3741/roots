@@ -1,0 +1,9 @@
+creation_rules:
+  # YAML (平文/暗号化どちらも対象: tenant.yaml / tenant.enc.yaml)
+  - path_regex: "infra/configs/.+\\.ya?ml$"
+    age:
+      - "age10ylnv6zweltf3jeme355vt07myhree04445cxx8mpg59w880ycwqp44fhh"
+  # env (平文/暗号化どちらも対象: .env / .enc.env)
+  - path_regex: "infra/configs/.+\\.env$"
+    age:
+      - "age10ylnv6zweltf3jeme355vt07myhree04445cxx8mpg59w880ycwqp44fhh"

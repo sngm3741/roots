@@ -39,8 +39,10 @@ func TestTwitterHandler_LoginStart(t *testing.T) {
 		body       any
 		usecaseErr error
 		wantStatus int
+		headerOrigin string
 	}{
 		{name: "正常", body: map[string]string{"origin": "https://app.example.com"}, wantStatus: http.StatusOK},
+		{name: "正常_ヘッダOriginのみ", body: map[string]string{}, headerOrigin: "https://app.example.com", wantStatus: http.StatusOK},
 		{name: "origin未許可", body: map[string]string{"origin": "https://bad.example.com"}, wantStatus: http.StatusForbidden},
 		{name: "origin空", body: map[string]string{"origin": ""}, wantStatus: http.StatusBadRequest, usecaseErr: twitterlogin.ErrOriginRequired},
 		{name: "ボディ不正", body: "{", wantStatus: http.StatusBadRequest},
@@ -59,6 +61,9 @@ func TestTwitterHandler_LoginStart(t *testing.T) {
 				_ = json.NewEncoder(&buf).Encode(v)
 			}
 			req := httptest.NewRequest(http.MethodPost, "/twitter/login", &buf)
+			if tt.headerOrigin != "" {
+				req.Header.Set("Origin", tt.headerOrigin)
+			}
 			req = req.WithContext(context.WithValue(req.Context(), tenantKey{}, "tenant1"))
 			rr := httptest.NewRecorder()
 

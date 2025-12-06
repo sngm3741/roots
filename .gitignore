@@ -10,6 +10,9 @@ coverage/
 *.env
 **/.env
 infra/configs/*/*/message/tenants/*.yaml
+infra/configs/*/*/auth/tenants/*.yaml
+!infra/configs/**/.enc.env
+!infra/configs/**/*.enc.yaml
 
 # Node / frontend
 node_modules/

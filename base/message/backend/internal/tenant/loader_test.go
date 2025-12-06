@@ -75,7 +75,7 @@ func TestValidateConfig_Errors(t *testing.T) {
 				"a": {
 					NATSURL:           "nats://nats:4222",
 					DiscordSubject:    "discord.incoming.a",
-					Discord: DiscordConfig{WebhookURL: "https://discord.com/api/webhooks/x/y"},
+					Discord:           DiscordConfig{WebhookURL: "https://discord.com/api/webhooks/x/y"},
 					IngressTimeout:    0,
 					WorkerHTTPTimeout: -1,
 				},
