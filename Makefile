@@ -2,6 +2,7 @@
 .PHONY: local-storage-up local-storage-down
 .PHONY: local-message-up local-message-down
 .PHONY: encrypt-configs
+.PHONY: decrypt-configs
 
 ROOT := $(CURDIR)
 GO ?= go
@@ -50,3 +51,14 @@ encrypt-configs:
 	  else echo "SOPS_AGE_KEY not set and no age key file found"; exit 1; fi; \
 	fi; \
 	SOPS_CONFIG=$$SOPS_CFG $(ROOT)/infra/scripts/config/encrypt_all.sh
+
+# infra/configs 配下の .enc.env / .enc.yaml を平文に復号する
+decrypt-configs:
+	@SOPS_CFG=$(ROOT)/.sops.yaml; \
+	if [ ! -f $$SOPS_CFG ]; then echo "missing $$SOPS_CFG"; exit 1; fi; \
+	if [ -z "$$SOPS_AGE_KEY" ]; then \
+	  if [ -f $$HOME/.age/key.txt ]; then export SOPS_AGE_KEY=$$(cat $$HOME/.age/key.txt); \
+	  elif [ -f $$HOME/.config/sops/age/keys.txt ]; then export SOPS_AGE_KEY=$$(grep -m1 '^AGE-SECRET-KEY-' $$HOME/.config/sops/age/keys.txt); \
+	  else echo "SOPS_AGE_KEY not set and no age key file found"; exit 1; fi; \
+	fi; \
+	SOPS_CONFIG=$$SOPS_CFG $(ROOT)/infra/scripts/config/decrypt_all.sh
