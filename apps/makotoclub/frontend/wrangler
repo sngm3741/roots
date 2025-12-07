@@ -1,0 +1,43 @@
+
+> preview
+> npm run build && wrangler pages dev ./build/client --config wrangler.toml # build - pages dev ./build/client wrangler.toml
+
+
+> build
+> react-router build
+
+vite v7.2.6 building client environment for production...
+transforming...
+✓ 44 modules transformed.
+rendering chunks...
+computing gzip size...
+build/client/.vite/manifest.json                  1.37 kB │ gzip:  0.39 kB
+build/client/assets/logo-dark-pX2395Y0.svg        6.10 kB │ gzip:  2.51 kB
+build/client/assets/logo-light-CVbx2LBR.svg       6.13 kB │ gzip:  2.52 kB
+build/client/assets/root-BrAzMOzt.css             7.72 kB │ gzip:  2.38 kB
+build/client/assets/root-BPptM8UG.js              1.09 kB │ gzip:  0.62 kB
+build/client/assets/home-CEZqEQix.js              3.70 kB │ gzip:  1.70 kB
+build/client/assets/chunk-WWGJGFF6-DiwFlXBc.js  120.27 kB │ gzip: 40.70 kB
+build/client/assets/entry.client-Cf1gF1RK.js    190.51 kB │ gzip: 59.94 kB
+✓ built in 512ms
+vite v7.2.6 building ssr environment for production...
+transforming...
+✓ 9 modules transformed.
+rendering chunks...
+build/server/.vite/manifest.json                0.58 kB
+build/server/assets/logo-dark-pX2395Y0.svg      6.10 kB
+build/server/assets/logo-light-CVbx2LBR.svg     6.13 kB
+build/server/assets/server-build-BrAzMOzt.css   7.72 kB
+build/server/index.js                          11.12 kB
+
+✓ 3 assets cleaned from React Router server build.
+build/client/assets/logo-dark-pX2395Y0.svg
+build/client/assets/logo-light-CVbx2LBR.svg
+build/server/assets/server-build-BrAzMOzt.css
+
+✓ built in 27ms
+
+ ⛅️ wrangler 3.114.15 (update available 4.53.0)
+-----------------------------------------------
+
+

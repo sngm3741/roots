@@ -1,0 +1,9 @@
+name = "makotoclub-frontend"
+compatibility_date = "2025-02-07"
+pages_build_output_dir = "./build/client"
+compatibility_flags = ["nodejs_compat"]
+
+[[d1_databases]]
+binding = "DB"                # Functions内で context.cloudflare.env.DB で参照
+database_name = "makotoclub"  # 実際のDB名は wrangler で作成時に調整
+database_id = "13a8135d-e968-458b-986b-b6047f2c859f" # デプロイ時に wrangler d1 create で取得したIDを設定
