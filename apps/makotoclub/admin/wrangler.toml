@@ -1,0 +1,6 @@
+name = "makotoclub-admin"
+compatibility_date = "2025-02-07"
+compatibility_flags = ["nodejs_compat"]
+
+# Pages 用：ビルド成果物
+pages_build_output_dir = "dist"
