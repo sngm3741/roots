@@ -1,0 +1,51 @@
+.env
+# Go build cache
+.gocache/
+__debug_bin
+*.test
+*.out
+coverage/
+
+# Environment files
+*.env
+**/.env
+infra/configs/*/*/message/tenants/*.yaml
+infra/configs/*/*/auth/tenants/*.yaml
+!infra/configs/**/.enc.env
+!infra/configs/**/*.enc.yaml
+
+# Node / frontend
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json
+!apps/makotoclub/frontend/package-lock.json
+pnpm-lock.yaml
+yarn.lock
+.next/
+.nuxt/
+.turbo/
+dist/
+build/
+.parcel-cache/
+.cache/
+/.vercel
+/.remix-cache
+.remix/
+
+# Editors / OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Docker / compose artifacts
+*.pid
+*.seed
+*.log
+docker-compose.override.yml
+
+__before/
+.wrangler/

@@ -1,0 +1,121 @@
+name: Pages - makotoclub-frontend
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - apps/makotoclub/frontend/**
+      - .github/workflows/pages-makotoclub-frontend.yml
+  pull_request:
+    paths:
+      - apps/makotoclub/frontend/**
+      - .github/workflows/pages-makotoclub-frontend.yml
+
+concurrency:
+  group: pages-makotoclub-frontend-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    outputs:
+      frontend_present: ${{ steps.check_frontend.outputs.exists }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+      - name: Check frontend directory exists
+        id: check_frontend
+        run: |
+          if [ -d "apps/makotoclub/frontend" ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "apps/makotoclub/frontend not found; skipping verify."
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+        if: steps.check_frontend.outputs.exists == 'true'
+      - run: |
+          pwd
+          ls -la
+          ls -la apps/makotoclub/frontend
+        if: steps.check_frontend.outputs.exists == 'true'
+        working-directory: .
+      - run: npm ci
+        working-directory: apps/makotoclub/frontend
+        if: steps.check_frontend.outputs.exists == 'true'
+      - run: npm run build
+        working-directory: apps/makotoclub/frontend
+        if: steps.check_frontend.outputs.exists == 'true'
+      - run: npm run --if-present test
+        working-directory: apps/makotoclub/frontend
+        if: steps.check_frontend.outputs.exists == 'true'
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        if: steps.check_frontend.outputs.exists == 'true'
+        with:
+          name: makotoclub-frontend-build
+          path: apps/makotoclub/frontend/build
+          if-no-files-found: error
+          retention-days: 1
+
+  deploy_production:
+    needs: verify
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.verify.outputs.frontend_present == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm i -g wrangler@3
+      - uses: actions/download-artifact@v4
+        with:
+          name: makotoclub-frontend-build
+          path: apps/makotoclub/frontend/build
+      - run: npm ci
+        working-directory: apps/makotoclub/frontend
+      - run: wrangler pages deploy build/client --project-name makotoclub-frontend
+        working-directory: apps/makotoclub/frontend
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+  deploy_preview:
+    # PR でも早期確認のため preview デプロイを行う（同一リポジトリの PR のみに限定）
+    needs: verify
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && needs.verify.outputs.frontend_present == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm i -g wrangler@3
+      - uses: actions/download-artifact@v4
+        with:
+          name: makotoclub-frontend-build
+          path: apps/makotoclub/frontend/build
+      - run: npm ci
+        working-directory: apps/makotoclub/frontend
+      - name: Sanitize branch name
+        id: branch
+        run: |
+          RAW="${GITHUB_HEAD_REF:-${GITHUB_REF_NAME}}"
+          SANITIZED="${RAW//\//-}"
+          echo "name=$SANITIZED" >> "$GITHUB_OUTPUT"
+      - run: wrangler pages deploy build/client --project-name makotoclub-frontend --branch ${{ steps.branch.outputs.name }}
+        working-directory: apps/makotoclub/frontend
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

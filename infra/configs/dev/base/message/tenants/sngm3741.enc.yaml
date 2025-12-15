@@ -1,0 +1,29 @@
+message:
+    sngm3741:
+        natsURL: ENC[AES256_GCM,data:BGhk+e13PSobPDZ5qtp5uw==,iv:Ky9NJM6ZL42nA/K2PooV8P29Mm7OZGz28qgS7yOgUf8=,tag:ldIQ25xaXESAz1v7uWdmIQ==,type:str]
+        lineSubject: ENC[AES256_GCM,data:383VFxnhi44uukuYUOnjZgArvGk=,iv:squRw7EE+9JKyLiOn/w1hEzOqZ/umUxu0Rys3wws4ms=,tag:Bxi15V14ozwSxTCVSXnwjQ==,type:str]
+        discordSubject: ENC[AES256_GCM,data:J0hw4FeRouclYBsSVh4HNQuAtS27VP46nw==,iv:J5C0iEt9qLqMcdEajHxqvN6HzMBNVhcsHM6zdvpvUJ0=,tag:TALsOZ4PY5NtQ5mRPcgy2A==,type:str]
+        line:
+            pushEndpoint: ENC[AES256_GCM,data:rMChalIz0BxuIb3ASj9N4gmxXbPTHEHGkLVegd4qdZMydI+MkVHn,iv:zpNAcwffuAGiV4MmAORQrJBO9noZ6pgEXjcK9NsGBRk=,tag:3KSkLlapO3x1uTsX68EnsA==,type:str]
+            channelToken: ENC[AES256_GCM,data:EWwS9IeFgc5Gr26G8e8=,iv:+irNDtgFRpELW24PKwqn0K21p9/mKFUT45VS7bZSr2w=,tag:Y7SXSSek6ZFzLMl366aGtg==,type:str]
+        discord:
+            webhookURL: ENC[AES256_GCM,data:JvQm/aMKreU//Pxzoshxshtsi7uKm1dZ0urVt66JyQjVn2T/0HbOmnAua7mk3ma8/psM5bvki5EV+v0qdOHzHzW2E4daYicpENLBtVQGqB76pBVK0A1sxe0OBJi7LL0xTa3tsPO+rA8dh+wvLHNDllieA3XZNeCtIg==,iv:CBuV5fzaN2xdqh3bgHb+mIV9h8oqSCQyl2THdbz9dXc=,tag:raoic1PC44dZ0e7KbYmdiA==,type:str]
+            username: ENC[AES256_GCM,data:/noqlsL+Ls8m2nI0kKQDqg==,iv:4BEIDXb+RvgEsvYQKjDrg8q572fSVXDQR3Nrl+Haej4=,tag:SV2hUD5RGa2x9JsrufucVA==,type:str]
+            avatarURL: ""
+        ingressTimeout: ENC[AES256_GCM,data:Y1M=,iv:fi+AuNxAHF+1Xc/mbImorQj+Lb+KaGJpCD1+vzivPVY=,tag:oRNb/8Tt2JZLDj9JKUmCdQ==,type:str]
+        workerHTTPTimeout: ENC[AES256_GCM,data:kfc=,iv:LRH38apT6f+PlDVwNdXjsNU3lTdDqQCXY6gXzz9gn4Y=,tag:yG95O5RJyfmErKGBhwt9vg==,type:str]
+sops:
+    age:
+        - recipient: age10ylnv6zweltf3jeme355vt07myhree04445cxx8mpg59w880ycwqp44fhh
+          enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBFSDBHNUxWN05qNVFSRlp4
+            Z2hJcno2ZW9UeXYwbW1jUVJ1OHFHVFowS2cwCkZVZ0tLYjAyTFJiUE5VQ3JYYzBi
+            YVhlOW1wV0lUNGJnQjZURUh3TWRqa2sKLS0tIG9MTnV0MDFkcU51eGxGb0puVDFZ
+            TnpTUGM0YzdwUHF0bGd1TmVkZFVWM28KLM92a+7m9JTQ0k/wQclwFbJXQilKiEe7
+            LI64nRiwxJ4RgoGUOkteEGqm+BPyKrE8YF6F6RARSjG7//uW2A/lhQ==
+            -----END AGE ENCRYPTED FILE-----
+    lastmodified: "2025-12-14T14:44:16Z"
+    mac: ENC[AES256_GCM,data:wQlQbUctYf5JSrkgBt/BjQFpNyUCROSDYcdCVY/+EEnIW3HPQC8nZo7eXCYrPcYDonI1itQLIeQaBJFWasWDzwXjh2BCEBwkdYdM2IO/xDXSWxfsRNtcr+X5d/6rQflwJB0MPJX2Z7dr7Rkbew15fts6V2+nIGdONcrnbP9beSc=,iv:iWRQ3PEJdtQcRyTNcJlPnvQFMH4wArVpdCZOJBZ/imk=,tag:g7eGMIWxbUJ8O5almwKT/w==,type:str]
+    unencrypted_suffix: _unencrypted
+    version: 3.11.0

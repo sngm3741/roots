@@ -1,0 +1,15 @@
+name = "makotoclub-frontend"
+compatibility_date = "2025-02-07"
+compatibility_flags = ["nodejs_compat"]
+
+# Pages 用：公開する静的アセット
+pages_build_output_dir = "build/client"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "makotoclub"
+database_id = "13a8135d-e968-458b-986b-b6047f2c859f"
+
+[[r2_buckets]]
+binding = "makotoclub_assets"
+bucket_name = "makotoclub-assets"

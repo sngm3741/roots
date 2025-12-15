@@ -1,0 +1,40 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif,
+    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+}
+
+:root {
+  --mc-bg: #fff9fb;
+  --mc-fg: #0f172a;
+  --mc-accent: #f472b6;
+  --mc-accent-2: #a855f7;
+}
+
+html,
+body {
+  @apply min-h-screen;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(244, 114, 182, 0.16), transparent 32%),
+    radial-gradient(circle at 82% 5%, rgba(168, 85, 247, 0.12), transparent 28%),
+    linear-gradient(180deg, #fff9fb 0%, #ffffff 40%, #fff8ff 100%);
+  color: var(--mc-fg);
+}
+
+.glass-surface {
+  background: rgba(255, 255, 255, 0.86);
+  border: 1px solid rgba(244, 169, 196, 0.32);
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.08), 0 10px 24px rgba(244, 114, 182, 0.12);
+  backdrop-filter: blur(18px);
+}
+
+.card-surface {
+  background: #ffffff;
+  border: 1px solid rgba(244, 169, 196, 0.2);
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.08), 0 10px 30px rgba(244, 114, 182, 0.12);
+}
+
+*::selection {
+  background-color: rgba(244, 114, 182, 0.25);
+}

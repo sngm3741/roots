@@ -1,0 +1,13 @@
+.DS_Store
+.env
+/node_modules/
+
+# React Router
+/.react-router/
+/build/
+
+# Cloudflare Wrangler local state/cache (generated)
+.wrangler/state/
+.wrangler/tmp/
+.wrangler/registry/
+.wrangler/logs/
