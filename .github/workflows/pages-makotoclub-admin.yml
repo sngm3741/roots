@@ -22,6 +22,8 @@ jobs:
   verify:
     name: verify
     runs-on: ubuntu-latest
+    outputs:
+      admin_present: ${{ steps.check_admin.outputs.exists }}
     defaults:
       run:
         working-directory: apps/makotoclub/admin
@@ -29,19 +31,32 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Check admin directory exists
+        id: check_admin
+        run: |
+          if [ -d "apps/makotoclub/admin" ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "apps/makotoclub/admin not found; skipping admin workflow."
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
           cache-dependency-path: apps/makotoclub/admin/package-lock.json
+        if: steps.check_admin.outputs.exists == 'true'
 
       - name: Install
         run: npm ci
+        if: steps.check_admin.outputs.exists == 'true'
 
       # ここはプロジェクトの実態に合わせて lint/test/build を調整してください
       - name: Build
         run: npm run build
+        if: steps.check_admin.outputs.exists == 'true'
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
@@ -50,12 +65,13 @@ jobs:
           path: apps/makotoclub/admin/dist
           if-no-files-found: error
           retention-days: 7
+        if: steps.check_admin.outputs.exists == 'true'
 
   deploy_production:
     name: deploy_production
     needs: verify
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.verify.outputs.admin_present == 'true'
     defaults:
       run:
         working-directory: apps/makotoclub/admin
@@ -115,7 +131,7 @@ jobs:
     name: deploy_preview
     needs: verify
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' && needs.verify.outputs.admin_present == 'true'
     defaults:
       run:
         working-directory: apps/makotoclub/admin
