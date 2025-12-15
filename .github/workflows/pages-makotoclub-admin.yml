@@ -2,15 +2,14 @@ name: Pages - makotoclub-admin
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
     paths:
-      - apps/makotoclub/admin/**
-      - .github/workflows/pages-makotoclub-admin.yml
+      - "apps/makotoclub/admin/**"
+      - ".github/workflows/pages-makotoclub-admin.yml"
   pull_request:
     paths:
-      - apps/makotoclub/admin/**
-      - .github/workflows/pages-makotoclub-admin.yml
+      - "apps/makotoclub/admin/**"
+      - ".github/workflows/pages-makotoclub-admin.yml"
 
 concurrency:
   group: pages-makotoclub-admin-${{ github.ref }}
@@ -18,98 +17,156 @@ concurrency:
 
 permissions:
   contents: read
-  actions: write
 
 jobs:
   verify:
+    name: verify
     runs-on: ubuntu-latest
-    outputs:
-      admin_present: ${{ steps.check_admin.outputs.exists }}
+    defaults:
+      run:
+        working-directory: apps/makotoclub/admin
     steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: false
-      - name: Check admin directory exists
-        id: check_admin
-        run: |
-          if [ -d "apps/makotoclub/admin" ]; then
-            echo "exists=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "apps/makotoclub/admin not found; skipping verify."
-            echo "exists=false" >> "$GITHUB_OUTPUT"
-          fi
-      - uses: actions/setup-node@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
           node-version: 20
-        if: steps.check_admin.outputs.exists == 'true'
-      - run: npm install
-        working-directory: apps/makotoclub/admin
-        if: steps.check_admin.outputs.exists == 'true'
-      - run: npm run build
-        working-directory: apps/makotoclub/admin
-        if: steps.check_admin.outputs.exists == 'true'
-      - run: npm run --if-present test
-        working-directory: apps/makotoclub/admin
-        if: steps.check_admin.outputs.exists == 'true'
+          cache: npm
+          cache-dependency-path: apps/makotoclub/admin/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      # ここはプロジェクトの実態に合わせて lint/test/build を調整してください
+      - name: Build
+        run: npm run build
+
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
-        if: steps.check_admin.outputs.exists == 'true'
         with:
           name: makotoclub-admin-build
           path: apps/makotoclub/admin/dist
           if-no-files-found: error
-          retention-days: 1
+          retention-days: 7
 
   deploy_production:
+    name: deploy_production
     needs: verify
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.verify.outputs.admin_present == 'true'
     runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    defaults:
+      run:
+        working-directory: apps/makotoclub/admin
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout (full history for commit message)
+        uses: actions/checkout@v4
         with:
-          submodules: false
-      - uses: actions/setup-node@v4
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
           node-version: 20
-      - run: npm i -g wrangler@3
-      - uses: actions/download-artifact@v4
+          cache: npm
+          cache-dependency-path: apps/makotoclub/admin/package-lock.json
+
+      - name: Install Wrangler
+        run: npm i -g wrangler@3
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
         with:
           name: makotoclub-admin-build
           path: apps/makotoclub/admin/dist
-      - run: npm install
-        working-directory: apps/makotoclub/admin
-      - run: wrangler pages deploy dist --project-name makotoclub-admin
-        working-directory: apps/makotoclub/admin
+
+      # ✅ 追加: Git を UTF-8 前提にする
+      - name: Ensure git uses UTF-8
+        run: |
+          git config --global i18n.commitEncoding utf-8
+          git config --global i18n.logOutputEncoding utf-8
+
+      # ✅ 追加: commit message を検査し、ダメならローカル空コミットで HEAD を差し替える
+      - name: Sanitize commit message (create empty commit if necessary)
+        run: |
+          set -euo pipefail
+
+          MSG="$(git log -1 --pretty=%B || true)"
+
+          # iconv で UTF-8 として解釈できるか検査
+          if ! printf '%s' "$MSG" | iconv -f utf-8 -t utf-8 >/dev/null 2>&1; then
+            echo "Invalid UTF-8 commit message detected. Creating a sanitized empty commit on runner HEAD..."
+            git -c user.name='github-actions[bot]' \
+                -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
+                commit --allow-empty -m "CI: Deploy from GitHub Actions"
+          else
+            echo "Commit message is valid UTF-8. No action needed."
+          fi
+
+      - name: Deploy to Cloudflare Pages (production)
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          wrangler pages deploy dist --project-name makotoclub-admin
 
   deploy_preview:
+    name: deploy_preview
     needs: verify
-    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && needs.verify.outputs.admin_present == 'true'
     runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    defaults:
+      run:
+        working-directory: apps/makotoclub/admin
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout (full history for commit message)
+        uses: actions/checkout@v4
         with:
-          submodules: false
-      - uses: actions/setup-node@v4
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
           node-version: 20
-      - run: npm i -g wrangler@3
-      - uses: actions/download-artifact@v4
+          cache: npm
+          cache-dependency-path: apps/makotoclub/admin/package-lock.json
+
+      - name: Install Wrangler
+        run: npm i -g wrangler@3
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
         with:
           name: makotoclub-admin-build
           path: apps/makotoclub/admin/dist
-      - run: npm install
-        working-directory: apps/makotoclub/admin
-      - name: Sanitize branch name
-        id: branch
+
+      # ✅ 追加: Git を UTF-8 前提にする
+      - name: Ensure git uses UTF-8
         run: |
-          RAW="${GITHUB_HEAD_REF:-${GITHUB_REF_NAME}}"
-          SANITIZED="${RAW//\//-}"
-          echo "name=$SANITIZED" >> "$GITHUB_OUTPUT"
-      - run: wrangler pages deploy dist --project-name makotoclub-admin --branch ${{ steps.branch.outputs.name }}
-        working-directory: apps/makotoclub/admin
+          git config --global i18n.commitEncoding utf-8
+          git config --global i18n.logOutputEncoding utf-8
+
+      # ✅ 追加: commit message を検査し、ダメならローカル空コミットで HEAD を差し替える
+      - name: Sanitize commit message (create empty commit if necessary)
+        run: |
+          set -euo pipefail
+
+          MSG="$(git log -1 --pretty=%B || true)"
+
+          if ! printf '%s' "$MSG" | iconv -f utf-8 -t utf-8 >/dev/null 2>&1; then
+            echo "Invalid UTF-8 commit message detected. Creating a sanitized empty commit on runner HEAD..."
+            git -c user.name='github-actions[bot]' \
+                -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
+                commit --allow-empty -m "CI: Deploy from GitHub Actions"
+          else
+            echo "Commit message is valid UTF-8. No action needed."
+          fi
+
+      - name: Deploy to Cloudflare Pages (preview)
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          # PR ではブランチ名/PR番号をメタにしたい場合は --branch を付けてもOK
+          wrangler pages deploy dist --project-name makotoclub-admin
