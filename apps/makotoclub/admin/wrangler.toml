@@ -4,3 +4,8 @@ compatibility_flags = ["nodejs_compat"]
 
 # Pages 用：ビルド成果物
 pages_build_output_dir = "dist"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "makotoclub"
+database_id = "13a8135d-e968-458b-986b-b6047f2c859f"
