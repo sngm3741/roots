@@ -1,0 +1,114 @@
+name: Pages - makotoclub-admin
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - apps/makotoclub/admin/**
+      - .github/workflows/pages-makotoclub-admin.yml
+  pull_request:
+    paths:
+      - apps/makotoclub/admin/**
+      - .github/workflows/pages-makotoclub-admin.yml
+
+concurrency:
+  group: pages-makotoclub-admin-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    outputs:
+      admin_present: ${{ steps.check_admin.outputs.exists }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+      - name: Check admin directory exists
+        id: check_admin
+        run: |
+          if [ -d "apps/makotoclub/admin" ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "apps/makotoclub/admin not found; skipping verify."
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+        if: steps.check_admin.outputs.exists == 'true'
+      - run: npm install
+        working-directory: apps/makotoclub/admin
+        if: steps.check_admin.outputs.exists == 'true'
+      - run: npm run build
+        working-directory: apps/makotoclub/admin
+        if: steps.check_admin.outputs.exists == 'true'
+      - run: npm run --if-present test
+        working-directory: apps/makotoclub/admin
+        if: steps.check_admin.outputs.exists == 'true'
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        if: steps.check_admin.outputs.exists == 'true'
+        with:
+          name: makotoclub-admin-build
+          path: apps/makotoclub/admin/dist
+          if-no-files-found: error
+          retention-days: 1
+
+  deploy_production:
+    needs: verify
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.verify.outputs.admin_present == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm i -g wrangler@3
+      - uses: actions/download-artifact@v4
+        with:
+          name: makotoclub-admin-build
+          path: apps/makotoclub/admin/dist
+      - run: npm install
+        working-directory: apps/makotoclub/admin
+      - run: wrangler pages deploy dist --project-name makotoclub-admin
+        working-directory: apps/makotoclub/admin
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+  deploy_preview:
+    needs: verify
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && needs.verify.outputs.admin_present == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm i -g wrangler@3
+      - uses: actions/download-artifact@v4
+        with:
+          name: makotoclub-admin-build
+          path: apps/makotoclub/admin/dist
+      - run: npm install
+        working-directory: apps/makotoclub/admin
+      - name: Sanitize branch name
+        id: branch
+        run: |
+          RAW="${GITHUB_HEAD_REF:-${GITHUB_REF_NAME}}"
+          SANITIZED="${RAW//\//-}"
+          echo "name=$SANITIZED" >> "$GITHUB_OUTPUT"
+      - run: wrangler pages deploy dist --project-name makotoclub-admin --branch ${{ steps.branch.outputs.name }}
+        working-directory: apps/makotoclub/admin
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
