@@ -95,9 +95,7 @@ export function SurveyCard({ survey, className }: Props) {
             <span>稼ぎ</span>
           </div>
           <span className="text-sm text-gray-900">
-            {Number.isFinite(survey.averageEarning)
-              ? `${(survey.averageEarning / 10000).toFixed(0)}万円`
-              : "-"}
+            {Number.isFinite(survey.averageEarning) ? `${survey.averageEarning}万円` : "-"}
           </span>
         </div>
         <div className="flex items-center justify-between">

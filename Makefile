@@ -3,7 +3,7 @@
 .PHONY: local-message-up local-message-down
 .PHONY: encrypt-configs
 .PHONY: decrypt-configs
-.PHONY: makotoclub-frontend-preview
+.PHONY: makotoclub-frontend-preview makotoclub-admin-preview
 
 ROOT := $(CURDIR)
 GO ?= go
@@ -67,3 +67,6 @@ decrypt-configs:
 # makotoclub frontend
 makotoclub-frontend-preview:
 	@cd apps/makotoclub/frontend && npm run preview
+
+makotoclub-admin-preview:
+	@cd apps/makotoclub/admin && npm run preview

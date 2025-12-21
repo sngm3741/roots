@@ -86,7 +86,9 @@ export async function action({ request, context }: ActionFunctionArgs) {
   const earnVal = earnRaw === null || earnRaw === "" ? NaN : Number(earnRaw);
   const ratingVal = ratingRaw === null || ratingRaw === "" ? NaN : Number(ratingRaw);
   const castBackVal =
-    castBackRaw === null || castBackRaw === "" ? NaN : Number((castBackRaw as string).trim());
+    castBackRaw === null || castBackRaw === "" ? null : Number((castBackRaw as string).trim());
+  const castBackProvided = castBackVal !== null;
+  const castBackValid = castBackVal !== null && Number.isFinite(castBackVal);
 
   if (
     !Number.isFinite(ageVal) ||
@@ -102,9 +104,9 @@ export async function action({ request, context }: ActionFunctionArgs) {
     waitVal > 24 ||
     earnVal < 0 ||
     earnVal > 30 ||
-    castBackVal < 0 ||
-    castBackVal > 30000 ||
-    !Number.isFinite(castBackVal) ||
+    (castBackProvided && !castBackValid) ||
+    (castBackValid && castBackVal < 0) ||
+    (castBackValid && castBackVal > 30000) ||
     ratingVal < 0 ||
     ratingVal > 5
   ) {
@@ -143,7 +145,7 @@ export async function action({ request, context }: ActionFunctionArgs) {
     specScore: specVal,
     waitTimeHours: waitVal,
     averageEarning: earnVal,
-    castBack: castBackVal,
+    castBack: castBackValid ? castBackVal : undefined,
     customerComment: (formData.get("customerComment") as string | null)?.trim() || undefined,
     staffComment: (formData.get("staffComment") as string | null)?.trim() || undefined,
     workEnvironmentComment:
@@ -226,7 +228,6 @@ export default function NewSurvey() {
     ].slice(0, MAX_IMAGES);
     setSelectedFiles(next);
     syncInputFiles(next.map((n) => n.file));
-    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const handleRemoveFile = (index: number) => {

@@ -1,12 +1,12 @@
 -- Sample seed data for local preview
 
 INSERT OR REPLACE INTO stores (
-  id, name, branch_name, prefecture, area, industry, genre, unit_price,
-  business_hours_open, business_hours_close, average_rating, created_at, updated_at
+  id, name, branch_name, prefecture, area, industry, genre,
+  business_hours_open, business_hours_close, created_at, updated_at
 ) VALUES
-('store-001', 'やりすぎ娘', '新宿店', '東京都', '新宿', 'ソープ', '高級店', '10000', '10:00', '24:00', 4.5, DATETIME('now'), DATETIME('now')),
-('store-002', 'メンエスLounge', '梅田', '大阪府', '梅田', 'メンエス', 'スタンダード', '8000', '12:00', '23:00', 4.2, DATETIME('now'), DATETIME('now')),
-('store-003', 'デリヘル雅', '栄', '愛知県', '栄', 'デリヘル', '学園系', '12000', '11:00', '27:00', 4.0, DATETIME('now'), DATETIME('now'));
+('store-001', 'やりすぎ娘', '新宿店', '東京都', '新宿', 'ソープ', '高級店', '10:00', '24:00', DATETIME('now'), DATETIME('now')),
+('store-002', 'メンエスLounge', '梅田', '大阪府', '梅田', 'メンエス', 'スタンダード', '12:00', '23:00', DATETIME('now'), DATETIME('now')),
+('store-003', 'デリヘル雅', '栄', '愛知県', '栄', 'デリヘル', '学園系', '11:00', '27:00', DATETIME('now'), DATETIME('now'));
 
 INSERT OR REPLACE INTO surveys (
   id, store_id, store_name, store_branch, store_prefecture, store_area,

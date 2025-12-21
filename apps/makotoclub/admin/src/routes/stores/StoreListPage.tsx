@@ -2,6 +2,9 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { adminApi } from "../../api/client";
 import { Store } from "../../types";
+import { Button } from "../../components/ui/button";
+import { Card } from "../../components/ui/card";
+import { Badge } from "../../components/ui/badge";
 
 export const StoreListPage = () => {
   const [stores, setStores] = useState<Store[]>([]);
@@ -36,47 +39,59 @@ export const StoreListPage = () => {
   }, []);
 
   return (
-    <div>
-      <div className="section-header">
-        <div>
-          <h1>店舗管理</h1>
-          <p>店舗情報の作成・編集・削除を行います。</p>
+    <div className="space-y-5">
+      <div className="flex items-center justify-between gap-3">
+        <div className="space-y-1">
+          <p className="text-sm font-semibold text-pink-500">Store Manager</p>
+          <h1 className="text-2xl font-bold">店舗管理</h1>
+          <p className="text-sm text-slate-600">店舗情報の作成・編集・削除を行います。</p>
         </div>
-        <Link to="/stores/new" className="button">
-          新規追加
-        </Link>
+        <Button asChild>
+          <Link to="/stores/new">新規追加</Link>
+        </Button>
       </div>
 
-      {error && <div className="alert">{error}</div>}
+      {error && <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-red-700">{error}</div>}
+
       {loading ? (
-        <p>読込中...</p>
+        <p className="text-sm text-slate-600">読込中...</p>
       ) : (
-        <div className="list-grid">
+        <div className="grid gap-4 md:grid-cols-2">
           {stores.map((store) => (
-            <div key={store.id} className="card">
-              <div style={{ display: "flex", justifyContent: "space-between", gap: "0.5rem" }}>
-                <div>
-                  <h3 style={{ margin: "0 0 0.5rem" }}>{store.storeName}</h3>
-                  <p style={{ margin: 0, color: "#475569" }}>
-                    {store.prefecture} {store.area ?? ""} / {store.category}
+            <Card key={store.id} className="flex flex-col gap-4">
+              <div className="flex items-start justify-between gap-4">
+                <div className="space-y-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="text-lg font-semibold">
+                      {store.storeName}
+                      {store.branchName ? ` ${store.branchName}` : ""}
+                    </h3>
+                    <Badge>{store.category}</Badge>
+                  </div>
+                  <p className="text-sm text-slate-600">
+                    {store.prefecture} {store.area ?? ""} / {store.genre ?? "ジャンル未設定"}
                   </p>
-                  <p style={{ margin: "0.5rem 0", color: "#475569" }}>
-                    平均評価: {store.averageRating.toFixed(1)} / 平均時給: {store.averageEarningLabel ?? "-"}
+                  <p className="text-sm text-slate-600">
+                    平均評価: <span className="font-semibold">{store.averageRating.toFixed(1)}</span> / 平均時給:{" "}
+                    {store.averageEarningLabel ?? "-"}
                   </p>
-                  <p style={{ margin: 0, color: "#475569" }}>
+                  <p className="text-sm text-slate-600">
                     アンケート: {store.surveyCount}件 / 役立ち度: {store.helpfulCount ?? 0}
                   </p>
                 </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                  <Link to={`/stores/${store.id}/edit`} className="button secondary" style={{ textAlign: "center" }}>
-                    編集
-                  </Link>
-                  <button className="button danger" onClick={() => handleDelete(store.id)}>
+                <div className="flex flex-col gap-2">
+                  <Button asChild variant="secondary" size="sm">
+                    <Link to={`/stores/${store.id}/edit`}>編集</Link>
+                  </Button>
+                  <Button asChild size="sm">
+                    <Link to={`/surveys/new?storeId=${store.id}`}>アンケート追加</Link>
+                  </Button>
+                  <Button variant="destructive" size="sm" onClick={() => handleDelete(store.id)}>
                     削除
-                  </button>
+                  </Button>
                 </div>
               </div>
-            </div>
+            </Card>
           ))}
         </div>
       )}

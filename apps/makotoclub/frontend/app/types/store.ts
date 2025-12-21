@@ -13,7 +13,6 @@ export interface StoreSummary {
   averageEarningLabel?: string;
   waitTimeHours: number;
   waitTimeLabel?: string;
-  unitPrice?: string | null;
   surveyCount: number;
   helpfulCount?: number;
   reviewCount?: number; // 互換用

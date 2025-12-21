@@ -11,7 +11,6 @@ export type Store = {
   area?: string | null;
   category: string;
   genre?: string | null;
-  unitPrice?: string | null;
   businessHours?: BusinessHours | null;
   averageRating: number;
   averageEarning: number;
@@ -28,22 +27,25 @@ export type SurveyStatus = "draft" | "published";
 
 export type Survey = {
   id: string;
-  storeId: string;
   storeName: string;
-  storeBranch?: string | null;
-  storePrefecture: string;
-  storeArea?: string | null;
-  storeIndustry: string;
-  storeGenre?: string | null;
+  branchName?: string | null;
+  prefecture: string;
+  industry: string;
   visitedPeriod: string;
   workType: string;
   age: number;
   specScore: number;
   waitTimeHours: number;
   averageEarning: number;
+  castBack: number;
   rating: number;
-  status: SurveyStatus;
   customerComment?: string | null;
+  staffComment?: string | null;
+  workEnvironmentComment?: string | null;
+  etcComment?: string | null;
+  emailAddress?: string | null;
+  imageUrls?: string[] | null;
+  status: SurveyStatus;
   createdAt: string;
   updatedAt: string;
 };
@@ -60,7 +62,6 @@ export const db = {
       area: "新宿",
       category: "スナック",
       genre: "カジュアル",
-      unitPrice: "6000",
       businessHours: { open: "18:00", close: "25:00" },
       averageRating: 4.2,
       averageEarning: 15,
@@ -92,41 +93,48 @@ export const db = {
   surveys: [
     {
       id: "survey-1",
-      storeId: "store-1",
       storeName: "スナック桜",
-      storeBranch: "新宿店",
-      storePrefecture: "東京都",
-      storeArea: "新宿",
-      storeIndustry: "スナック",
-      storeGenre: "カジュアル",
+      branchName: "新宿店",
+      prefecture: "東京都",
+      industry: "スナック",
       visitedPeriod: "2024-12",
-      workType: "アルバイト",
+      workType: "在籍",
       age: 24,
-      specScore: 4,
+      specScore: 100,
       waitTimeHours: 2,
       averageEarning: 16,
+      castBack: 12000,
       rating: 4,
-      status: "published",
       customerComment: "常連さんが多く落ち着いた雰囲気",
+      staffComment: "優しい",
+      workEnvironmentComment: "清潔感あり",
+      etcComment: "",
+      emailAddress: "sample@example.com",
+      imageUrls: [],
+      status: "published",
       createdAt: nowIso(),
       updatedAt: nowIso(),
     },
     {
       id: "survey-2",
-      storeId: "store-2",
       storeName: "バー橘",
-      storePrefecture: "大阪府",
-      storeArea: "北新地",
-      storeIndustry: "バー",
+      prefecture: "大阪府",
+      industry: "バー",
       visitedPeriod: "2025-01",
-      workType: "レギュラー",
+      workType: "出稼ぎ",
       age: 28,
-      specScore: 5,
+      specScore: 110,
       waitTimeHours: 1,
       averageEarning: 20,
+      castBack: 8000,
       rating: 5,
       status: "draft",
-      customerComment: "静かな時間帯が多い", 
+      customerComment: "静かな時間帯が多い",
+      staffComment: null,
+      workEnvironmentComment: null,
+      etcComment: null,
+      emailAddress: null,
+      imageUrls: [],
       createdAt: nowIso(),
       updatedAt: nowIso(),
     },

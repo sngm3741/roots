@@ -11,7 +11,12 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
-    "types": ["vite/client"]
+    "types": ["vite/client", "node"],
+    "paths": {
+      "@makotoclub/shared": ["./node_modules/@makotoclub/shared/src"],
+      "@makotoclub/shared/*": ["./node_modules/@makotoclub/shared/src/*"],
+      "zod": ["./node_modules/zod"]
+    }
   },
   "include": ["src", "functions", "vite.config.ts"],
   "exclude": ["node_modules"]

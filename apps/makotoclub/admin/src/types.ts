@@ -1,53 +1,30 @@
+import type { SurveyInput, StoreInput } from "@makotoclub/shared";
+
 export type BusinessHours = {
   open: string;
   close: string;
 };
 
-export type Store = {
+export type Store = StoreInput & {
   id: string;
-  storeName: string;
-  branchName?: string | null;
-  prefecture: string;
-  area?: string | null;
-  category: string;
-  genre?: string | null;
-  unitPrice?: string | null;
-  businessHours?: BusinessHours | null;
   averageRating: number;
-  averageEarning: number;
-  averageEarningLabel?: string | null;
-  waitTimeHours?: number | null;
-  waitTimeLabel?: string | null;
+  waitTimeHours: number;
   surveyCount: number;
   helpfulCount?: number;
+  reviewCount?: number;
   createdAt?: string;
   updatedAt?: string;
 };
 
-export type StorePayload = Omit<Store, "createdAt" | "updatedAt"> & { id?: string };
+export type StorePayload = StoreInput & { id?: string };
 
-export type SurveyStatus = "draft" | "published";
-
-export type Survey = {
+export type Survey = SurveyInput & {
   id: string;
-  storeId: string;
-  storeName: string;
-  storeBranch?: string | null;
-  storePrefecture: string;
-  storeArea?: string | null;
-  storeIndustry: string;
-  storeGenre?: string | null;
-  visitedPeriod: string;
-  workType: string;
-  age: number;
-  specScore: number;
-  waitTimeHours: number;
-  averageEarning: number;
-  rating: number;
-  status: SurveyStatus;
-  customerComment?: string | null;
   createdAt: string;
   updatedAt: string;
+  helpfulCount?: number;
+  status?: "draft" | "published";
+  area?: string;
 };
 
-export type SurveyPayload = Omit<Survey, "createdAt" | "updatedAt"> & { id?: string };
+export type SurveyPayload = SurveyInput & { id?: string };

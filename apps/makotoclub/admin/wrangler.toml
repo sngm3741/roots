@@ -9,3 +9,7 @@ pages_build_output_dir = "dist"
 binding = "DB"
 database_name = "makotoclub"
 database_id = "13a8135d-e968-458b-986b-b6047f2c859f"
+
+[[r2_buckets]]
+binding = "makotoclub_assets"
+bucket_name = "makotoclub-assets"

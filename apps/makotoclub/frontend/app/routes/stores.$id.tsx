@@ -5,6 +5,8 @@ import { getApiBaseUrl } from "../config.server";
 import type { StoreDetail } from "../types/store";
 import { RatingStars } from "../components/ui/rating-stars";
 import { BreadcrumbLabelSetter } from "../components/common/breadcrumb-label-setter";
+import { ImageGallery } from "../components/ui/image-gallery";
+import type { ImageGalleryItem } from "../components/ui/image-gallery";
 
 type LoaderData = {
   store: StoreDetail | null;
@@ -39,6 +41,20 @@ export default function StoreDetailPage() {
     typeof store.waitTimeHours === "number" && !Number.isNaN(store.waitTimeHours)
       ? `${store.waitTimeHours.toFixed(1)}h`
       : store.waitTimeLabel ?? "-";
+
+  const photoItems: ImageGalleryItem[] = (store.surveys ?? []).flatMap((survey) => {
+    const comment =
+      survey.customerComment ||
+      survey.workEnvironmentComment ||
+      survey.staffComment ||
+      survey.etcComment ||
+      "";
+    return (survey.imageUrls ?? []).map((url) => ({
+      url,
+      surveyId: survey.id,
+      comment,
+    }));
+  });
 
   return (
     <main className="mx-auto max-w-5xl px-4 pb-12 pt-6 space-y-8">
@@ -149,6 +165,16 @@ export default function StoreDetailPage() {
           )}
         </div>
       </section>
+
+      {photoItems.length > 0 && (
+        <section className="space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-lg font-semibold text-slate-900">投稿写真</h2>
+            <p className="text-xs text-slate-500">左右にスワイプして確認できます</p>
+          </div>
+          <ImageGallery items={photoItems} />
+        </section>
+      )}
     </main>
   );
 }

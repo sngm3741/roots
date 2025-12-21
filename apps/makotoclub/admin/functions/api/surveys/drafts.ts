@@ -1,5 +1,5 @@
-import { db } from "../data";
 import { PagesFunction } from "../types";
+import { mapSurvey } from "../lib/mapper";
 
 const json = (body: unknown, init?: ResponseInit) =>
   new Response(JSON.stringify(body), {
@@ -7,7 +7,8 @@ const json = (body: unknown, init?: ResponseInit) =>
     ...init,
   });
 
-export const onRequest: PagesFunction = async () => {
-  const drafts = db.surveys.filter((survey) => survey.status === "draft");
-  return json({ items: drafts, total: drafts.length });
+export const onRequest: PagesFunction = async ({ env }) => {
+  const rows = await env.DB.prepare("SELECT *, 'draft' as status FROM survey_drafts ORDER BY created_at DESC").all();
+  const items = (rows.results ?? []).map(mapSurvey);
+  return json({ items, total: items.length });
 };

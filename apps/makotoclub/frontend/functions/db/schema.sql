@@ -12,10 +12,10 @@ CREATE TABLE stores (
   area TEXT,
   industry TEXT NOT NULL,
   genre TEXT,
-  unit_price TEXT,
+  cast_back TEXT,
+  recruitment_urls TEXT,
   business_hours_open TEXT,
   business_hours_close TEXT,
-  average_rating REAL,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
   deleted_at TEXT

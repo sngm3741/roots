@@ -21,10 +21,8 @@ type StoreRow = {
   area?: string | null;
   industry: string;
   genre?: string | null;
-  unit_price?: string | null;
   business_hours_open?: string | null;
   business_hours_close?: string | null;
-  average_rating?: number | null;
   created_at?: string | null;
   updated_at?: string | null;
   deleted_at?: string | null;
@@ -75,7 +73,7 @@ type StoreStats = {
 
 const mapStore = (row: StoreRow, stats?: StoreStats) => {
   const averageEarning = stats?.averageEarning ?? row.avg_earning ?? 0;
-  const averageRating = stats?.averageRating ?? row.avg_rating ?? row.average_rating ?? 0;
+  const averageRating = stats?.averageRating ?? row.avg_rating ?? 0;
   const waitTimeHours = stats?.waitTimeHours ?? row.avg_wait ?? 0;
   const surveyCount = stats?.surveyCount ?? row.survey_count ?? 0;
   const helpfulCount = stats?.helpfulCount ?? row.helpful_count ?? 0;
@@ -87,11 +85,10 @@ const mapStore = (row: StoreRow, stats?: StoreStats) => {
     area: row.area ?? undefined,
     category: row.industry,
     genre: row.genre ?? undefined,
-    unitPrice: row.unit_price ?? undefined,
     businessHours: row.business_hours_open
       ? { open: row.business_hours_open, close: row.business_hours_close ?? "" }
       : undefined,
-    averageRating: row.average_rating ?? 0,
+    averageRating,
     averageEarning,
     averageEarningLabel:
       stats?.averageEarningLabel ??
@@ -198,7 +195,7 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
 
     return Response.json({
       key,
-      url: `/api/uploads/${key}`,
+      url: `${url.origin}/api/uploads/${key}`,
       contentType: file.type,
       size: file.size,
     });
@@ -497,10 +494,8 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
       area,
       industry,
       genre,
-      unitPrice,
       businessHoursOpen,
       businessHoursClose,
-      averageRating,
     } = payload || {};
 
     if (!name || !prefecture || !industry) {
@@ -509,8 +504,8 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
 
     await env.DB.prepare(
       `INSERT OR REPLACE INTO stores
-      (id, name, branch_name, prefecture, area, industry, genre, unit_price, business_hours_open, business_hours_close, average_rating, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE((SELECT created_at FROM stores WHERE id = ?), ?), ?)`
+      (id, name, branch_name, prefecture, area, industry, genre, business_hours_open, business_hours_close, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE((SELECT created_at FROM stores WHERE id = ?), ?), ?)`
     )
       .bind(
         id,
@@ -520,10 +515,8 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
         area ?? null,
         industry,
         genre ?? null,
-        unitPrice ?? null,
         businessHoursOpen ?? null,
         businessHoursClose ?? null,
-        typeof averageRating === "number" ? averageRating : null,
         id,
         now,
         now,
@@ -560,10 +553,8 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
         area = COALESCE(?, area),
         industry = COALESCE(?, industry),
         genre = COALESCE(?, genre),
-        unit_price = COALESCE(?, unit_price),
         business_hours_open = COALESCE(?, business_hours_open),
         business_hours_close = COALESCE(?, business_hours_close),
-        average_rating = COALESCE(?, average_rating),
         updated_at = ?
       WHERE id = ?`
     )
@@ -574,10 +565,8 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
         payload.area ?? null,
         payload.industry ?? null,
         payload.genre ?? null,
-        payload.unitPrice ?? null,
         payload.businessHoursOpen ?? null,
         payload.businessHoursClose ?? null,
-        typeof payload.averageRating === "number" ? payload.averageRating : null,
         now,
         id,
       )

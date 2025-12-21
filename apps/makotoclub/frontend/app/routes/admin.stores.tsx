@@ -37,10 +37,8 @@ export async function action({ request, context }: ActionFunctionArgs) {
     area: formData.get("area") || undefined,
     industry: formData.get("industry"),
     genre: formData.get("genre") || undefined,
-    unitPrice: formData.get("unitPrice") || undefined,
     businessHoursOpen: formData.get("businessHoursOpen") || undefined,
     businessHoursClose: formData.get("businessHoursClose") || undefined,
-    averageRating: Number(formData.get("averageRating") || "0"),
   };
 
   try {
@@ -95,10 +93,8 @@ export default function AdminStores() {
         <Field label="エリア" name="area" placeholder="例: 新宿" />
         <Field label="業種" name="industry" required placeholder="例: 風俗 / キャバ" />
         <Field label="ジャンル" name="genre" placeholder="例: ソープ / キャバクラ" />
-        <Field label="稼ぎ(60分)" name="unitPrice" placeholder="例: 10000" />
         <Field label="営業時間(開始)" name="businessHoursOpen" placeholder="10:00" />
         <Field label="営業時間(終了)" name="businessHoursClose" placeholder="24:00" />
-        <Field label="平均総評" name="averageRating" type="number" step="0.1" min="0" max="5" />
 
         <div className="md:col-span-2">
           <Button type="submit" disabled={submitting} className="w-full shadow-sm shadow-pink-200">
@@ -126,7 +122,7 @@ export default function AdminStores() {
               </p>
               <div className="text-sm text-slate-600">
                 総評: {store.averageRating?.toFixed?.(1) ?? "-"} / 稼ぎ:{" "}
-                {store.unitPrice ?? store.averageEarningLabel ?? "-"}
+                {store.averageEarningLabel ?? "-"}
               </div>
               <Button variant="ghost" size="sm" asChild>
                 <a href={`/stores/${store.id}`}>店舗ページ</a>

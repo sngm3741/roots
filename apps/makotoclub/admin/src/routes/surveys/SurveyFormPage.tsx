@@ -1,65 +1,200 @@
 import { FormEvent, useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { adminApi } from "../../api/client";
-import { SurveyPayload } from "../../types";
+import { Store, SurveyPayload } from "../../types";
+import { WORK_TYPES } from "@makotoclub/shared";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
+import { Textarea } from "../../components/ui/textarea";
+import { Select } from "../../components/ui/select";
+import { Card } from "../../components/ui/card";
 
 type Props = { mode: "create" | "edit" };
 
-const emptySurvey: SurveyPayload = {
+type SurveyFormState = Omit<
+  SurveyPayload,
+  "age" | "specScore" | "waitTimeHours" | "averageEarning" | "castBack" | "imageUrls"
+> & {
+  age: string;
+  specScore: string;
+  waitTimeHours: string;
+  averageEarning: string;
+  castBack?: string;
+  imageUrls?: string[];
+};
+
+const emptySurvey: SurveyFormState = {
   storeId: "",
   storeName: "",
-  storeBranch: "",
-  storePrefecture: "",
-  storeArea: "",
-  storeIndustry: "",
-  storeGenre: "",
+  branchName: "",
+  prefecture: "",
+  industry: "",
+  genre: "",
   visitedPeriod: "",
   workType: "",
-  age: 0,
-  specScore: 0,
-  waitTimeHours: 0,
-  averageEarning: 0,
+  age: "",
+  specScore: "",
+  waitTimeHours: "",
+  averageEarning: "",
+  castBack: "",
   rating: 0,
-  status: "draft",
   customerComment: "",
+  staffComment: "",
+  workEnvironmentComment: "",
+  etcComment: "",
+  emailAddress: "",
+  imageUrls: [],
 };
+
+const toFormState = (survey: SurveyPayload): SurveyFormState => ({
+  ...survey,
+  age: Number.isFinite(survey.age) ? String(survey.age) : "",
+  specScore: Number.isFinite(survey.specScore) ? String(survey.specScore) : "",
+  waitTimeHours: Number.isFinite(survey.waitTimeHours) ? String(survey.waitTimeHours) : "",
+  averageEarning: Number.isFinite(survey.averageEarning) ? String(survey.averageEarning) : "",
+  castBack: typeof survey.castBack === "number" ? String(survey.castBack) : "",
+  emailAddress: survey.emailAddress ?? "",
+  imageUrls: survey.imageUrls ?? [],
+});
 
 export const SurveyFormPage = ({ mode }: Props) => {
   const params = useParams();
   const navigate = useNavigate();
-  const [form, setForm] = useState<SurveyPayload>(emptySurvey);
+  const [searchParams] = useSearchParams();
+  const [form, setForm] = useState<SurveyFormState>(emptySurvey);
   const [loading, setLoading] = useState(mode === "edit");
   const [error, setError] = useState<string | null>(null);
+  const [store, setStore] = useState<Store | null>(null);
+  const [isReadOnly, setIsReadOnly] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   useEffect(() => {
     const load = async () => {
-      if (mode === "edit" && params.id) {
-        try {
+      try {
+        if (mode === "edit" && params.id) {
           const survey = await adminApi.getSurvey(params.id);
-          setForm(survey);
-        } catch (err) {
-          setError(err instanceof Error ? err.message : "取得に失敗しました");
-        } finally {
-          setLoading(false);
+          setForm(toFormState(survey));
+          setIsReadOnly(survey.status === "draft");
+          if (survey.storeId) {
+            const fetchedStore = await adminApi.getStore(survey.storeId);
+            setStore(fetchedStore);
+          }
+        } else {
+          setIsReadOnly(false);
+          const storeId = searchParams.get("storeId");
+          if (!storeId) {
+            setError("店舗カードの「アンケート追加」から遷移してください（storeId がありません）。");
+            return;
+          }
+          const fetchedStore = await adminApi.getStore(storeId);
+          setStore(fetchedStore);
+          setForm({
+            ...emptySurvey,
+            storeId: fetchedStore.id,
+            storeName: fetchedStore.storeName,
+            branchName: fetchedStore.branchName ?? "",
+            prefecture: fetchedStore.prefecture,
+            industry: fetchedStore.category ?? "",
+            genre: fetchedStore.genre ?? "",
+          });
         }
-      } else {
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "取得に失敗しました");
+      } finally {
         setLoading(false);
       }
     };
     load();
-  }, [mode, params.id]);
+  }, [mode, params.id, searchParams]);
 
-  const handleChange = (key: keyof SurveyPayload, value: unknown) => {
-    setForm((prev) => ({ ...prev, [key]: value } as SurveyPayload));
+  const handleChange = (key: keyof SurveyFormState, value: unknown) => {
+    setForm((prev) => ({ ...prev, [key]: value } as SurveyFormState));
+  };
+
+  const removeImage = (index: number) => {
+    setForm((prev) => {
+      const next = [...(prev.imageUrls ?? [])];
+      next.splice(index, 1);
+      return { ...prev, imageUrls: next };
+    });
+  };
+
+  const handleUpload = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    setUploading(true);
+    setUploadError(null);
+    try {
+      const uploadedUrls: string[] = [];
+      for (const file of Array.from(files)) {
+        const formData = new FormData();
+        formData.append("file", file);
+        const res = await fetch("/api/uploads", { method: "POST", body: formData });
+        if (!res.ok) {
+          const message = await res.text();
+          throw new Error(message || "画像アップロードに失敗しました");
+        }
+        const data = (await res.json()) as { url: string };
+        if (!data.url) throw new Error("アップロードURLが取得できませんでした");
+        uploadedUrls.push(data.url);
+      }
+      setForm((prev) => ({ ...prev, imageUrls: [...(prev.imageUrls ?? []), ...uploadedUrls] }));
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : "画像アップロードに失敗しました");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const parseIntField = (value: string, label: string, required = true) => {
+    const trimmed = value.trim();
+    if (!trimmed) {
+      if (required) setError(`${label}は必須です`);
+      return required ? null : undefined;
+    }
+    if (!/^\d+$/.test(trimmed)) {
+      setError(`${label}は整数で入力してください`);
+      return null;
+    }
+    return Number(trimmed);
   };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    if (isReadOnly) {
+      return;
+    }
+    setError(null);
+    if (!form.storeId) {
+      setError("店舗が指定されていません。店舗一覧からアンケートを追加してください。");
+      return;
+    }
+    const age = parseIntField(form.age, "年齢");
+    if (age == null) return;
+    const specScore = parseIntField(form.specScore, "スペック");
+    if (specScore == null) return;
+    const waitTimeHours = parseIntField(form.waitTimeHours, "待機時間");
+    if (waitTimeHours == null) return;
+    const averageEarning = parseIntField(form.averageEarning, "平均稼ぎ");
+    if (averageEarning == null) return;
+    const castBack = parseIntField(form.castBack ?? "", "キャストバック", false);
+    if (castBack === null) return;
+    const payload: SurveyPayload = {
+      ...form,
+      age,
+      specScore,
+      waitTimeHours,
+      averageEarning,
+      castBack,
+      emailAddress: form.emailAddress?.trim() ? form.emailAddress.trim() : undefined,
+      imageUrls: form.imageUrls ?? [],
+    };
     try {
       if (mode === "create") {
-        await adminApi.createSurvey(form);
+        await adminApi.createSurvey(payload);
       } else if (params.id) {
-        await adminApi.updateSurvey(params.id, form);
+        await adminApi.updateSurvey(params.id, payload);
       }
       navigate("/surveys");
     } catch (err) {
@@ -70,126 +205,244 @@ export const SurveyFormPage = ({ mode }: Props) => {
   if (loading) return <p>読込中...</p>;
 
   return (
-    <div>
-      <div className="section-header">
-        <div>
-          <h1>アンケート{mode === "create" ? "作成" : "編集"}</h1>
-          <p>アンケート内容を入力してください。</p>
+    <div className="space-y-5">
+      <div className="flex items-center justify-between gap-3">
+        <div className="space-y-1">
+          <p className="text-sm font-semibold text-pink-500">Survey Form</p>
+          <h1 className="text-2xl font-bold">
+            {isReadOnly ? "投稿アンケート詳細" : `アンケート${mode === "create" ? "作成" : "編集"}`}
+          </h1>
+          <p className="text-sm text-slate-600">
+            {isReadOnly ? "投稿内容の確認専用ページです（編集はできません）。" : "アンケート内容を入力してください。"}
+          </p>
         </div>
-        <button className="button outline" onClick={() => navigate(-1)}>
+        <Button variant="outline" onClick={() => navigate(-1)}>
           戻る
-        </button>
+        </Button>
       </div>
 
-      {error && <div className="alert">{error}</div>}
+      {error && <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-red-700">{error}</div>}
 
-      <form className="card" onSubmit={handleSubmit}>
-        <div className="form-grid">
-          <div>
-            <label className="label">店舗ID</label>
-            <input className="input" value={form.storeId} onChange={(e) => handleChange("storeId", e.target.value)} required />
-          </div>
-          <div>
-            <label className="label">店舗名</label>
-            <input className="input" value={form.storeName} onChange={(e) => handleChange("storeName", e.target.value)} required />
-          </div>
-          <div>
-            <label className="label">支店名</label>
-            <input className="input" value={form.storeBranch ?? ""} onChange={(e) => handleChange("storeBranch", e.target.value)} />
-          </div>
-          <div>
-            <label className="label">都道府県</label>
-            <input
-              className="input"
-              value={form.storePrefecture}
-              onChange={(e) => handleChange("storePrefecture", e.target.value)}
-              required
-            />
-          </div>
-          <div>
-            <label className="label">エリア</label>
-            <input className="input" value={form.storeArea ?? ""} onChange={(e) => handleChange("storeArea", e.target.value)} />
-          </div>
-          <div>
-            <label className="label">業態</label>
-            <input className="input" value={form.storeIndustry} onChange={(e) => handleChange("storeIndustry", e.target.value)} />
-          </div>
-          <div>
-            <label className="label">ジャンル</label>
-            <input className="input" value={form.storeGenre ?? ""} onChange={(e) => handleChange("storeGenre", e.target.value)} />
-          </div>
-          <div>
-            <label className="label">訪問時期</label>
-            <input className="input" value={form.visitedPeriod} onChange={(e) => handleChange("visitedPeriod", e.target.value)} />
-          </div>
-          <div>
-            <label className="label">働き方</label>
-            <input className="input" value={form.workType} onChange={(e) => handleChange("workType", e.target.value)} />
-          </div>
-          <div>
-            <label className="label">年齢</label>
-            <input type="number" className="input" value={form.age} onChange={(e) => handleChange("age", Number(e.target.value))} />
-          </div>
-          <div>
-            <label className="label">接客スコア</label>
-            <input
-              type="number"
-              className="input"
-              value={form.specScore}
-              onChange={(e) => handleChange("specScore", Number(e.target.value))}
-            />
-          </div>
-          <div>
-            <label className="label">待機時間</label>
-            <input
-              type="number"
-              className="input"
-              value={form.waitTimeHours}
-              onChange={(e) => handleChange("waitTimeHours", Number(e.target.value))}
-            />
-          </div>
-          <div>
-            <label className="label">平均報酬</label>
-            <input
-              type="number"
-              className="input"
-              value={form.averageEarning}
-              onChange={(e) => handleChange("averageEarning", Number(e.target.value))}
-            />
-          </div>
-          <div>
-            <label className="label">評価 (0-5)</label>
-            <input type="number" className="input" value={form.rating} onChange={(e) => handleChange("rating", Number(e.target.value))} />
-          </div>
-          <div>
-            <label className="label">コメント</label>
-            <textarea
-              className="input"
-              style={{ minHeight: "100px" }}
-              value={form.customerComment ?? ""}
-              onChange={(e) => handleChange("customerComment", e.target.value)}
-            />
-          </div>
-          <div>
-            <label className="label">ステータス</label>
-            <select
-              className="input"
-              value={form.status}
-              onChange={(e) => handleChange("status", e.target.value as SurveyPayload["status"])}
-            >
-              <option value="draft">下書き</option>
-              <option value="published">公開</option>
-            </select>
-          </div>
-        </div>
+      <Card>
+        <form className="space-y-4" onSubmit={handleSubmit}>
+          <input type="hidden" name="storeId" value={form.storeId} />
 
-        <div style={{ marginTop: "1.25rem", display: "flex", gap: "0.75rem" }}>
-          <button type="submit" className="button">
-            {mode === "create" ? "作成" : "更新"}
-          </button>
-          <button type="button" className="button outline" onClick={() => navigate("/surveys")}>キャンセル</button>
-        </div>
-      </form>
+          <fieldset className="space-y-4" disabled={isReadOnly}>
+            {(store || form.storeName) && (
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>店舗名</Label>
+                  <Input value={store?.storeName ?? form.storeName ?? ""} disabled readOnly />
+                </div>
+                <div className="space-y-2">
+                  <Label>支店名</Label>
+                  <Input value={store?.branchName ?? form.branchName ?? ""} disabled readOnly />
+                </div>
+                <div className="space-y-2">
+                  <Label>都道府県</Label>
+                  <Input value={store?.prefecture ?? form.prefecture ?? ""} disabled readOnly />
+                </div>
+                <div className="space-y-2">
+                  <Label>業種</Label>
+                  <Input value={store?.category ?? form.industry ?? ""} disabled readOnly />
+                </div>
+                <div className="space-y-2">
+                  <Label>ジャンル</Label>
+                  <Input value={store?.genre ?? form.genre ?? ""} disabled readOnly />
+                </div>
+              </div>
+            )}
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label>働いた時期</Label>
+                <Input
+                  type="month"
+                  value={form.visitedPeriod}
+                  onChange={(e) => handleChange("visitedPeriod", e.target.value)}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>勤務形態</Label>
+                <Select value={form.workType} onChange={(e) => handleChange("workType", e.target.value)} required>
+                  <option value="">選択してください</option>
+                  {WORK_TYPES.map((opt) => (
+                    <option key={opt} value={opt}>
+                      {opt}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>年齢</Label>
+                <Input
+                  inputMode="numeric"
+                  value={form.age}
+                  onChange={(e) => handleChange("age", e.target.value)}
+                  placeholder="例: 23"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>スペック</Label>
+                <Input
+                  inputMode="numeric"
+                  value={form.specScore}
+                  onChange={(e) => handleChange("specScore", e.target.value)}
+                  placeholder="例: 90"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>待機時間 (0-24h)</Label>
+                <Input
+                  inputMode="numeric"
+                  value={form.waitTimeHours}
+                  onChange={(e) => handleChange("waitTimeHours", e.target.value)}
+                  placeholder="例: 3"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>平均稼ぎ (0-30 万円)</Label>
+                <Input
+                  inputMode="numeric"
+                  value={form.averageEarning}
+                  onChange={(e) => handleChange("averageEarning", e.target.value)}
+                  placeholder="例: 12"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>キャストバック (0-30000 円)</Label>
+                <Input
+                  inputMode="numeric"
+                  value={form.castBack ?? ""}
+                  onChange={(e) => handleChange("castBack", e.target.value)}
+                  placeholder="未入力可"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>評価 (0-5)</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  max={5}
+                  step={0.1}
+                  value={form.rating}
+                  onChange={(e) => handleChange("rating", Number(e.target.value))}
+                  required
+                />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label>客層の印象</Label>
+                <Textarea
+                  minLength={0}
+                  rows={3}
+                  value={form.customerComment ?? ""}
+                  onChange={(e) => handleChange("customerComment", e.target.value)}
+                />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label>スタッフ対応</Label>
+                <Textarea rows={3} value={form.staffComment ?? ""} onChange={(e) => handleChange("staffComment", e.target.value)} />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label>職場環境</Label>
+                <Textarea
+                  rows={3}
+                  value={form.workEnvironmentComment ?? ""}
+                  onChange={(e) => handleChange("workEnvironmentComment", e.target.value)}
+                />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label>その他</Label>
+                <Textarea rows={3} value={form.etcComment ?? ""} onChange={(e) => handleChange("etcComment", e.target.value)} />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label>連絡先メール (任意)</Label>
+                <Input
+                  type="email"
+                  value={form.emailAddress ?? ""}
+                  onChange={(e) => handleChange("emailAddress", e.target.value)}
+                  placeholder="example@makoto-club.jp"
+                />
+              </div>
+              {!isReadOnly && (
+                <div className="space-y-2 md:col-span-2">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label>画像（再アップロード用）</Label>
+                      <p className="text-xs text-slate-600">draft の画像を確認後、確定用画像をアップロードしてください。</p>
+                    </div>
+                  </div>
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    disabled={uploading}
+                    onChange={(e) => handleUpload(e.target.files)}
+                  />
+                  {uploading && <p className="text-xs text-slate-500">アップロード中...</p>}
+                  {uploadError && <p className="text-xs text-red-600">{uploadError}</p>}
+                  <div className="grid gap-3">
+                    {(form.imageUrls ?? []).map((url, index) => (
+                      <div key={`${url}-${index}`} className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white p-2">
+                        <img src={url} alt={`確定画像 ${index + 1}`} className="h-16 w-16 rounded-md object-cover" loading="lazy" />
+                        <div className="flex-1 text-xs text-slate-600 break-all">{url}</div>
+                        <Button type="button" size="sm" variant="ghost" onClick={() => removeImage(index)}>
+                          削除
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-500">画像は任意です。</p>
+                </div>
+              )}
+            </div>
+          </fieldset>
+
+          {isReadOnly && (
+            <div className="space-y-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+              <div className="space-y-1">
+                <Label>投稿画像</Label>
+                <p className="text-xs text-slate-600">投稿時の画像URL一覧です。必要ならダウンロードして再アップロードしてください。</p>
+              </div>
+              {(form.imageUrls ?? []).length === 0 ? (
+                <p className="text-sm text-slate-600">投稿画像はありません。</p>
+              ) : (
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {(form.imageUrls ?? []).map((url, index) => (
+                    <a
+                      key={`${url}-${index}`}
+                      href={url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="group flex items-center gap-3 rounded-lg border border-slate-200 bg-white p-2 transition hover:border-pink-200"
+                    >
+                      <img
+                        src={url}
+                        alt={`投稿画像 ${index + 1}`}
+                        className="h-16 w-16 rounded-md object-cover"
+                        loading="lazy"
+                      />
+                      <span className="text-xs text-slate-600 group-hover:text-slate-900">画像を開く</span>
+                    </a>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {!isReadOnly && (
+            <div className="flex flex-wrap items-center gap-3">
+              <Button type="submit">{mode === "create" ? "作成" : "更新"}</Button>
+              <Button type="button" variant="outline" onClick={() => navigate("/surveys")}>
+                キャンセル
+              </Button>
+            </div>
+          )}
+        </form>
+      </Card>
     </div>
   );
 };

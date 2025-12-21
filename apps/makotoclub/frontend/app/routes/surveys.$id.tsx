@@ -5,6 +5,8 @@ import type { SurveyDetail } from "../types/survey";
 import { RatingStars } from "../components/ui/rating-stars";
 import { BreadcrumbLabelSetter } from "../components/common/breadcrumb-label-setter";
 import { Button } from "../components/ui/button";
+import { ImageGallery } from "../components/ui/image-gallery";
+import type { ImageGalleryItem } from "../components/ui/image-gallery";
 
 type LoaderData = {
   survey: SurveyDetail | null;
@@ -34,6 +36,18 @@ export default function SurveyDetailPage() {
       </main>
     );
   }
+
+  const comment =
+    survey.customerComment ||
+    survey.workEnvironmentComment ||
+    survey.staffComment ||
+    survey.etcComment ||
+    "";
+  const galleryItems: ImageGalleryItem[] = (survey.imageUrls ?? []).map((url) => ({
+    url,
+    surveyId: survey.id,
+    comment,
+  }));
 
   return (
     <main className="mx-auto max-w-5xl px-4 pb-12 pt-6 space-y-8">
@@ -72,6 +86,16 @@ export default function SurveyDetailPage() {
           <CommentCard title="職場環境" body={survey.workEnvironmentComment} />
           <CommentCard title="その他" body={survey.etcComment} />
         </section>
+
+        {galleryItems.length > 0 && (
+          <section className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-slate-900">投稿画像</h2>
+              <p className="text-xs text-slate-500">左右にスワイプできます</p>
+            </div>
+            <ImageGallery items={galleryItems} />
+          </section>
+        )}
 
         <div className="flex justify-end">
           <Button variant="secondary" asChild className="shadow-sm shadow-pink-200">

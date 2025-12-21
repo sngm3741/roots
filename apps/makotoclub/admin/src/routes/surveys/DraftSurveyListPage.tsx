@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import { adminApi } from "../../api/client";
 import { Survey } from "../../types";
+import { Card } from "../../components/ui/card";
+import { Badge } from "../../components/ui/badge";
+import { Link } from "react-router-dom";
+import { Button } from "../../components/ui/button";
 
 export const DraftSurveyListPage = () => {
   const [drafts, setDrafts] = useState<Survey[]>([]);
@@ -25,50 +28,53 @@ export const DraftSurveyListPage = () => {
   }, []);
 
   return (
-    <div>
-      <div className="section-header">
-        <div>
-          <h1>下書きアンケート</h1>
-          <p>公開前のアンケート一覧です。編集して公開に進められます。</p>
+    <div className="space-y-5">
+      <div className="flex items-center justify-between gap-3">
+        <div className="space-y-1">
+          <p className="text-sm font-semibold text-pink-500">投稿アンケート</p>
+          <h1 className="text-2xl font-bold">ユーザー投稿一覧</h1>
+          <p className="text-sm text-slate-600">
+            frontend で投稿された内容をここで確認し、店舗を紐付けた新規アンケートを手入力してください（このページでは編集しません）。
+          </p>
         </div>
-        <Link to="/surveys/new" className="button">
-          新規作成
-        </Link>
       </div>
 
-      {error && <div className="alert">{error}</div>}
+      {error && <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-red-700">{error}</div>}
 
       {loading ? (
-        <p>読込中...</p>
+        <p className="text-sm text-slate-600">読込中...</p>
       ) : drafts.length === 0 ? (
-        <p>下書きはありません。</p>
+        <p className="text-sm text-slate-600">投稿アンケートはありません。</p>
       ) : (
-        <table className="table card">
-          <thead>
-            <tr>
-              <th>店舗</th>
-              <th>訪問時期</th>
-              <th>平均報酬</th>
-              <th>評価</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {drafts.map((survey) => (
-              <tr key={survey.id}>
-                <td>{survey.storeName}</td>
-                <td>{survey.visitedPeriod}</td>
-                <td>{survey.averageEarning}万円</td>
-                <td>{survey.rating} / 5</td>
-                <td>
-                  <Link to={`/surveys/${survey.id}/edit`} className="button secondary">
-                    編集
-                  </Link>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="grid gap-4">
+          {drafts.map((survey) => (
+            <Card key={survey.id} className="flex flex-col gap-3">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-lg font-semibold">
+                      {survey.storeName}
+                      {survey.branchName ? ` ${survey.branchName}` : ""}
+                    </h3>
+                    <Badge variant="outline">投稿</Badge>
+                  </div>
+                  <p className="text-sm text-slate-600">
+                    訪問時期: {survey.visitedPeriod} / 勤務形態: {survey.workType}
+                  </p>
+                  <p className="text-sm text-slate-600">
+                    平均報酬: {survey.averageEarning}万円 / 評価: {survey.rating} / 5
+                  </p>
+                  <p className="text-sm text-slate-600">
+                    {survey.prefecture} {survey.area ?? ""} / 業種: {survey.industry} / ジャンル: {survey.genre ?? "-"}
+                  </p>
+                </div>
+                <Button asChild size="sm" variant="secondary">
+                  <Link to={`/surveys/${survey.id}/edit`}>詳細を見る</Link>
+                </Button>
+              </div>
+            </Card>
+          ))}
+        </div>
       )}
     </div>
   );
