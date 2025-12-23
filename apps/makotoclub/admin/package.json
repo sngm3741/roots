@@ -8,7 +8,8 @@
     "build": "vite build",
     "preview": "npm run build && wrangler pages dev dist --local",
     "deploy": "npm run build && wrangler pages deploy dist --project-name makotoclub-admin",
-    "lint": "eslint . --ext .ts,.tsx"
+    "lint": "eslint . --ext .ts,.tsx",
+    "postinstall": "npm --prefix ../../../packages/makotoclub-shared ci"
   },
   "dependencies": {
     "@makotoclub/shared": "file:../../../packages/makotoclub-shared",
@@ -23,6 +24,7 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@types/node": "^22.10.2",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^5.1.0",

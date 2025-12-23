@@ -1,15 +1,20 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { adminApi } from "../../api/client";
 import { Store } from "../../types";
 import { Button } from "../../components/ui/button";
 import { Card } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
+import { Input } from "../../components/ui/input";
+import { Select } from "../../components/ui/select";
+import { Label } from "../../components/ui/label";
 
 export const StoreListPage = () => {
   const [stores, setStores] = useState<Store[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [keyword, setKeyword] = useState("");
+  const [sortOption, setSortOption] = useState("createdAt-desc");
 
   const load = async () => {
     try {
@@ -38,6 +43,30 @@ export const StoreListPage = () => {
     load();
   }, []);
 
+  const totalCount = stores.length;
+
+  const filteredStores = useMemo(() => {
+    const normalizedKeyword = keyword.trim().toLowerCase();
+    let result = [...stores];
+
+    if (normalizedKeyword) {
+      result = result.filter((store) => {
+        const haystack = [store.storeName, store.prefecture, store.category].join(" ").toLowerCase();
+        return haystack.includes(normalizedKeyword);
+      });
+    }
+
+    const sorters: Record<string, (a: Store, b: Store) => number> = {
+      "createdAt-desc": (a, b) => Date.parse(b.createdAt ?? "") - Date.parse(a.createdAt ?? ""),
+      "createdAt-asc": (a, b) => Date.parse(a.createdAt ?? "") - Date.parse(b.createdAt ?? ""),
+      "averageRating-desc": (a, b) => (b.averageRating ?? 0) - (a.averageRating ?? 0),
+      "averageRating-asc": (a, b) => (a.averageRating ?? 0) - (b.averageRating ?? 0),
+    };
+
+    const sorter = sorters[sortOption] ?? sorters["createdAt-desc"];
+    return result.sort(sorter);
+  }, [stores, keyword, sortOption]);
+
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between gap-3">
@@ -51,13 +80,52 @@ export const StoreListPage = () => {
         </Button>
       </div>
 
+      <Card className="flex items-center justify-between px-4 py-3">
+        <div>
+          <p className="text-xs text-slate-500">総件数</p>
+          <p className="text-2xl font-semibold">{totalCount}</p>
+        </div>
+        <Badge>ALL</Badge>
+      </Card>
+
+      <Card className="grid gap-4 p-4 md:grid-cols-[1fr_220px_auto] md:items-end">
+        <div className="space-y-2">
+          <Label htmlFor="store-keyword">キーワード</Label>
+          <Input
+            id="store-keyword"
+            placeholder="店舗名・都道府県・業種で検索"
+            value={keyword}
+            onChange={(event) => setKeyword(event.target.value)}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="store-sort">並び替え</Label>
+          <Select id="store-sort" value={sortOption} onChange={(event) => setSortOption(event.target.value)}>
+            <option value="createdAt-desc">新着順</option>
+            <option value="createdAt-asc">古い順</option>
+            <option value="averageRating-desc">評価が高い順</option>
+            <option value="averageRating-asc">評価が低い順</option>
+          </Select>
+        </div>
+        <Button
+          variant="secondary"
+          onClick={() => {
+            setKeyword("");
+            setSortOption("createdAt-desc");
+          }}
+        >
+          リセット
+        </Button>
+      </Card>
+
       {error && <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-red-700">{error}</div>}
 
       {loading ? (
         <p className="text-sm text-slate-600">読込中...</p>
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
-          {stores.map((store) => (
+          <p className="text-sm text-slate-600 md:col-span-2">検索結果: {filteredStores.length}件</p>
+          {filteredStores.map((store) => (
             <Card key={store.id} className="flex flex-col gap-4">
               <div className="flex items-start justify-between gap-4">
                 <div className="space-y-1">

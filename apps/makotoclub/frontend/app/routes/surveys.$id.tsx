@@ -119,7 +119,7 @@ function CommentCard({ title, body }: { title: string; body?: string | null }) {
   return (
     <div className="rounded-2xl border border-pink-100 bg-white/95 p-5 shadow-sm space-y-2">
       <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
-      <p className="text-sm text-slate-700">{body || "コメントなし"}</p>
+      <p className="text-sm text-slate-700 whitespace-pre-wrap break-words">{body || "コメントなし"}</p>
     </div>
   );
 }
