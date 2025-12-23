@@ -220,8 +220,8 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
     const limit = Number(url.searchParams.get("limit") || "10");
     const sort = url.searchParams.get("sort") || "newest";
     const offset = Math.max(0, (page - 1) * limit);
-    let orderBy = "created_at DESC";
-    if (sort === "oldest") orderBy = "created_at ASC";
+    let orderBy = "COALESCE(visited_period, '') DESC, created_at DESC";
+    if (sort === "oldest") orderBy = "COALESCE(visited_period, '') ASC, created_at DESC";
     if (sort === "earning") orderBy = "COALESCE(average_earning, 0) DESC, created_at DESC";
     if (sort === "rating") orderBy = "COALESCE(rating, 0) DESC, created_at DESC";
     const name = url.searchParams.get("name")?.trim();

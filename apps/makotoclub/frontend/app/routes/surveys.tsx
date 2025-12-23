@@ -85,7 +85,7 @@ export default function Surveys() {
 }
 
 const SORT_OPTIONS = [
-  { value: "newest", label: "新着順" },
+  { value: "newest", label: "新着順(訪問日)" },
   { value: "earning", label: "稼ぎ順" },
   { value: "rating", label: "評価順" },
 ];
