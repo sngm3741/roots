@@ -12,7 +12,7 @@ export const SurveyDraftInputSchema = z.object({
   visitedPeriod: z.string().min(1), // YYYY-MM 前提
   workType: z.enum(WORK_TYPES),
   age: z.number().min(18).max(50),
-  specScore: z.number().min(60).max(140),
+  specScore: z.number().min(50).max(140),
   waitTimeHours: z.number().min(0).max(24),
   averageEarning: z.number().min(0).max(30),
   castBack: z.number().min(0).max(30000).optional(),

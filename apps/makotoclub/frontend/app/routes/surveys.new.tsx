@@ -98,7 +98,7 @@ export async function action({ request, context }: ActionFunctionArgs) {
     !Number.isFinite(ratingVal) ||
     ageVal < 18 ||
     ageVal > 50 ||
-    specVal < 60 ||
+    specVal < 50 ||
     specVal > 140 ||
     waitVal < 0 ||
     waitVal > 24 ||
@@ -187,7 +187,7 @@ export default function NewSurvey() {
   const [imageError, setImageError] = useState<string | null>(null);
   const [modalImage, setModalImage] = useState<{ url: string; name: string } | null>(null);
   const [age, setAge] = useState<number>(18);
-  const [specScore, setSpecScore] = useState<number>(60);
+  const [specScore, setSpecScore] = useState<number>(50);
   const [rating, setRating] = useState<number>(0);
   const [waitTime, setWaitTime] = useState<number>(0);
   const [averageEarning, setAverageEarning] = useState<number>(0);
@@ -372,7 +372,7 @@ export default function NewSurvey() {
             {/* スペックスライダー */}
             <div className="space-y-2">
               <div className="text-sm font-semibold text-slate-800">
-                スペック (60-140)<span className="ml-1 text-pink-600">*</span>
+                スペック (50-140)<span className="ml-1 text-pink-600">*</span>
               </div>
               <div className="space-y-2 rounded-2xl border border-slate-200 bg-white p-4">
               <div className="flex items-center justify-between text-sm text-slate-700">
@@ -382,13 +382,13 @@ export default function NewSurvey() {
               <input type="hidden" name="specScore" value={specTouched ? specScore : ""} />
               <input
                 type="range"
-                min="60"
+                min="50"
                 max="140"
                 step="1"
                 value={specScore}
                 onChange={(e) => {
                   const val = Number(e.target.value);
-                  const clamped = Math.min(140, Math.max(60, val));
+                  const clamped = Math.min(140, Math.max(50, val));
                   if (!Number.isFinite(clamped)) return;
                   setSpecTouched(true);
                   setSpecScore(clamped);
@@ -396,8 +396,8 @@ export default function NewSurvey() {
                 className="w-full accent-pink-500"
               />
                 <div className="flex justify-between text-xs text-slate-500">
-                  <span>60</span>
-                  <span>100</span>
+                  <span>50</span>
+                  <span>95</span>
                   <span>140</span>
                 </div>
               </div>
