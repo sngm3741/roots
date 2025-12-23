@@ -174,6 +174,10 @@ export const SurveyFormPage = ({ mode }: Props) => {
     if (age == null) return;
     const specScore = parseIntField(form.specScore, "スペック");
     if (specScore == null) return;
+    if (specScore < 50 || specScore > 140) {
+      setError("スペックは50〜140の範囲で入力してください");
+      return;
+    }
     const waitTimeHours = parseIntField(form.waitTimeHours, "待機時間");
     if (waitTimeHours == null) return;
     const averageEarning = parseIntField(form.averageEarning, "平均稼ぎ");
@@ -284,7 +288,7 @@ export const SurveyFormPage = ({ mode }: Props) => {
                 />
               </div>
               <div className="space-y-2">
-                <Label>スペック</Label>
+                <Label>スペック (50-140)</Label>
                 <Input
                   inputMode="numeric"
                   value={form.specScore}
