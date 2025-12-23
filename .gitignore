@@ -23,6 +23,7 @@ pnpm-debug.log*
 package-lock.json
 !apps/makotoclub/frontend/package-lock.json
 !apps/makotoclub/admin/package-lock.json
+!packages/makotoclub-shared/package-lock.json
 pnpm-lock.yaml
 yarn.lock
 .next/
