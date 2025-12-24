@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { type LoaderFunctionArgs, useLoaderData } from "react-router";
 import { Button } from "../components/ui/button";
 import { fetchStores } from "../lib/stores.server";
@@ -6,7 +7,6 @@ import { getApiBaseUrl } from "../config.server";
 import type { StoreSummary } from "../types/store";
 import type { SurveySummary } from "../types/survey";
 import { Input } from "../components/ui/input";
-import { Select } from "../components/ui/select";
 import { StoreCard } from "../components/cards/store-card";
 import { SurveyCard } from "../components/cards/survey-card";
 
@@ -15,68 +15,6 @@ type LoaderData = {
   stores: StoreSummary[];
   surveys: SurveySummary[];
 };
-
-const PREFS = [
-  "北海道",
-  "青森県",
-  "岩手県",
-  "宮城県",
-  "秋田県",
-  "山形県",
-  "福島県",
-  "茨城県",
-  "栃木県",
-  "群馬県",
-  "埼玉県",
-  "千葉県",
-  "東京都",
-  "神奈川県",
-  "新潟県",
-  "富山県",
-  "石川県",
-  "福井県",
-  "山梨県",
-  "長野県",
-  "岐阜県",
-  "静岡県",
-  "愛知県",
-  "三重県",
-  "滋賀県",
-  "京都府",
-  "大阪府",
-  "兵庫県",
-  "奈良県",
-  "和歌山県",
-  "鳥取県",
-  "島根県",
-  "岡山県",
-  "広島県",
-  "山口県",
-  "徳島県",
-  "香川県",
-  "愛媛県",
-  "高知県",
-  "福岡県",
-  "佐賀県",
-  "長崎県",
-  "熊本県",
-  "大分県",
-  "宮崎県",
-  "鹿児島県",
-  "沖縄県",
-];
-
-const INDUSTRY_OPTIONS = [
-  "デリヘル",
-  "ホテヘル",
-  "箱ヘル",
-  "ソープ",
-  "DC",
-  "風エス",
-  "メンエス",
-];
-
-const GENRE_OPTIONS = ["熟女", "学園系", "スタンダード", "格安店", "高級店"];
 
 export async function loader({ context, request }: LoaderFunctionArgs) {
   const apiBaseUrl = getApiBaseUrl(context.cloudflare?.env ?? {}, new URL(request.url).origin);
@@ -162,65 +100,60 @@ function SearchGuide() {
 }
 
 function SearchSection() {
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const searchForm = (
+    <form method="get" action="/surveys" className="grid gap-4 md:grid-cols-2">
+      <div className="space-y-2">
+        <label className="text-sm font-semibold text-slate-800" htmlFor="specMin">
+          スペック
+        </label>
+        <Input id="specMin" name="specMin" type="number" placeholder="例: 80" min={0} />
+      </div>
+      <div className="space-y-2">
+        <label className="text-sm font-semibold text-slate-800" htmlFor="ageMin">
+          年齢
+        </label>
+        <Input id="ageMin" name="ageMin" type="number" placeholder="例: 22" min={18} />
+      </div>
+      <div className="md:col-span-3 flex items-center justify-end gap-3">
+        <Button variant="secondary" asChild>
+          <a href="/surveys">条件をクリア</a>
+        </Button>
+        <Button type="submit">検索する</Button>
+      </div>
+    </form>
+  );
+
   return (
-    <section className="card-surface space-y-5 rounded-3xl border border-pink-100/80 p-6">
-      <header className="space-y-2">
-        <p className="text-xs font-semibold uppercase text-slate-500">Search</p>
-        <h2 className="text-xl font-semibold text-slate-900">店舗を検索する</h2>
-      </header>
-      <form method="get" action="/stores" className="grid gap-4 md:grid-cols-3">
-        <div className="md:col-span-3 space-y-2">
-          <label className="text-sm font-semibold text-slate-800" htmlFor="name">
-            キーワード
-          </label>
-          <Input id="name" name="name" placeholder="店名・業種で検索" aria-label="キーワード検索" />
+    <section className="rounded-[32px] border border-slate-200/80 bg-slate-50/70 px-1 pb-1 pt-2 md:px-6 md:pb-2 md:pt-12">
+      <div className="relative flex min-h-[36px] items-center pb-2">
+        <button
+          type="button"
+          aria-pressed={filtersOpen}
+          className="flex items-center gap-2 rounded-full px-2 text-sm font-semibold text-slate-700"
+          onClick={() => setFiltersOpen((value) => !value)}
+        >
+          <span className={`inline-flex h-6 w-10 items-center rounded-full transition-colors ${filtersOpen ? "bg-pink-500" : "bg-slate-200"}`}>
+            <span
+              className={`ml-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${filtersOpen ? "translate-x-4" : "translate-x-0"}`}
+            />
+          </span>
+          条件を追加
+        </button>
+      </div>
+      <div
+        className={`pointer-events-none overflow-hidden transition-all duration-300 ease-out ${
+          filtersOpen ? "mb-4 max-h-[520px] translate-y-0 scale-100 opacity-100" : "mb-0 max-h-0 -translate-y-2 scale-95 opacity-0"
+        }`}
+        aria-hidden={!filtersOpen}
+      >
+        <div className="pointer-events-auto card-surface !shadow-none space-y-5 rounded-3xl border border-pink-100/80 bg-white/95 p-5 md:p-6">
+          {searchForm}
         </div>
-        <div className="space-y-2">
-          <label className="text-sm font-semibold text-slate-800" htmlFor="prefecture">
-            都道府県
-          </label>
-          <Select id="prefecture" name="prefecture" defaultValue="">
-            <option value="">指定なし</option>
-            {PREFS.map((pref) => (
-              <option key={pref} value={pref}>
-                {pref}
-              </option>
-            ))}
-          </Select>
-        </div>
-        <div className="space-y-2">
-          <label className="text-sm font-semibold text-slate-800" htmlFor="industry">
-            業種
-          </label>
-          <Select id="industry" name="industry" defaultValue="">
-            <option value="">指定なし</option>
-            {INDUSTRY_OPTIONS.map((opt) => (
-              <option key={opt} value={opt}>
-                {opt}
-              </option>
-            ))}
-          </Select>
-        </div>
-        <div className="space-y-2">
-          <label className="text-sm font-semibold text-slate-800" htmlFor="genre">
-            ジャンル
-          </label>
-          <Select id="genre" name="genre" defaultValue="">
-            <option value="">指定なし</option>
-            {GENRE_OPTIONS.map((opt) => (
-              <option key={opt} value={opt}>
-                {opt}
-              </option>
-            ))}
-          </Select>
-        </div>
-        <div className="md:col-span-3 flex items-center justify-end gap-3">
-          <Button variant="secondary" asChild>
-            <a href="/stores">条件をクリア</a>
-          </Button>
-          <Button type="submit">検索する</Button>
-        </div>
-      </form>
+      </div>
+      <div className="card-surface !shadow-none space-y-5 rounded-3xl border border-pink-100/80 p-5 md:p-6">
+        {searchForm}
+      </div>
     </section>
   );
 }
