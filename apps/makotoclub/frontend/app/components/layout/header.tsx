@@ -40,7 +40,7 @@ export function Header() {
     <>
       <header className="fixed top-4 left-4 right-4 z-50 bg-white/60 backdrop-blur-2xl border border-gray-200/50 rounded-2xl shadow-lg shadow-black/5">
         <div className="max-w-5xl mx-auto px-4">
-          <div className="flex items-center justify-between h-14 md:justify-center">
+          <div className="relative flex items-center justify-between h-14">
             {/* Mobile Menu Button - Left */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -50,13 +50,16 @@ export function Header() {
               {mobileMenuOpen ? <CloseIcon /> : <MenuIcon />}
             </button>
 
-            {/* Logo - Center on mobile, Left on desktop */}
+            {/* Logo - Center */}
             <a
               href="/"
-              className="flex items-center gap-2 hover:opacity-80 transition-opacity md:absolute md:left-4"
+              className="absolute left-1/2 -translate-x-1/2 flex items-center hover:opacity-80 transition-opacity"
             >
-              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-pink-400 to-purple-500" />
-              <span className="text-lg text-gray-900">MakotoClub</span>
+              <img
+                src="/logo.jpeg"
+                alt="MakotoClub"
+                className="w-10 h-10 md:w-8 md:h-8 rounded-lg object-cover"
+              />
             </a>
 
             {/* Spacer for mobile to keep logo centered */}
@@ -78,10 +81,16 @@ export function Header() {
             {/* CTA Button */}
             <Button
               asChild
-              className="hidden md:block px-4 py-2 bg-gradient-to-r from-pink-400 to-purple-500 text-white rounded-lg hover:opacity-90 transition-opacity text-sm md:absolute md:right-4 shadow-sm shadow-pink-200"
+              className="hidden md:block h-10 md:h-8 px-4 bg-gradient-to-r from-pink-400 to-purple-500 text-white rounded-lg hover:opacity-90 transition-opacity text-sm md:absolute md:right-4 shadow-sm shadow-pink-200"
               size="sm"
             >
-              <a href="/stores">店舗を探す</a>
+              <a
+                href="/surveys/new"
+                aria-label="アンケート投稿"
+                className="flex items-center gap-1"
+              >
+                <span className="font-medium">投稿する</span>
+              </a>
             </Button>
           </div>
         </div>
@@ -112,8 +121,11 @@ export function Header() {
           {/* Menu Header */}
           <div className="p-6 border-b border-gray-100">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-pink-400 to-purple-500" />
-              <span className="text-lg text-gray-900">MakotoClub</span>
+              <img
+                src="/logo.jpeg"
+                alt="MakotoClub"
+                className="w-8 h-8 rounded-full object-cover"
+              />
             </div>
           </div>
 

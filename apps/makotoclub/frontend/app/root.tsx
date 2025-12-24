@@ -16,6 +16,7 @@ import { BreadcrumbProvider } from "./components/common/breadcrumb-context";
 import { Breadcrumbs } from "./components/common/breadcrumbs";
 
 export const links: Route.LinksFunction = () => [
+  { rel: "icon", href: "/favicon.png", type: "image/png" },
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
   {
     rel: "preconnect",

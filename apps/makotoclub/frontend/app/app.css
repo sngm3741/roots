@@ -1,8 +1,9 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif,
-    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-sans: Inter, Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans",
+    "Noto Sans JP", sans-serif, "Segoe UI Emoji", "Segoe UI Symbol",
+    "Noto Color Emoji";
 }
 
 :root {
@@ -20,6 +21,12 @@ body {
     radial-gradient(circle at 82% 5%, rgba(168, 85, 247, 0.12), transparent 28%),
     linear-gradient(180deg, #fff9fb 0%, #ffffff 40%, #fff8ff 100%);
   color: var(--mc-fg);
+}
+
+html[lang="ja"] body,
+html[lang="ja"] .font-base {
+  font-family: Inter, Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans",
+    "Noto Sans JP", sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
 }
 
 .glass-surface {

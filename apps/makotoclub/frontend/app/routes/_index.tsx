@@ -108,9 +108,10 @@ export default function Index() {
   const { stores, surveys } = useLoaderData() as LoaderData;
 
   return (
-    <main className="space-y-12">
+    <main className="space-y-2">
       <Hero />
       <div className="mx-auto max-w-5xl space-y-12 px-4">
+        <SearchGuide />
         <SearchSection />
         <SurveysSection surveys={surveys} />
         <StoresSection stores={stores} />
@@ -121,31 +122,42 @@ export default function Index() {
 
 function Hero() {
   return (
-    <section className="relative overflow-hidden rounded-[28px] border border-pink-100 bg-gradient-to-br from-white via-pink-50 to-violet-50 px-4 py-12 shadow-[0_30px_80px_rgba(15,23,42,0.12)]">
-      <div className="absolute -left-10 -top-10 h-56 w-56 rounded-full bg-pink-200/40 blur-3xl" />
-      <div className="absolute right-0 -bottom-10 h-64 w-64 rounded-full bg-purple-200/40 blur-3xl" />
-      <div className="mx-auto flex max-w-5xl flex-col gap-6 px-2 md:px-4">
-        <div className="inline-flex items-center gap-2 self-start rounded-full bg-white/70 px-4 py-2 text-xs font-semibold text-pink-700 shadow-sm">
-          テスト
-        </div>
-        <div className="space-y-4">
-          <h1 className="text-3xl font-bold leading-tight text-slate-900 md:text-4xl">
-            みんなのリアルな声で、<br />お店探しをアップデート。
-          </h1>
-          <p className="text-base text-slate-700 md:text-lg">
-            最新の口コミと店舗情報をまとめてチェック。気になるお店はすぐに詳細へ。
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-3">
-          <Button size="lg" asChild>
-            <a href="/stores">店舗を探す</a>
-          </Button>
-          <Button size="lg" variant="secondary" asChild>
-            <a href="/surveys/new">アンケートを投稿</a>
-          </Button>
+    <section className="relative mx-auto max-w-5xl overflow-hidden rounded-[28px] p-6 text-center md:px-8 md:py-20">
+      <div className="relative flex flex-col items-center justify-center gap-5">
+        <img
+          src="/logo.jpeg"
+          alt="マコトクラブ"
+          className="h-20 w-20 rounded-2xl object-cover md:h-24 md:w-24"
+        />
+        <div className="space-y-2 text-center">
+          <h1 className="font-bold text-4xl text-pink-600 md:text-4xl">#マコトクラブ</h1>
+          <p className="font-bold text-lg text-slate-500 md:text-base">みんなのリアルな声で、</p>
+          <p className="font-bold text-lg text-slate-500 md:text-base">あなたにピッタリのお店を。</p>
         </div>
       </div>
     </section>
+  );
+}
+
+function SearchGuide() {
+  return (
+    <div className="pointer-events-none relative mx-auto flex w-full max-w-5xl translate-x-8 flex-col items-center text-pink-600 md:translate-x-10">
+      <h2 className="text-center text-base font-semibold leading-[1.3] md:text-base rotate-4">
+        スペ・年齢で絞り込み！
+      </h2>
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 48 86"
+        className="mt-1 w-5"
+        style={{ transform: "scaleX(-1) rotate(-2deg)" }}
+        aria-hidden="true"
+      >
+        <path
+          d="M7.56192 40.4608C8.15817 41.2839 8.82796 42.2863 8.45988 43.2339C6.25154 48.9197 6.0619 55.2592 7.2044 61.251C8.34724 67.2427 10.7693 72.9247 13.6468 78.3031C12.0242 78.3763 10.5521 77.406 8.96586 77.0572C7.37965 76.7085 5.23093 77.5014 5.29847 79.1241C5.35162 80.3988 6.71295 81.1499 7.88804 81.6471C10.6975 82.836 13.5074 84.025 16.3171 85.2139C17.2318 85.6009 18.2218 85.9958 19.1907 85.7785C20.6445 85.4523 21.4423 83.9266 22.0478 82.5652C23.2785 79.7992 24.5093 77.0328 25.74 74.2665C26.1503 73.3442 26.5677 72.392 26.595 71.3831C26.6221 70.3741 26.162 69.2825 25.2413 68.8684C24.2713 68.4323 23.0867 68.8831 22.3577 69.6576C21.6287 70.4322 21.2531 71.4649 20.8959 72.4668C20.3 74.1394 19.7039 75.8116 19.1078 77.4839C12.7369 68.3247 10.3336 56.5018 12.6231 45.5823C20.6501 50.9164 31.738 51.2159 40.0413 46.3231C42.7194 44.7449 45.154 42.6226 46.6271 39.8857C48.1005 37.1485 48.5091 33.7429 47.2473 30.9022C45.2914 26.4989 40.0112 24.5615 35.1969 24.3683C25.6364 23.9847 16.0405 29.0244 10.9298 37.1136C5.10672 26.9807 4.08367 14.2215 8.21786 3.29054C8.62916 2.20329 7.68279 0.934948 6.53541 0.749838C5.38784 0.564421 4.23455 1.2381 3.53684 2.16756C2.83909 3.09737 2.51284 4.24745 2.23416 5.37576C-0.693149 17.2316 0.395505 30.5727 7.56192 40.4608ZM14.7532 40.6965C18.936 33.1922 27.8194 28.5949 36.3617 29.5141C38.8825 29.7852 41.6788 30.7681 42.6341 33.1168C43.2485 34.6275 42.922 36.4039 42.0856 37.8039C41.2493 39.204 39.9585 40.2761 38.5992 41.177C35.0496 43.53 30.8218 44.8963 26.5633 44.874C22.3048 44.8517 18.0358 43.4096 14.7532 40.6965Z"
+          fill="currentColor"
+        />
+      </svg>
+    </div>
   );
 }
 
@@ -155,9 +167,6 @@ function SearchSection() {
       <header className="space-y-2">
         <p className="text-xs font-semibold uppercase text-slate-500">Search</p>
         <h2 className="text-xl font-semibold text-slate-900">店舗を検索する</h2>
-        <p className="text-sm text-slate-600">
-          店名・エリア・業種を入力するか、プリセットから絞り込んでください。
-        </p>
       </header>
       <form method="get" action="/stores" className="grid gap-4 md:grid-cols-3">
         <div className="md:col-span-3 space-y-2">

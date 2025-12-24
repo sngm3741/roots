@@ -4,9 +4,12 @@ export function Footer() {
       <div className="max-w-5xl mx-auto px-4 py-8">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-pink-400 to-purple-500" />
-            <span className="text-gray-900">MakotoClub</span>
-            <span className="text-gray-500 text-sm ml-2">© 2024 All rights reserved.</span>
+            <span className="text-gray-500 text-sm ml-2">© マコトクラブ</span>
+            <img
+              src="/logo.jpeg"
+              alt="MakotoClub"
+              className="w-6 h-6 rounded-full object-cover"
+            />
           </div>
           <div className="flex items-center gap-6 text-sm text-gray-600">
             <a className="hover:text-gray-900 transition-colors" href="/terms">
@@ -24,4 +27,3 @@ export function Footer() {
     </footer>
   );
 }
-
