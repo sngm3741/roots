@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { type LoaderFunctionArgs, Form, useLoaderData } from "react-router";
+import { type LoaderFunctionArgs, Form, Link, useLoaderData } from "react-router";
 import { Button } from "../components/ui/button";
 import { fetchStores } from "../lib/stores.server";
 import { fetchSurveys } from "../lib/surveys.server";
@@ -104,45 +104,43 @@ export async function loader({ context, request }: LoaderFunctionArgs) {
   let surveysTotal = 0;
 
   try {
-    const [surveysCountRes, targetRes] = await Promise.all([
-      fetchSurveys({ API_BASE_URL: apiBaseUrl }, { sort: "newest", limit: 1 }),
-      target === "surveys"
-        ? fetchSurveys(
-            { API_BASE_URL: apiBaseUrl },
-            {
-              page,
-              limit,
-              sort,
-              name,
-              prefecture,
-              industry,
-              genre,
-              spec: spec ?? undefined,
-              age: age ?? undefined,
-            },
-          )
-        : fetchStores(
-            { API_BASE_URL: apiBaseUrl },
-            {
-              page,
-              limit,
-              sort,
-              name,
-              prefecture,
-              industry,
-              genre,
-              spec: spec ?? undefined,
-              age: age ?? undefined,
-            },
-          ),
-    ]);
+    const surveysCountRes = await fetchSurveys({ API_BASE_URL: apiBaseUrl }, { sort: "newest", limit: 1 });
     surveysTotal = surveysCountRes.total ?? surveysCountRes.items.length ?? 0;
+
     if (target === "surveys") {
-      surveys = targetRes.items;
-      total = targetRes.total;
+      const surveysRes = await fetchSurveys(
+        { API_BASE_URL: apiBaseUrl },
+        {
+          page,
+          limit,
+          sort,
+          name,
+          prefecture,
+          industry,
+          genre,
+          spec: spec ?? undefined,
+          age: age ?? undefined,
+        },
+      );
+      surveys = surveysRes.items;
+      total = surveysRes.total;
     } else {
-      stores = targetRes.items;
-      total = targetRes.total;
+      const storesRes = await fetchStores(
+        { API_BASE_URL: apiBaseUrl },
+        {
+          page,
+          limit,
+          sort,
+          name,
+          prefecture,
+          industry,
+          genre,
+          spec: spec ?? undefined,
+          age: age ?? undefined,
+        },
+      );
+      stores = storesRes.items;
+      total = storesRes.total;
     }
   } catch (error) {
     console.error("Failed to fetch data for index loader", error);
@@ -491,7 +489,7 @@ function SearchSection({
             </div>
             <div className="md:col-span-3 flex items-center justify-end gap-3">
               <Button variant="secondary" asChild>
-                <a href={`/?target=${targetValue}`}>条件をクリア</a>
+                <Link preventScrollReset to={`/?target=${targetValue}`}>条件をクリア</Link>
               </Button>
               <Button type="submit">検索する</Button>
             </div>
