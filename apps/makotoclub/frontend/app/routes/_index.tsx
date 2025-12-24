@@ -119,8 +119,8 @@ export default function Index() {
 
 function Hero() {
   return (
-    <section className="relative mx-auto max-w-5xl overflow-hidden rounded-[28px] p-6 text-center md:px-8 md:py-20">
-      <div className="relative flex flex-col items-center justify-center gap-5">
+    <section className="relative mx-auto max-w-5xl overflow-hidden rounded-[28px] py-20 text-center">
+      <div className="relative flex flex-col items-center justify-center gap-6">
         <img
           src="/logo.jpeg"
           alt="マコトクラブ"
@@ -162,9 +162,7 @@ function SearchSection() {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const legacyFilters = (
     <>
-      <header className="space-y-2">
-      </header>
-      <form method="get" action="/stores" className="grid gap-4 md:grid-cols-3">
+      <form method="get" action="/stores" className="grid gap-6 md:grid-cols-3">
         <div className="md:col-span-3 space-y-2">
           <label className="text-sm font-semibold text-slate-800" htmlFor="name">
             キーワード
@@ -214,7 +212,7 @@ function SearchSection() {
     </>
   );
   const searchForm = (
-    <form method="get" action="/surveys" className="grid gap-4 md:grid-cols-2">
+    <form method="get" action="/surveys" className="grid gap-6 md:grid-cols-2">
       <div className="space-y-2">
         <label className="text-sm font-semibold text-slate-800" htmlFor="specMin">
           スペック
