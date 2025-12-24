@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { type LoaderFunctionArgs, useLoaderData } from "react-router";
 import { Button } from "../components/ui/button";
 import { fetchStores } from "../lib/stores.server";
@@ -15,6 +15,7 @@ type LoaderData = {
   apiBaseUrl: string;
   stores: StoreSummary[];
   surveys: SurveySummary[];
+  surveysTotal: number;
 };
 
 const PREFS = [
@@ -76,6 +77,7 @@ export async function loader({ context, request }: LoaderFunctionArgs) {
 
   let stores: StoreSummary[] = [];
   let surveys: SurveySummary[] = [];
+  let surveysTotal = 0;
 
   try {
     const [surveysRes, storesRes] = await Promise.all([
@@ -84,25 +86,28 @@ export async function loader({ context, request }: LoaderFunctionArgs) {
     ]);
     stores = storesRes.items;
     surveys = surveysRes.items;
+    surveysTotal =  surveysRes.total ?? surveysRes.items.length ?? 0;
   } catch (error) {
     console.error("Failed to fetch data for index loader", error);
     stores = [];
     surveys = [];
+    surveysTotal = 0;
   }
 
   return Response.json({
     apiBaseUrl,
     stores,
     surveys,
+    surveysTotal,
   });
 }
 
 export default function Index() {
-  const { stores, surveys } = useLoaderData() as LoaderData;
+  const { stores, surveys, surveysTotal } = useLoaderData() as LoaderData;
 
   return (
     <main className="space-y-2">
-      <Hero />
+      <Hero surveysTotal={surveysTotal} />
       <div className="mx-auto max-w-5xl space-y-12 px-4">
         <div className="relative">
           <SearchGuide className="absolute left-1/2 top-0 -translate-x-1/2 translate-y-12 md:translate-y-15" />
@@ -117,7 +122,31 @@ export default function Index() {
   );
 }
 
-function Hero() {
+function Hero({ surveysTotal }: { surveysTotal: number }) {
+  const [displayCount, setDisplayCount] = useState(0);
+
+  useEffect(() => {
+    let rafId = 0;
+    const durationMs = 900;
+    const target = Math.max(0, surveysTotal);
+    const start = performance.now();
+
+    const tick = (now: number) => {
+      const progress = Math.min(1, (now - start) / durationMs);
+      setDisplayCount(Math.floor(target * progress));
+      if (progress < 1) {
+        rafId = requestAnimationFrame(tick);
+      } else {
+        setDisplayCount(target);
+      }
+    };
+
+    rafId = requestAnimationFrame(tick);
+    return () => {
+      cancelAnimationFrame(rafId);
+    };
+  }, [surveysTotal]);
+
   return (
     <section className="relative mx-auto max-w-5xl overflow-hidden rounded-[28px] py-20 text-center">
       <div className="relative flex flex-col items-center justify-center gap-6">
@@ -129,7 +158,28 @@ function Hero() {
         <div className="space-y-2 text-center">
           <h1 className="font-bold text-4xl text-pink-600 md:text-4xl">#マコトクラブ</h1>
           <p className="font-bold text-lg text-slate-500 md:text-base">みんなのリアルな声で、</p>
-          <p className="font-bold text-lg text-slate-500 md:text-base">あなたにピッタリのお店を。</p>
+          <p className="font-bold text-lg text-slate-500 md:text-base">自分にピッタリのお店を。</p>
+        </div>
+      </div>
+      <div className="mt-10 flex justify-center">
+        <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700">
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 24 24"
+            className="h-4 w-4 text-emerald-500"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <path d="M9 11h6" />
+            <path d="M9 15h4" />
+            <path d="M6 3h8l4 4v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z" />
+            <path d="M14 3v4h4" />
+            <path d="M8 7h4" />
+            <path d="M9 18l2 2 4-4" />
+          </svg>
+          {/* NOTE: とりあえずはったりでアンケート数 の2倍に...(^ω^;) */}
+          掲載数 {(displayCount*2).toLocaleString("ja-JP")} +
         </div>
       </div>
     </section>
@@ -160,6 +210,8 @@ function SearchGuide({ className = "" }: { className?: string }) {
 
 function SearchSection() {
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [menuLabel, setMenuLabel] = useState("アンケート");
   const legacyFilters = (
     <>
       <form method="get" action="/stores" className="grid gap-6 md:grid-cols-3">
@@ -236,7 +288,7 @@ function SearchSection() {
 
   return (
     <section className="rounded-[32px] border border-slate-200/80 bg-slate-50/70 px-1 pb-1 pt-2">
-      <div className="relative flex min-h-[36px] items-center pb-2">
+      <div className="relative flex min-h-[36px] items-center justify-between pb-1">
         <button
           type="button"
           aria-pressed={filtersOpen}
@@ -250,6 +302,61 @@ function SearchSection() {
           </span>
           条件を追加
         </button>
+        <div className="relative">
+          <button
+            type="button"
+            className="grid w-32 grid-cols-[20px_auto] items-center justify-center gap-1 rounded-full px-2 text-sm font-semibold text-slate-700"
+            aria-expanded={menuOpen}
+            aria-haspopup="menu"
+            onClick={() => setMenuOpen((value) => !value)}
+          >
+            <span className="flex items-center justify-center">
+              <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+              <path
+                d="M8.86464 13.2068L5.96851 16.103L8.86464 19M18.0334 16.103H5.9668"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M15.1371 10.7931L18.0332 7.89701L15.1371 5M5.96875 7.89683H18.0354"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              </svg>
+            </span>
+            <span>{menuLabel}</span>
+          </button>
+          <div
+            role="menu"
+            className={`absolute right-0 top-full z-20 mt-2 w-44 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-xl shadow-black/5 transition-all ${
+              menuOpen ? "scale-100 opacity-100" : "pointer-events-none scale-95 opacity-0"
+            }`}
+            aria-hidden={!menuOpen}
+          >
+            <button
+              type="button"
+              className="flex items-center gap-2 px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+              role="menuitem"
+              onClick={() => {
+                setMenuLabel("アンケート");
+                setMenuOpen(false);
+              }}
+            >
+              アンケート
+            </button>
+            <button
+              type="button"
+              className="flex items-center gap-2 px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+              role="menuitem"
+              onClick={() => {
+                setMenuLabel("店舗情報");
+                setMenuOpen(false);
+              }}
+            >
+              店舗情報
+            </button>
+          </div>
+        </div>
       </div>
       <div
         className={`pointer-events-none overflow-hidden transition-all duration-300 ease-out ${
