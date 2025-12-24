@@ -7,6 +7,7 @@ import { getApiBaseUrl } from "../config.server";
 import type { StoreSummary } from "../types/store";
 import type { SurveySummary } from "../types/survey";
 import { Input } from "../components/ui/input";
+import { Select } from "../components/ui/select";
 import { StoreCard } from "../components/cards/store-card";
 import { SurveyCard } from "../components/cards/survey-card";
 
@@ -15,6 +16,60 @@ type LoaderData = {
   stores: StoreSummary[];
   surveys: SurveySummary[];
 };
+
+const PREFS = [
+  "北海道",
+  "青森県",
+  "岩手県",
+  "宮城県",
+  "秋田県",
+  "山形県",
+  "福島県",
+  "茨城県",
+  "栃木県",
+  "群馬県",
+  "埼玉県",
+  "千葉県",
+  "東京都",
+  "神奈川県",
+  "新潟県",
+  "富山県",
+  "石川県",
+  "福井県",
+  "山梨県",
+  "長野県",
+  "岐阜県",
+  "静岡県",
+  "愛知県",
+  "三重県",
+  "滋賀県",
+  "京都府",
+  "大阪府",
+  "兵庫県",
+  "奈良県",
+  "和歌山県",
+  "鳥取県",
+  "島根県",
+  "岡山県",
+  "広島県",
+  "山口県",
+  "徳島県",
+  "香川県",
+  "愛媛県",
+  "高知県",
+  "福岡県",
+  "佐賀県",
+  "長崎県",
+  "熊本県",
+  "大分県",
+  "宮崎県",
+  "鹿児島県",
+  "沖縄県",
+];
+
+const INDUSTRY_OPTIONS = ["デリヘル", "ホテヘル", "箱ヘル", "ソープ", "DC", "風エス", "メンエス"];
+
+const GENRE_OPTIONS = ["熟女", "学園系", "スタンダード", "格安店", "高級店"];
 
 export async function loader({ context, request }: LoaderFunctionArgs) {
   const apiBaseUrl = getApiBaseUrl(context.cloudflare?.env ?? {}, new URL(request.url).origin);
@@ -49,8 +104,12 @@ export default function Index() {
     <main className="space-y-2">
       <Hero />
       <div className="mx-auto max-w-5xl space-y-12 px-4">
-        <SearchGuide />
-        <SearchSection />
+        <div className="relative">
+          <SearchGuide className="absolute left-1/2 top-0 -translate-x-1/2 translate-y-12 md:translate-y-15" />
+          <div className="pt-10 md:pt-12">
+            <SearchSection />
+          </div>
+        </div>
         <SurveysSection surveys={surveys} />
         <StoresSection stores={stores} />
       </div>
@@ -77,9 +136,9 @@ function Hero() {
   );
 }
 
-function SearchGuide() {
+function SearchGuide({ className = "" }: { className?: string }) {
   return (
-    <div className="pointer-events-none relative mx-auto flex w-full max-w-5xl translate-x-8 flex-col items-center text-pink-600 md:translate-x-10">
+    <div className={`pointer-events-none relative mx-auto flex w-full max-w-5xl flex-col items-center text-pink-600 ${className}`}>
       <h2 className="text-center text-base font-semibold leading-[1.3] md:text-base rotate-4">
         スペ・年齢で絞り込み！
       </h2>
@@ -101,6 +160,59 @@ function SearchGuide() {
 
 function SearchSection() {
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const legacyFilters = (
+    <>
+      <header className="space-y-2">
+      </header>
+      <form method="get" action="/stores" className="grid gap-4 md:grid-cols-3">
+        <div className="md:col-span-3 space-y-2">
+          <label className="text-sm font-semibold text-slate-800" htmlFor="name">
+            キーワード
+          </label>
+          <Input id="name" name="name" placeholder="店名・業種で検索" aria-label="キーワード検索" />
+        </div>
+        <div className="space-y-2">
+          <label className="text-sm font-semibold text-slate-800" htmlFor="prefecture">
+            都道府県
+          </label>
+          <Select id="prefecture" name="prefecture" defaultValue="">
+            <option value="">指定なし</option>
+            {PREFS.map((pref) => (
+              <option key={pref} value={pref}>
+                {pref}
+              </option>
+            ))}
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <label className="text-sm font-semibold text-slate-800" htmlFor="industry">
+            業種
+          </label>
+          <Select id="industry" name="industry" defaultValue="">
+            <option value="">指定なし</option>
+            {INDUSTRY_OPTIONS.map((opt) => (
+              <option key={opt} value={opt}>
+                {opt}
+              </option>
+            ))}
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <label className="text-sm font-semibold text-slate-800" htmlFor="genre">
+            ジャンル
+          </label>
+          <Select id="genre" name="genre" defaultValue="">
+            <option value="">指定なし</option>
+            {GENRE_OPTIONS.map((opt) => (
+              <option key={opt} value={opt}>
+                {opt}
+              </option>
+            ))}
+          </Select>
+        </div>
+      </form>
+    </>
+  );
   const searchForm = (
     <form method="get" action="/surveys" className="grid gap-4 md:grid-cols-2">
       <div className="space-y-2">
@@ -125,7 +237,7 @@ function SearchSection() {
   );
 
   return (
-    <section className="rounded-[32px] border border-slate-200/80 bg-slate-50/70 px-1 pb-1 pt-2 md:px-6 md:pb-2 md:pt-12">
+    <section className="rounded-[32px] border border-slate-200/80 bg-slate-50/70 px-1 pb-1 pt-2">
       <div className="relative flex min-h-[36px] items-center pb-2">
         <button
           type="button"
@@ -148,7 +260,7 @@ function SearchSection() {
         aria-hidden={!filtersOpen}
       >
         <div className="pointer-events-auto card-surface !shadow-none space-y-5 rounded-3xl border border-pink-100/80 bg-white/95 p-5 md:p-6">
-          {searchForm}
+          {legacyFilters}
         </div>
       </div>
       <div className="card-surface !shadow-none space-y-5 rounded-3xl border border-pink-100/80 p-5 md:p-6">
