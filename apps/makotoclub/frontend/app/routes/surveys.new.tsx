@@ -203,7 +203,7 @@ export default function NewSurvey() {
 
   const remainingSlots = Math.max(0, MAX_IMAGES - selectedFiles.length);
   const baseInputClass =
-    "w-full rounded-xl border border-slate-200/90 bg-white px-3.5 py-2.5 text-sm";
+    "w-full min-w-0 max-w-full rounded-xl border border-slate-200/90 bg-white px-3.5 py-2.5 text-base md:text-sm";
 
   const syncInputFiles = (files: File[]) => {
     if (!fileInputRef.current) return;
@@ -724,7 +724,7 @@ function TextAreaField({ id, label }: { id: string; label: string }) {
         id={id}
         name={id}
         rows={3}
-        className="w-full rounded-xl border border-slate-200/90 bg-white px-3.5 py-2.5 text-sm"
+        className="w-full min-w-0 max-w-full rounded-xl border border-slate-200/90 bg-white px-3.5 py-2.5 text-base md:text-sm"
       />
     </div>
   );
