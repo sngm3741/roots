@@ -1,4 +1,5 @@
 import { mapSurvey } from "../lib/mapper";
+import { rebuildStoreStats } from "../lib/store-stats";
 import { PagesFunction } from "../types";
 
 const json = (body: unknown, init?: ResponseInit) =>
@@ -47,6 +48,12 @@ export const onRequest: PagesFunction = async ({ request, params, env }) => {
       .bind(id)
       .first();
     const table = existsInPublished ? "surveys" : "survey_drafts";
+    const storeRow =
+      table === "surveys"
+        ? await env.DB.prepare("SELECT store_id FROM surveys WHERE id = ? AND deleted_at IS NULL")
+            .bind(id)
+            .first()
+        : null;
 
     await env.DB.prepare(
       `UPDATE ${table} SET
@@ -101,12 +108,15 @@ export const onRequest: PagesFunction = async ({ request, params, env }) => {
 
     const updated = await loadSurvey();
     if (!updated) return json({ message: "アンケートが見つかりません" }, { status: 404 });
+    if (table === "surveys" && storeRow?.store_id) {
+      await rebuildStoreStats(env, storeRow.store_id as string);
+    }
     return json(updated);
   }
 
   if (request.method === "DELETE") {
     const published = await env.DB.prepare(
-      "SELECT id FROM surveys WHERE id = ? AND deleted_at IS NULL"
+      "SELECT id, store_id FROM surveys WHERE id = ? AND deleted_at IS NULL"
     )
       .bind(id)
       .first();
@@ -115,6 +125,9 @@ export const onRequest: PagesFunction = async ({ request, params, env }) => {
       await env.DB.prepare("UPDATE surveys SET deleted_at = ?, updated_at = ? WHERE id = ?")
         .bind(new Date().toISOString(), new Date().toISOString(), id)
         .run();
+      if ((published as any).store_id) {
+        await rebuildStoreStats(env, (published as any).store_id as string);
+      }
     } else {
       await env.DB.prepare("DELETE FROM survey_drafts WHERE id = ?").bind(id).run();
     }

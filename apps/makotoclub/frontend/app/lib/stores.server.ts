@@ -11,6 +11,8 @@ type StoreSearchParams = {
   page?: number;
   limit?: number;
   sort?: string;
+  spec?: number;
+  age?: number;
 };
 
 export async function fetchStores(env: { API_BASE_URL?: string }, params: StoreSearchParams = {}) {
@@ -23,6 +25,8 @@ export async function fetchStores(env: { API_BASE_URL?: string }, params: StoreS
   if (params.page) search.set("page", String(params.page));
   if (params.limit) search.set("limit", String(params.limit));
   if (params.sort) search.set("sort", params.sort);
+  if (typeof params.spec === "number") search.set("spec", String(params.spec));
+  if (typeof params.age === "number") search.set("age", String(params.age));
 
   return apiClient.fetchJson<StoreListResponse>(`/api/stores?${search.toString()}`, env);
 }

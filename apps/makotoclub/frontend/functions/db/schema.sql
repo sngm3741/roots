@@ -1,5 +1,6 @@
 -- D1 schema for MakotoClub (stores/surveys)
 
+DROP TABLE IF EXISTS store_stats;
 DROP TABLE IF EXISTS survey_drafts;
 DROP TABLE IF EXISTS surveys;
 DROP TABLE IF EXISTS stores;
@@ -53,6 +54,25 @@ CREATE TABLE surveys (
 
 CREATE INDEX idx_surveys_store_id ON surveys(store_id);
 CREATE INDEX idx_surveys_created_at ON surveys(created_at);
+
+CREATE TABLE store_stats (
+  store_id TEXT PRIMARY KEY,
+  survey_count INTEGER NOT NULL,
+  min_spec REAL NOT NULL,
+  max_spec REAL NOT NULL,
+  median_spec REAL NOT NULL,
+  min_age INTEGER NOT NULL,
+  max_age INTEGER NOT NULL,
+  median_age REAL NOT NULL,
+  avg_earning REAL NOT NULL,
+  avg_rating REAL NOT NULL,
+  avg_wait REAL NOT NULL,
+  helpful_count INTEGER NOT NULL,
+  updated_at TEXT NOT NULL,
+  FOREIGN KEY (store_id) REFERENCES stores(id)
+);
+
+CREATE INDEX idx_store_stats_updated_at ON store_stats(updated_at);
 CREATE TABLE survey_drafts (
   id TEXT PRIMARY KEY,
   store_id TEXT,

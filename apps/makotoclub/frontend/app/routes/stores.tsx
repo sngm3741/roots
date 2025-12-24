@@ -20,7 +20,18 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
   const url = new URL(request.url);
   const page = Number(url.searchParams.get("page") || "1");
   const limit = Number(url.searchParams.get("limit") || "10");
-  const sort = url.searchParams.get("sort") || undefined;
+  const spec = parseNumberParam(url.searchParams.get("spec"));
+  const age = parseNumberParam(url.searchParams.get("age"));
+  const name = url.searchParams.get("name")?.trim() || undefined;
+  const prefecture = url.searchParams.get("prefecture")?.trim() || undefined;
+  const area = url.searchParams.get("area")?.trim() || undefined;
+  const industry = url.searchParams.get("industry")?.trim() || undefined;
+  const genre = url.searchParams.get("genre")?.trim() || undefined;
+  const sortParam = url.searchParams.get("sort") || "";
+  const hasFilters = Boolean(
+    name || prefecture || area || industry || genre || spec !== null || age !== null,
+  );
+  const sort = sortParam || (hasFilters ? "rating" : undefined);
 
   let stores: StoreSummary[] = [];
   let total = 0;
@@ -30,10 +41,14 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
       {
         page,
         limit,
-        prefecture: url.searchParams.get("prefecture") || undefined,
-        industry: url.searchParams.get("industry") || undefined,
-        name: url.searchParams.get("name") || undefined,
+        prefecture,
+        area,
+        industry,
+        genre,
+        name,
         sort,
+        spec: spec ?? undefined,
+        age: age ?? undefined,
       },
     );
     stores = res.items;
@@ -162,6 +177,18 @@ function SearchForm({ filters }: { filters: Record<string, string> }) {
       className="card-surface space-y-5 rounded-3xl border border-pink-100/80 p-6"
     >
       <div className="grid gap-4 md:grid-cols-3">
+        <div className="space-y-2">
+          <label className="text-sm font-semibold text-slate-800" htmlFor="spec">
+            スペック
+          </label>
+          <Input id="spec" name="spec" type="number" placeholder="例: 80" min={0} defaultValue={filters.spec || ""} />
+        </div>
+        <div className="space-y-2">
+          <label className="text-sm font-semibold text-slate-800" htmlFor="age">
+            年齢
+          </label>
+          <Input id="age" name="age" type="number" placeholder="例: 22" min={18} defaultValue={filters.age || ""} />
+        </div>
         <div className="md:col-span-3 space-y-2">
           <label className="text-sm font-semibold text-slate-800" htmlFor="name">
             キーワード
@@ -224,7 +251,7 @@ function SearchForm({ filters }: { filters: Record<string, string> }) {
 }
 
 function SortBar({ filters }: { filters: Record<string, string> }) {
-  const { name, prefecture, industry, sort = "" } = filters;
+  const { name, prefecture, area, industry, genre, spec, age, sort = "" } = filters;
   return (
     <Form
       method="get"
@@ -251,7 +278,11 @@ function SortBar({ filters }: { filters: Record<string, string> }) {
       {/* 検索条件を引き継ぐ */}
       {name && <input type="hidden" name="name" value={name} />}
       {prefecture && <input type="hidden" name="prefecture" value={prefecture} />}
+      {area && <input type="hidden" name="area" value={area} />}
       {industry && <input type="hidden" name="industry" value={industry} />}
+      {genre && <input type="hidden" name="genre" value={genre} />}
+      {spec && <input type="hidden" name="spec" value={spec} />}
+      {age && <input type="hidden" name="age" value={age} />}
       <input type="hidden" name="page" value="1" />
     </Form>
   );
@@ -273,4 +304,12 @@ function Pagination({ current, totalPages }: { current: number; totalPages: numb
       </Button>
     </div>
   );
+}
+
+function parseNumberParam(value: string | null) {
+  if (value === null) return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const num = Number(trimmed);
+  return Number.isFinite(num) ? num : null;
 }

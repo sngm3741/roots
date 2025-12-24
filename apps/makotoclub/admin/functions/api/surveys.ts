@@ -1,6 +1,7 @@
 import { PagesFunction } from "./types";
 import { SurveyInputSchema } from "@makotoclub/shared";
 import { mapSurvey } from "./lib/mapper";
+import { rebuildStoreStats } from "./lib/store-stats";
 
 const json = (body: unknown, init?: ResponseInit) =>
   new Response(JSON.stringify(body), {
@@ -91,6 +92,8 @@ export const onRequestPost: PagesFunction = async ({ request, env }) => {
     )
     .run();
 
+  await rebuildStoreStats(env, payload.storeId);
+
   const row = await env.DB.prepare("SELECT *, 'published' as status FROM surveys WHERE id = ?")
     .bind(id)
     .first();
@@ -175,6 +178,10 @@ export const onRequestPut: PagesFunction = async ({ request, env }) => {
     )
     .run();
 
+  if (table === "surveys") {
+    await rebuildStoreStats(env, payload.storeId);
+  }
+
   const row = await env.DB.prepare(
     `SELECT *, '${(existing as any).status}' as status FROM ${table} WHERE id = ?`,
   )
@@ -193,9 +200,15 @@ export const onRequestDelete: PagesFunction = async ({ request, env }) => {
     .bind(id)
     .first();
   if (published) {
+    const storeRow = await env.DB.prepare("SELECT store_id FROM surveys WHERE id = ? AND deleted_at IS NULL")
+      .bind(id)
+      .first();
     await env.DB.prepare("UPDATE surveys SET deleted_at = ?, updated_at = ? WHERE id = ?")
       .bind(new Date().toISOString(), new Date().toISOString(), id)
       .run();
+    if (storeRow?.store_id) {
+      await rebuildStoreStats(env, storeRow.store_id as string);
+    }
     return json({ success: true });
   }
 

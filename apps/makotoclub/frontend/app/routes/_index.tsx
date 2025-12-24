@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { type LoaderFunctionArgs, useLoaderData } from "react-router";
+import { type LoaderFunctionArgs, Form, useLoaderData } from "react-router";
 import { Button } from "../components/ui/button";
 import { fetchStores } from "../lib/stores.server";
 import { fetchSurveys } from "../lib/surveys.server";
@@ -13,6 +13,13 @@ import { SurveyCard } from "../components/cards/survey-card";
 
 type LoaderData = {
   apiBaseUrl: string;
+  target: "surveys" | "stores";
+  filters: Record<string, string>;
+  hasFilters: boolean;
+  sort: string;
+  page: number;
+  limit: number;
+  total: number;
   stores: StoreSummary[];
   surveys: SurveySummary[];
   surveysTotal: number;
@@ -74,28 +81,86 @@ const GENRE_OPTIONS = ["熟女", "学園系", "スタンダード", "格安店",
 
 export async function loader({ context, request }: LoaderFunctionArgs) {
   const apiBaseUrl = getApiBaseUrl(context.cloudflare?.env ?? {}, new URL(request.url).origin);
+  const url = new URL(request.url);
+  const target = url.searchParams.get("target") === "stores" ? "stores" : "surveys";
+  const page = Number(url.searchParams.get("page") || "1");
+  const limit = Number(url.searchParams.get("limit") || "5");
+  const sortParam = url.searchParams.get("sort") || "";
+  const name = url.searchParams.get("name")?.trim() || undefined;
+  const prefecture = url.searchParams.get("prefecture")?.trim() || undefined;
+  const industry = url.searchParams.get("industry")?.trim() || undefined;
+  const genre = url.searchParams.get("genre")?.trim() || undefined;
+  const spec = parseNumberParam(url.searchParams.get("spec"));
+  const age = parseNumberParam(url.searchParams.get("age"));
+  const hasFilters = Boolean(
+    name || prefecture || industry || genre || spec !== null || age !== null,
+  );
+  const sort = sortParam || (hasFilters ? "rating" : "newest");
+  const filters = Object.fromEntries(url.searchParams.entries());
 
   let stores: StoreSummary[] = [];
   let surveys: SurveySummary[] = [];
+  let total = 0;
   let surveysTotal = 0;
 
   try {
-    const [surveysRes, storesRes] = await Promise.all([
-      fetchSurveys({ API_BASE_URL: apiBaseUrl }, { sort: "newest", limit: 3 }),
-      fetchStores({ API_BASE_URL: apiBaseUrl }, { limit: 3 }),
+    const [surveysCountRes, targetRes] = await Promise.all([
+      fetchSurveys({ API_BASE_URL: apiBaseUrl }, { sort: "newest", limit: 1 }),
+      target === "surveys"
+        ? fetchSurveys(
+            { API_BASE_URL: apiBaseUrl },
+            {
+              page,
+              limit,
+              sort,
+              name,
+              prefecture,
+              industry,
+              genre,
+              spec: spec ?? undefined,
+              age: age ?? undefined,
+            },
+          )
+        : fetchStores(
+            { API_BASE_URL: apiBaseUrl },
+            {
+              page,
+              limit,
+              sort,
+              name,
+              prefecture,
+              industry,
+              genre,
+              spec: spec ?? undefined,
+              age: age ?? undefined,
+            },
+          ),
     ]);
-    stores = storesRes.items;
-    surveys = surveysRes.items;
-    surveysTotal =  surveysRes.total ?? surveysRes.items.length ?? 0;
+    surveysTotal = surveysCountRes.total ?? surveysCountRes.items.length ?? 0;
+    if (target === "surveys") {
+      surveys = targetRes.items;
+      total = targetRes.total;
+    } else {
+      stores = targetRes.items;
+      total = targetRes.total;
+    }
   } catch (error) {
     console.error("Failed to fetch data for index loader", error);
     stores = [];
     surveys = [];
     surveysTotal = 0;
+    total = 0;
   }
 
   return Response.json({
     apiBaseUrl,
+    target,
+    filters,
+    hasFilters,
+    sort,
+    page,
+    limit,
+    total,
     stores,
     surveys,
     surveysTotal,
@@ -103,7 +168,8 @@ export async function loader({ context, request }: LoaderFunctionArgs) {
 }
 
 export default function Index() {
-  const { stores, surveys, surveysTotal } = useLoaderData() as LoaderData;
+  const { stores, surveys, surveysTotal, target, filters, hasFilters, sort, page, limit, total } =
+    useLoaderData() as LoaderData;
 
   return (
     <main className="space-y-2">
@@ -112,11 +178,20 @@ export default function Index() {
         <div className="relative">
           <SearchGuide className="absolute left-1/2 top-0 -translate-x-1/2 translate-y-12 md:translate-y-15" />
           <div className="pt-10 md:pt-12">
-            <SearchSection />
+            <SearchSection target={target} filters={filters} />
           </div>
         </div>
-        <SurveysSection surveys={surveys} />
-        <StoresSection stores={stores} />
+        <ResultsSection
+          target={target}
+          surveys={surveys}
+          stores={stores}
+          total={total}
+          page={page}
+          limit={limit}
+          sort={sort}
+          filters={filters}
+          hasFilters={hasFilters}
+        />
       </div>
     </main>
   );
@@ -208,10 +283,16 @@ function SearchGuide({ className = "" }: { className?: string }) {
   );
 }
 
-function SearchSection() {
+function SearchSection({
+  target,
+  filters,
+}: {
+  target: "surveys" | "stores";
+  filters: Record<string, string>;
+}) {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [menuLabel, setMenuLabel] = useState("アンケート");
+  const [menuLabel, setMenuLabel] = useState(target === "stores" ? "店舗情報" : "アンケート");
   const [menuClosing, setMenuClosing] = useState(false);
   const closeMenu = () => {
     setMenuClosing(true);
@@ -220,78 +301,64 @@ function SearchSection() {
       setMenuClosing(false);
     }, 200);
   };
-  const legacyFilters = (
-    <>
-      <form method="get" action="/stores" className="grid gap-6 md:grid-cols-3">
-        <div className="md:col-span-3 space-y-2">
-          <label className="text-sm font-semibold text-slate-800" htmlFor="name">
-            キーワード
-          </label>
-          <Input id="name" name="name" placeholder="店名・業種で検索" aria-label="キーワード検索" />
-        </div>
-        <div className="space-y-2">
-          <label className="text-sm font-semibold text-slate-800" htmlFor="prefecture">
-            都道府県
-          </label>
-          <Select id="prefecture" name="prefecture" defaultValue="">
-            <option value="">指定なし</option>
-            {PREFS.map((pref) => (
-              <option key={pref} value={pref}>
-                {pref}
-              </option>
-            ))}
-          </Select>
-        </div>
-        <div className="space-y-2">
-          <label className="text-sm font-semibold text-slate-800" htmlFor="industry">
-            業種
-          </label>
-          <Select id="industry" name="industry" defaultValue="">
-            <option value="">指定なし</option>
-            {INDUSTRY_OPTIONS.map((opt) => (
-              <option key={opt} value={opt}>
-                {opt}
-              </option>
-            ))}
-          </Select>
-        </div>
-        <div className="space-y-2">
-          <label className="text-sm font-semibold text-slate-800" htmlFor="genre">
-            ジャンル
-          </label>
-          <Select id="genre" name="genre" defaultValue="">
-            <option value="">指定なし</option>
-            {GENRE_OPTIONS.map((opt) => (
-              <option key={opt} value={opt}>
-                {opt}
-              </option>
-            ))}
-          </Select>
-        </div>
-      </form>
-    </>
-  );
-  const searchForm = (
-    <form method="get" action="/surveys" className="grid gap-6 md:grid-cols-2">
-      <div className="space-y-2">
-        <label className="text-sm font-semibold text-slate-800" htmlFor="specMin">
-          スペック
+  useEffect(() => {
+    setMenuLabel(target === "stores" ? "店舗情報" : "アンケート");
+  }, [target]);
+  const targetValue = menuLabel === "店舗情報" ? "stores" : "surveys";
+  const extraFilters = (
+    <div className="grid gap-6 md:grid-cols-3">
+      <div className="md:col-span-3 space-y-2">
+        <label className="text-sm font-semibold text-slate-800" htmlFor="name">
+          キーワード
         </label>
-        <Input id="specMin" name="specMin" type="number" placeholder="例: 80" min={0} />
+        <Input
+          id="name"
+          name="name"
+          placeholder="店名・業種で検索"
+          aria-label="キーワード検索"
+          defaultValue={filters.name || ""}
+        />
       </div>
       <div className="space-y-2">
-        <label className="text-sm font-semibold text-slate-800" htmlFor="ageMin">
-          年齢
+        <label className="text-sm font-semibold text-slate-800" htmlFor="prefecture">
+          都道府県
         </label>
-        <Input id="ageMin" name="ageMin" type="number" placeholder="例: 22" min={18} />
+        <Select id="prefecture" name="prefecture" defaultValue={filters.prefecture || ""}>
+          <option value="">指定なし</option>
+          {PREFS.map((pref) => (
+            <option key={pref} value={pref}>
+              {pref}
+            </option>
+          ))}
+        </Select>
       </div>
-      <div className="md:col-span-3 flex items-center justify-end gap-3">
-        <Button variant="secondary" asChild>
-          <a href="/surveys">条件をクリア</a>
-        </Button>
-        <Button type="submit">検索する</Button>
+      <div className="space-y-2">
+        <label className="text-sm font-semibold text-slate-800" htmlFor="industry">
+          業種
+        </label>
+        <Select id="industry" name="industry" defaultValue={filters.industry || ""}>
+          <option value="">指定なし</option>
+          {INDUSTRY_OPTIONS.map((opt) => (
+            <option key={opt} value={opt}>
+              {opt}
+            </option>
+          ))}
+        </Select>
       </div>
-    </form>
+      <div className="space-y-2">
+        <label className="text-sm font-semibold text-slate-800" htmlFor="genre">
+          ジャンル
+        </label>
+        <Select id="genre" name="genre" defaultValue={filters.genre || ""}>
+          <option value="">指定なし</option>
+          {GENRE_OPTIONS.map((opt) => (
+            <option key={opt} value={opt}>
+              {opt}
+            </option>
+          ))}
+        </Select>
+      </div>
+    </div>
   );
 
   return (
@@ -380,67 +447,207 @@ function SearchSection() {
           </div>
         </div>
       </div>
-      <div
-        className={`pointer-events-none overflow-hidden transition-all duration-300 ease-out ${
-          filtersOpen ? "mb-4 max-h-[520px] translate-y-0 scale-100 opacity-100" : "mb-0 max-h-0 -translate-y-2 scale-95 opacity-0"
-        }`}
-        aria-hidden={!filtersOpen}
-      >
-        <div className="pointer-events-auto card-surface !shadow-none space-y-5 rounded-3xl border border-pink-100/80 bg-white/95 p-5 md:p-6">
-          {legacyFilters}
+      <Form method="get" action="/" preventScrollReset className="space-y-5">
+        <input type="hidden" name="target" value={targetValue} />
+        <div
+          className={`pointer-events-none overflow-hidden transition-all duration-300 ease-out ${
+            filtersOpen
+              ? "mb-4 max-h-[520px] translate-y-0 scale-100 opacity-100"
+              : "mb-0 max-h-0 -translate-y-2 scale-95 opacity-0"
+          }`}
+          aria-hidden={!filtersOpen}
+        >
+          <div className="pointer-events-auto card-surface !shadow-none space-y-5 rounded-3xl border border-pink-100/80 bg-white/95 p-5 md:p-6">
+            {extraFilters}
+          </div>
         </div>
-      </div>
-      <div className="card-surface !shadow-none space-y-5 rounded-3xl border border-pink-100/80 p-5 md:p-6">
-        {searchForm}
-      </div>
+        <div className="card-surface !shadow-none space-y-5 rounded-3xl border border-pink-100/80 p-5 md:p-6">
+          <div className="grid gap-6 md:grid-cols-2">
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-slate-800" htmlFor="spec">
+                スペック
+              </label>
+              <Input
+                id="spec"
+                name="spec"
+                type="number"
+                placeholder="例: 80"
+                min={0}
+                defaultValue={filters.spec || ""}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-slate-800" htmlFor="age">
+                年齢
+              </label>
+              <Input
+                id="age"
+                name="age"
+                type="number"
+                placeholder="例: 22"
+                min={18}
+                defaultValue={filters.age || ""}
+              />
+            </div>
+            <div className="md:col-span-3 flex items-center justify-end gap-3">
+              <Button variant="secondary" asChild>
+                <a href={`/?target=${targetValue}`}>条件をクリア</a>
+              </Button>
+              <Button type="submit">検索する</Button>
+            </div>
+          </div>
+        </div>
+      </Form>
     </section>
   );
 }
 
-function SurveysSection({ surveys }: { surveys: SurveySummary[] }) {
+const SORT_OPTIONS = [
+  { value: "newest", label: "新着順" },
+  { value: "earning", label: "稼ぎ順" },
+  { value: "rating", label: "評価順" },
+];
+
+function ResultsSection({
+  target,
+  surveys,
+  stores,
+  total,
+  page,
+  limit,
+  sort,
+  filters,
+  hasFilters,
+}: {
+  target: "surveys" | "stores";
+  surveys: SurveySummary[];
+  stores: StoreSummary[];
+  total: number;
+  page: number;
+  limit: number;
+  sort: string;
+  filters: Record<string, string>;
+  hasFilters: boolean;
+}) {
+  const totalPages = Math.max(1, Math.ceil(total / limit));
+  const isSurvey = target === "surveys";
+  const itemsEmpty = isSurvey ? surveys.length === 0 : stores.length === 0;
+  const title = isSurvey ? "アンケート" : "店舗情報";
+  const headline = hasFilters ? `${title}の検索結果` : `新着${title}`;
   return (
     <section className="space-y-5">
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div className="space-y-1">
-          <p className="text-xs uppercase font-semibold text-slate-500">Surveys</p>
-          <h2 className="text-xl font-semibold text-slate-900">新着アンケート</h2>
+          <p className="text-xs uppercase font-semibold text-slate-500">
+            {isSurvey ? "Surveys" : "Stores"}
+          </p>
+          <h2 className="text-xl font-semibold text-slate-900">{headline}</h2>
         </div>
-        <Button variant="secondary" asChild>
-          <a href="/surveys">もっと見る</a>
-        </Button>
+        <SortBar target={target} filters={filters} sort={sort} />
       </header>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {surveys.map((survey) => (
-          <SurveyCard key={survey.id} survey={survey} />
-        ))}
-        {surveys.length === 0 && (
-          <div className="text-sm text-slate-600">まだアンケートがありません。</div>
+        {isSurvey
+          ? surveys.map((survey) => <SurveyCard key={survey.id} survey={survey} />)
+          : stores.map((store) => <StoreCard key={store.id} store={store} />)}
+        {itemsEmpty && (
+          <div className="text-sm text-slate-600">
+            {isSurvey ? "条件に合うアンケートがありません。" : "条件に合う店舗情報がありません。"}
+          </div>
         )}
       </div>
+      <Pagination current={page} totalPages={totalPages} target={target} filters={filters} sort={sort} />
     </section>
   );
 }
 
-function StoresSection({ stores }: { stores: StoreSummary[] }) {
+function SortBar({
+  target,
+  filters,
+  sort,
+}: {
+  target: "surveys" | "stores";
+  filters: Record<string, string>;
+  sort: string;
+}) {
+  const { name, prefecture, industry, genre, spec, age } = filters;
   return (
-    <section className="space-y-5">
-      <header className="flex flex-wrap items-center justify-between gap-4">
-        <div className="space-y-1">
-          <p className="text-xs uppercase font-semibold text-slate-500">Stores</p>
-          <h2 className="text-xl font-semibold text-slate-900">新着店舗</h2>
-        </div>
-        <Button variant="secondary" asChild>
-          <a href="/stores">もっと見る</a>
+    <Form
+      method="get"
+      action="/"
+      preventScrollReset
+      className="flex flex-wrap items-center gap-2 text-sm text-slate-700"
+    >
+      <input type="hidden" name="target" value={target} />
+      {name && <input type="hidden" name="name" value={name} />}
+      {prefecture && <input type="hidden" name="prefecture" value={prefecture} />}
+      {industry && <input type="hidden" name="industry" value={industry} />}
+      {genre && <input type="hidden" name="genre" value={genre} />}
+      {spec && <input type="hidden" name="spec" value={spec} />}
+      {age && <input type="hidden" name="age" value={age} />}
+      {SORT_OPTIONS.map((opt) => (
+        <Button
+          key={opt.value}
+          type="submit"
+          variant={sort === opt.value ? "primary" : "ghost"}
+          size="sm"
+          name="sort"
+          value={opt.value}
+        >
+          {opt.label}
         </Button>
-      </header>
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {stores.map((store) => (
-          <StoreCard key={store.id} store={store} />
-        ))}
-        {stores.length === 0 && (
-          <div className="text-sm text-slate-600">まだ店舗がありません。</div>
-        )}
-      </div>
-    </section>
+      ))}
+      <input type="hidden" name="page" value="1" />
+    </Form>
   );
+}
+
+function Pagination({
+  current,
+  totalPages,
+  target,
+  filters,
+  sort,
+}: {
+  current: number;
+  totalPages: number;
+  target: "surveys" | "stores";
+  filters: Record<string, string>;
+  sort: string;
+}) {
+  const prev = current > 1 ? current - 1 : null;
+  const next = current < totalPages ? current + 1 : null;
+  const makeHref = (page: number) => {
+    const params = new URLSearchParams();
+    params.set("target", target);
+    params.set("page", String(page));
+    if (sort) params.set("sort", sort);
+    if (filters.name) params.set("name", filters.name);
+    if (filters.prefecture) params.set("prefecture", filters.prefecture);
+    if (filters.industry) params.set("industry", filters.industry);
+    if (filters.genre) params.set("genre", filters.genre);
+    if (filters.spec) params.set("spec", filters.spec);
+    if (filters.age) params.set("age", filters.age);
+    return `/?${params.toString()}`;
+  };
+  return (
+    <div className="flex items-center justify-center gap-3 text-sm text-slate-700">
+      <Button variant="ghost" size="sm" asChild disabled={!prev}>
+        <a href={prev ? makeHref(prev) : undefined}>前へ</a>
+      </Button>
+      <span className="rounded-full bg-white/80 px-3 py-1 text-slate-800 shadow-sm border border-slate-100">
+        {current} / {totalPages}
+      </span>
+      <Button variant="ghost" size="sm" asChild disabled={!next}>
+        <a href={next ? makeHref(next) : undefined}>次へ</a>
+      </Button>
+    </div>
+  );
+}
+
+function parseNumberParam(value: string | null) {
+  if (value === null) return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const num = Number(trimmed);
+  return Number.isFinite(num) ? num : null;
 }

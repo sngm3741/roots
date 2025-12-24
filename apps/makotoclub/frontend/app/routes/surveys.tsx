@@ -22,7 +22,18 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
   const url = new URL(request.url);
   const page = Number(url.searchParams.get("page") || "1");
   const limit = Number(url.searchParams.get("limit") || "10");
-  const sort = url.searchParams.get("sort") || "newest";
+  const spec = parseNumberParam(url.searchParams.get("spec"));
+  const age = parseNumberParam(url.searchParams.get("age"));
+  const sortParam = url.searchParams.get("sort") || "";
+  const name = url.searchParams.get("name")?.trim() || undefined;
+  const prefecture = url.searchParams.get("prefecture")?.trim() || undefined;
+  const industry = url.searchParams.get("industry")?.trim() || undefined;
+  const genre = url.searchParams.get("genre")?.trim() || undefined;
+  const visitedPeriod = url.searchParams.get("visitedPeriod")?.trim() || undefined;
+  const hasFilters = Boolean(
+    name || prefecture || industry || genre || visitedPeriod || spec !== null || age !== null,
+  );
+  const sort = sortParam || (hasFilters ? "rating" : "newest");
   const filters = Object.fromEntries(url.searchParams.entries());
 
   let surveys: SurveySummary[] = [];
@@ -34,11 +45,13 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
         page,
         limit,
         sort,
-        name: url.searchParams.get("name") || undefined,
-        prefecture: url.searchParams.get("prefecture") || undefined,
-        industry: url.searchParams.get("industry") || undefined,
-        genre: url.searchParams.get("genre") || undefined,
-        visitedPeriod: url.searchParams.get("visitedPeriod") || undefined,
+        name,
+        prefecture,
+        industry,
+        genre,
+        visitedPeriod,
+        spec: spec ?? undefined,
+        age: age ?? undefined,
       },
     );
     surveys = res.items;
@@ -68,7 +81,7 @@ export default function Surveys() {
         </header>
 
         <SearchForm filters={filters} />
-        <SortBar sort={sort} />
+        <SortBar sort={sort} filters={filters} />
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {surveys.map((survey) => (
@@ -152,7 +165,8 @@ const INDUSTRY_OPTIONS = [
 
 const GENRE_OPTIONS = ["熟女", "学園系", "スタンダード", "格安店", "高級店"];
 
-function SortBar({ sort }: { sort: string }) {
+function SortBar({ sort, filters }: { sort: string; filters: Record<string, string> }) {
+  const { name, prefecture, industry, genre, visitedPeriod, spec, age } = filters;
   return (
     <Form
       method="get"
@@ -176,6 +190,13 @@ function SortBar({ sort }: { sort: string }) {
           ))}
         </div>
       </div>
+      {name && <input type="hidden" name="name" value={name} />}
+      {prefecture && <input type="hidden" name="prefecture" value={prefecture} />}
+      {industry && <input type="hidden" name="industry" value={industry} />}
+      {genre && <input type="hidden" name="genre" value={genre} />}
+      {visitedPeriod && <input type="hidden" name="visitedPeriod" value={visitedPeriod} />}
+      {spec && <input type="hidden" name="spec" value={spec} />}
+      {age && <input type="hidden" name="age" value={age} />}
       <input type="hidden" name="page" value="1" />
     </Form>
   );
@@ -199,6 +220,14 @@ function Pagination({ current, totalPages, sort }: { current: number; totalPages
   );
 }
 
+function parseNumberParam(value: string | null) {
+  if (value === null) return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const num = Number(trimmed);
+  return Number.isFinite(num) ? num : null;
+}
+
 function SearchForm({ filters }: { filters: Record<string, string> }) {
   return (
     <Form
@@ -207,6 +236,18 @@ function SearchForm({ filters }: { filters: Record<string, string> }) {
       className="card-surface space-y-5 rounded-3xl border border-pink-100/80 p-6"
     >
       <div className="grid gap-4 md:grid-cols-3">
+        <div className="space-y-2">
+          <label className="text-sm font-semibold text-slate-800" htmlFor="spec">
+            スペック
+          </label>
+          <Input id="spec" name="spec" type="number" placeholder="例: 80" min={0} defaultValue={filters.spec || ""} />
+        </div>
+        <div className="space-y-2">
+          <label className="text-sm font-semibold text-slate-800" htmlFor="age">
+            年齢
+          </label>
+          <Input id="age" name="age" type="number" placeholder="例: 22" min={18} defaultValue={filters.age || ""} />
+        </div>
         <div className="md:col-span-3 space-y-2">
           <label className="text-sm font-semibold text-slate-800" htmlFor="name">
             キーワード

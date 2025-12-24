@@ -31,6 +31,12 @@ type StoreRow = {
   avg_earning?: number;
   avg_rating?: number;
   avg_wait?: number;
+  min_spec?: number;
+  max_spec?: number;
+  median_spec?: number;
+  min_age?: number;
+  max_age?: number;
+  median_age?: number;
 };
 
 type SurveyRow = {
@@ -165,6 +171,14 @@ const computeSurveyStats = (surveys: ReturnType<typeof mapSurvey>[]) => {
   };
 };
 
+const parseNumberParam = (value: string | null) => {
+  if (value === null) return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const num = Number(trimmed);
+  return Number.isFinite(num) ? num : null;
+};
+
 async function handleApi(request: Request, env: Env): Promise<Response | null> {
   const url = new URL(request.url);
   const { pathname } = url;
@@ -228,6 +242,8 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
     const prefecture = url.searchParams.get("prefecture")?.trim();
     const industry = url.searchParams.get("industry")?.trim();
     const genre = url.searchParams.get("genre")?.trim();
+    const spec = parseNumberParam(url.searchParams.get("spec"));
+    const age = parseNumberParam(url.searchParams.get("age"));
 
     const where: string[] = ["deleted_at IS NULL"];
     const params: (string | number)[] = [];
@@ -249,6 +265,14 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
     if (genre) {
       where.push("store_genre = ?");
       params.push(genre);
+    }
+    if (spec !== null) {
+      where.push("spec_score BETWEEN ? AND ?");
+      params.push(spec - 5, spec + 5);
+    }
+    if (age !== null) {
+      where.push("age BETWEEN ? AND ?");
+      params.push(age - 5, age + 5);
     }
     const whereClause = where.join(" AND ");
 
@@ -371,13 +395,15 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
     const industry = url.searchParams.get("industry")?.trim();
     const genre = url.searchParams.get("genre")?.trim();
     const sort = url.searchParams.get("sort") || "";
+    const spec = parseNumberParam(url.searchParams.get("spec"));
+    const age = parseNumberParam(url.searchParams.get("age"));
 
     let orderBy = "s.created_at DESC";
     if (sort === "oldest") orderBy = "s.created_at ASC";
-    if (sort === "earning") orderBy = "avg_earning DESC";
-    if (sort === "rating") orderBy = "avg_rating DESC";
+    if (sort === "earning") orderBy = "ss.avg_earning DESC";
+    if (sort === "rating") orderBy = "ss.avg_rating DESC";
 
-    const where: string[] = ["s.deleted_at IS NULL"];
+    const where: string[] = ["s.deleted_at IS NULL", "ss.survey_count > 0"];
     const params: (string | number)[] = [];
 
     if (name) {
@@ -403,23 +429,41 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
       where.push("s.genre = ?");
       params.push(genre);
     }
+    if (spec !== null) {
+      where.push("? BETWEEN ss.min_spec - 5 AND ss.max_spec + 5");
+      params.push(spec);
+    }
+    if (age !== null) {
+      where.push("? BETWEEN ss.min_age - 5 AND ss.max_age + 5");
+      params.push(age);
+    }
 
     const whereClause = where.join(" AND ");
 
     const totalRes = await env.DB.prepare(
-      `SELECT COUNT(*) as c FROM stores s WHERE ${whereClause}`,
+      `SELECT COUNT(*) as c
+       FROM stores s
+       JOIN store_stats ss ON ss.store_id = s.id
+       WHERE ${whereClause}`,
     )
       .bind(...params)
       .first();
     const rows = await env.DB.prepare(
       `SELECT
         s.*,
-        COALESCE((SELECT COUNT(*) FROM surveys WHERE store_id = s.id AND deleted_at IS NULL), 0) AS survey_count,
-        COALESCE((SELECT SUM(helpful_count) FROM surveys WHERE store_id = s.id AND deleted_at IS NULL), 0) AS helpful_count,
-        COALESCE((SELECT AVG(average_earning) FROM surveys WHERE store_id = s.id AND deleted_at IS NULL), 0) AS avg_earning,
-        COALESCE((SELECT AVG(rating) FROM surveys WHERE store_id = s.id AND deleted_at IS NULL), 0) AS avg_rating,
-        COALESCE((SELECT AVG(wait_time_hours) FROM surveys WHERE store_id = s.id AND deleted_at IS NULL), 0) AS avg_wait
+        ss.survey_count,
+        ss.helpful_count,
+        ss.avg_earning,
+        ss.avg_rating,
+        ss.avg_wait,
+        ss.min_spec,
+        ss.max_spec,
+        ss.median_spec,
+        ss.min_age,
+        ss.max_age,
+        ss.median_age
        FROM stores s
+       JOIN store_stats ss ON ss.store_id = s.id
        WHERE ${whereClause}
        ORDER BY ${orderBy}
        LIMIT ? OFFSET ?`,
