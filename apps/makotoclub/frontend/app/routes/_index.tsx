@@ -212,6 +212,14 @@ function SearchSection() {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuLabel, setMenuLabel] = useState("アンケート");
+  const [menuClosing, setMenuClosing] = useState(false);
+  const closeMenu = () => {
+    setMenuClosing(true);
+    window.setTimeout(() => {
+      setMenuOpen(false);
+      setMenuClosing(false);
+    }, 200);
+  };
   const legacyFilters = (
     <>
       <form method="get" action="/stores" className="grid gap-6 md:grid-cols-3">
@@ -328,32 +336,46 @@ function SearchSection() {
           </button>
           <div
             role="menu"
-            className={`absolute right-0 top-full z-20 mt-2 w-44 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-xl shadow-black/5 transition-all ${
+            className={`absolute right-0 top-full z-20 mt-2 w-44 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-xl shadow-black/5 transition-all duration-200 ease-out ${
               menuOpen ? "scale-100 opacity-100" : "pointer-events-none scale-95 opacity-0"
-            }`}
+            } ${menuClosing ? "scale-95 opacity-0" : ""}`}
             aria-hidden={!menuOpen}
           >
             <button
               type="button"
-              className="flex items-center gap-2 px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+              className="flex w-full items-center gap-2 px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
               role="menuitem"
               onClick={() => {
                 setMenuLabel("アンケート");
-                setMenuOpen(false);
+                closeMenu();
               }}
             >
-              アンケート
+              <span>アンケート</span>
+              {menuLabel === "アンケート" && (
+                <span className="ml-auto inline-flex h-5 w-5 items-center justify-center rounded-full bg-pink-100 text-pink-600">
+                  <svg viewBox="0 0 24 24" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="3" aria-hidden="true">
+                    <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </span>
+              )}
             </button>
             <button
               type="button"
-              className="flex items-center gap-2 px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+              className="flex w-full items-center gap-2 px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50"
               role="menuitem"
               onClick={() => {
                 setMenuLabel("店舗情報");
-                setMenuOpen(false);
+                closeMenu();
               }}
             >
-              店舗情報
+              <span>店舗情報</span>
+              {menuLabel === "店舗情報" && (
+                <span className="ml-auto inline-flex h-5 w-5 items-center justify-center rounded-full bg-pink-100 text-pink-600">
+                  <svg viewBox="0 0 24 24" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="3" aria-hidden="true">
+                    <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </span>
+              )}
             </button>
           </div>
         </div>
