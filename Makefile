@@ -4,10 +4,12 @@
 .PHONY: encrypt-configs
 .PHONY: decrypt-configs
 .PHONY: makotoclub-frontend-preview makotoclub-admin-preview
+.PHONY: makotoclub-d1-backup
 
 ROOT := $(CURDIR)
 GO ?= go
 GOCACHE ?= $(ROOT)/.gocache
+BACKUP_DIR ?= $(ROOT)/apps/makotoclub/backup
 
 # 全体テスト（auth/message/storage を順に実行）
 test: test-auth test-message test-storage
@@ -70,3 +72,10 @@ makotoclub-frontend-preview:
 
 makotoclub-admin-preview:
 	@cd apps/makotoclub/admin && npm run preview
+
+# MakotoClub D1 バックアップ（本番）
+makotoclub-d1-backup:
+	@mkdir -p $(BACKUP_DIR)
+	@backup="$(BACKUP_DIR)/d1-makotoclub-$$(date +%Y%m%d-%H%M%S).sql"; \
+	cd $(ROOT)/apps/makotoclub/frontend && npx wrangler d1 export makotoclub --remote --output "$$backup"; \
+	echo "$$backup"
