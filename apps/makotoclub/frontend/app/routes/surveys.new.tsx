@@ -203,7 +203,7 @@ export default function NewSurvey() {
 
   const remainingSlots = Math.max(0, MAX_IMAGES - selectedFiles.length);
   const baseInputClass =
-    "w-full min-w-0 max-w-full rounded-xl border border-slate-200/90 bg-white px-3.5 py-2.5 text-base md:text-sm";
+    "box-border w-full min-w-0 max-w-full rounded-xl border border-slate-200/90 bg-white px-3.5 py-2.5 text-base md:text-sm";
 
   const syncInputFiles = (files: File[]) => {
     if (!fileInputRef.current) return;
@@ -705,7 +705,7 @@ export default function NewSurvey() {
 
 function FormField({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
   return (
-    <div className="space-y-2">
+    <div className="min-w-0 space-y-2">
       <label className="text-sm font-semibold text-slate-800">
         {label} {required && <span className="text-pink-600">*</span>}
       </label>
@@ -724,7 +724,7 @@ function TextAreaField({ id, label }: { id: string; label: string }) {
         id={id}
         name={id}
         rows={3}
-        className="w-full min-w-0 max-w-full rounded-xl border border-slate-200/90 bg-white px-3.5 py-2.5 text-base md:text-sm"
+        className="box-border w-full min-w-0 max-w-full rounded-xl border border-slate-200/90 bg-white px-3.5 py-2.5 text-base md:text-sm"
       />
     </div>
   );

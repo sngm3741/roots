@@ -45,3 +45,16 @@ html[lang="ja"] .font-base {
 *::selection {
   background-color: rgba(244, 114, 182, 0.25);
 }
+
+input[type="month"] {
+  -webkit-appearance: none;
+  appearance: none;
+  box-sizing: border-box !important;
+  display: block;
+  inline-size: 100% !important;
+  max-inline-size: 100% !important;
+  min-inline-size: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+}
