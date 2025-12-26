@@ -58,3 +58,40 @@ input[type="month"] {
   max-width: 100% !important;
   min-width: 0 !important;
 }
+
+.speechBubble {
+  position: relative;
+  display: inline-block;
+  margin-bottom: 20px;
+  padding: 12px;
+  border: 2px solid #000000;
+  border-radius: 12px;
+  background-color: #d6fdff;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: #000000;
+}
+
+.speechBubble::before {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 24px;
+  border-style: solid;
+  border-width: 16px 8px 0 8px;
+  border-color: #000000 transparent transparent;
+  translate: 0 100%;
+}
+
+.speechBubble::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 24px;
+  border-style: solid;
+  border-width: 12px 6px 0 6px;
+  border-color: #d6fdff transparent transparent;
+  translate: 0 100%;
+}
