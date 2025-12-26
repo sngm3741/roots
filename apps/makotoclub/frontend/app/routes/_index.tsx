@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { type LoaderFunctionArgs, Form, Link, useLoaderData } from "react-router";
+import { type LoaderFunctionArgs, Form, useLoaderData } from "react-router";
 import { Button } from "../components/ui/button";
 import { fetchStores } from "../lib/stores.server";
 import { fetchSurveys } from "../lib/surveys.server";
@@ -175,7 +175,7 @@ export default function Index() {
       <div className="mx-auto max-w-5xl space-y-12 px-4">
         <div className="relative">
           <SearchGuide className="absolute left-1/2 top-0 -translate-x-1/2 translate-y-12 md:translate-y-15" />
-          <div className="pt-10 md:pt-12">
+          <div className="pt-10">
             <SearchSection target={target} filters={filters} />
           </div>
         </div>
@@ -221,20 +221,25 @@ function Hero({ surveysTotal }: { surveysTotal: number }) {
   }, [surveysTotal]);
 
   return (
-    <section className="relative mx-auto max-w-5xl overflow-hidden rounded-[28px] py-20 text-center">
+    <section className="relative mx-auto max-w-5xl overflow-hidden rounded-[28px] text-center pt-5">
       <div className="relative flex flex-col items-center justify-center gap-6">
-        <img
-          src="/logo.jpeg"
-          alt="マコトクラブ"
-          className="h-20 w-20 rounded-2xl object-cover md:h-24 md:w-24"
-        />
-        <div className="space-y-2 text-center">
-          <h1 className="font-bold text-4xl text-pink-600 md:text-4xl">#マコトクラブ</h1>
-          <p className="font-bold text-lg text-slate-500 md:text-base">みんなのリアルな声で、</p>
-          <p className="font-bold text-lg text-slate-500 md:text-base">自分にピッタリのお店を。</p>
+        <div className="rounded-[24px] p-2">
+          <img
+            src="/logo.jpeg"
+            alt="マコトクラブ"
+            className="h-20 w-20 rounded-2xl object-cover border-2 border-pink-200 shadow-[0_0_0_4px_rgba(244,114,182,0.12)] md:h-24 md:w-24"
+          />
+        </div>
+        <div className="text-center">
+          <h1 className="font-bold text-3xl text-pink-600">#マコトクラブ</h1>
+          <div className="pt-4 space-y-1">
+            <p className="font-semibold text-lg text-slate-400">みんなのリアルな声から</p>
+            <p className="font-semibold text-lg text-slate-400">自分にピッタリのお店を</p>
+          </div>
         </div>
       </div>
-      <div className="mt-10 flex justify-center">
+      {/*
+      <div className="mt-5 flex justify-center">
         <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700">
           <svg
             aria-hidden="true"
@@ -251,10 +256,10 @@ function Hero({ surveysTotal }: { surveysTotal: number }) {
             <path d="M8 7h4" />
             <path d="M9 18l2 2 4-4" />
           </svg>
-          {/* NOTE: とりあえずはったりでアンケート数 の2倍に...(^ω^;) */}
-          掲載数 {(displayCount*2).toLocaleString("ja-JP")} +
+          掲載数 {(displayCount).toLocaleString("ja-JP")} +
         </div>
       </div>
+      */}
     </section>
   );
 }
@@ -487,11 +492,20 @@ function SearchSection({
                 defaultValue={filters.age || ""}
               />
             </div>
-            <div className="md:col-span-3 flex items-center justify-end gap-3">
-              <Button variant="secondary" asChild>
-                <Link preventScrollReset to={`/?target=${targetValue}`}>条件をクリア</Link>
+            <div className="md:col-span-3 flex items-center justify-end">
+              <Button type="submit" className="gap-2">
+                検索
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  fill="currentColor"
+                  viewBox="0 0 16 16"
+                  aria-hidden="true"
+                >
+                  <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0" />
+                </svg>
               </Button>
-              <Button type="submit">検索する</Button>
             </div>
           </div>
         </div>
@@ -531,18 +545,15 @@ function ResultsSection({
   const isSurvey = target === "surveys";
   const itemsEmpty = isSurvey ? surveys.length === 0 : stores.length === 0;
   const title = isSurvey ? "アンケート" : "店舗情報";
-  const headline = hasFilters ? `${title}の検索結果` : `新着${title}`;
+  const countLabel = hasFilters ? "検索結果" : "新着";
   return (
     <section className="space-y-5">
-      <header className="flex flex-wrap items-center justify-between gap-4">
-        <div className="space-y-1">
-          <p className="text-xs uppercase font-semibold text-slate-500">
-            {isSurvey ? "Surveys" : "Stores"}
-          </p>
-          <h2 className="text-xl font-semibold text-slate-900">{headline}</h2>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="text-sm font-semibold text-slate-700">
+          {countLabel} {total.toLocaleString("ja-JP")} 件
         </div>
         <SortBar target={target} filters={filters} sort={sort} />
-      </header>
+      </div>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         {isSurvey
           ? surveys.map((survey) => <SurveyCard key={survey.id} survey={survey} />)
