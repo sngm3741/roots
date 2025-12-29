@@ -90,13 +90,13 @@ export function Header() {
 
   return (
     <>
-      <header className="fixed top-4 left-4 right-4 z-50 bg-white/60 backdrop-blur-2xl border border-gray-200/50 rounded-2xl shadow-lg shadow-black/5">
-        <div className="max-w-5xl mx-auto px-4">
+      <header className="fixed top-4 left-1/2 z-50 w-[calc(100%-2rem)] max-w-5xl -translate-x-1/2 bg-white/60 backdrop-blur-2xl border border-gray-200/50 rounded-2xl shadow-lg shadow-black/5">
+        <div className="px-4">
           <div className="relative flex items-center justify-between h-14">
-            {/* Mobile Menu Button - Left */}
+            {/* Menu Button - Left */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 text-gray-600 hover:text-gray-900 relative z-[60] -ml-2"
+              className="p-2 text-gray-600 hover:text-gray-900 relative z-[60] -ml-2"
               aria-label="メニューを開く"
             >
               {mobileMenuOpen ? <CloseIcon /> : <MenuIcon />}
@@ -114,21 +114,8 @@ export function Header() {
               />
             </a>
 
-            {/* Spacer for mobile to keep logo centered */}
-            <div className="md:hidden w-10" />
-
-            {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center gap-6">
-              {navItems.map((item) => (
-                <a
-                  key={item.href}
-                  href={item.href}
-                  className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
-                >
-                  {item.label}
-                </a>
-              ))}
-            </nav>
+            {/* Spacer to keep logo centered */}
+            <div className="w-10" />
 
             {/* CTA Button */}
             <Button
@@ -142,10 +129,11 @@ export function Header() {
                     }}
                     className="flex items-center justify-center"
                   >
+                    投稿する
                     <svg
                       viewBox="0 0 24 24"
                       aria-hidden="true"
-                      className="h-5 w-5"
+                      className="ml-2 h-5 w-5"
                       fill="none"
                       stroke="currentColor"
                       strokeWidth="2"
@@ -164,17 +152,17 @@ export function Header() {
         </div>
       </header>
 
-      {/* Mobile Menu Overlay - Outside header */}
+      {/* Menu Overlay - Outside header */}
       <div
-        className={`md:hidden fixed inset-0 bg-black/40 backdrop-blur-sm z-[55] transition-opacity duration-300 ease-out ${
+        className={`fixed inset-0 bg-black/40 backdrop-blur-sm z-[55] transition-opacity duration-300 ease-out ${
           mobileMenuOpen ? "opacity-100" : "opacity-0 pointer-events-none"
         }`}
         onClick={() => setMobileMenuOpen(false)}
       />
 
-      {/* Mobile Menu Panel - Outside header */}
+      {/* Menu Panel - Outside header */}
       <div
-        className={`md:hidden fixed z-[60] bg-white shadow-2xl rounded-[32px] overflow-hidden transition-transform duration-300 ease-out ${
+        className={`fixed z-[60] bg-white shadow-2xl rounded-[32px] overflow-hidden transition-transform duration-300 ease-out ${
           mobileMenuOpen ? "translate-x-0" : "-translate-x-[calc(100%+24px)]"
         }`}
         style={{

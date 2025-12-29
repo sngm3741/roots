@@ -317,7 +317,7 @@ function SearchSection({
         <Input
           id="name"
           name="name"
-          placeholder="店名・業種で検索"
+          placeholder="キーワードで検索"
           aria-label="キーワード検索"
           defaultValue={filters.name || ""}
         />
