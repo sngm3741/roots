@@ -187,9 +187,7 @@ export async function action({ request, context }: ActionFunctionArgs) {
     ratingVal < 0 ||
     ratingVal > 5
   ) {
-    return new Response(JSON.stringify({ error: "必須項目が未入力、または範囲外の値があります" }), {
-      status: 400,
-    });
+    return { error: "必須項目が未入力、または範囲外の値があります" };
   }
 
   const fileEntries = (formData.getAll("images").filter((f) => f instanceof File) as File[]).slice(
@@ -247,11 +245,11 @@ export async function action({ request, context }: ActionFunctionArgs) {
         typeof data?.error === "string"
           ? data.error
           : `投稿に失敗しました (HTTP ${res.status})`;
-      return new Response(JSON.stringify({ error: message }), { status: res.status });
+      return { error: message };
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : "投稿に失敗しました";
-    return new Response(JSON.stringify({ error: message }), { status: 500 });
+    return { error: message };
   }
 
   return redirect("/surveys");

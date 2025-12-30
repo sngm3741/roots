@@ -30,9 +30,11 @@ const emptySurvey: SurveyFormState = {
   branchName: "",
   prefecture: "",
   industry: "",
+  industryOther: "",
   genre: "",
   visitedPeriod: "",
   workType: "",
+  workTypeOther: "",
   age: "",
   specScore: "",
   waitTimeHours: "",
@@ -250,6 +252,17 @@ export const SurveyFormPage = ({ mode }: Props) => {
                   <Label>業種</Label>
                   <Input value={store?.category ?? form.industry ?? ""} disabled readOnly />
                 </div>
+                {form.industry === "その他" && (
+                  <div className="space-y-2">
+                    <Label>その他の業種</Label>
+                    <Input
+                      value={form.industryOther ?? ""}
+                      onChange={(e) => handleChange("industryOther", e.target.value)}
+                      disabled={isReadOnly}
+                      readOnly={isReadOnly}
+                    />
+                  </div>
+                )}
                 <div className="space-y-2">
                   <Label>ジャンル</Label>
                   <Input value={store?.genre ?? form.genre ?? ""} disabled readOnly />
@@ -278,6 +291,18 @@ export const SurveyFormPage = ({ mode }: Props) => {
                   ))}
                 </Select>
               </div>
+              {form.workType === "その他" && (
+                <div className="space-y-2">
+                  <Label>その他の勤務形態</Label>
+                  <Input
+                    value={form.workTypeOther ?? ""}
+                    onChange={(e) => handleChange("workTypeOther", e.target.value)}
+                    disabled={isReadOnly}
+                    readOnly={isReadOnly}
+                    placeholder="自由記入"
+                  />
+                </div>
+              )}
               <div className="space-y-2">
                 <Label>年齢</Label>
                 <Input
