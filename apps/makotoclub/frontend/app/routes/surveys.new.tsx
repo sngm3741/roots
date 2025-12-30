@@ -242,20 +242,11 @@ export default function NewSurvey() {
     <main className="mx-auto max-w-5xl px-4 pb-12 pt-6 space-y-8">
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <p className="text-xs uppercase text-slate-500 font-semibold">Surveys</p>
           <h1 className="text-2xl font-bold text-slate-900">アンケート投稿</h1>
           <p className="text-sm text-slate-600">
-            PayPay 1000円の送付を希望する場合はメールアドレスを記入してください。
+            🎁 アンケートの回答者にPayPay1000円分プレゼント 🎁
           </p>
         </div>
-        <Button
-          type="submit"
-          form="survey-form"
-          disabled={isSubmitting}
-          className="shadow-sm shadow-pink-200"
-        >
-          {isSubmitting ? "送信中..." : "投稿する"}
-        </Button>
       </header>
 
       {actionData?.error ? (
@@ -309,7 +300,6 @@ export default function NewSurvey() {
         <section className="card-surface space-y-4 rounded-3xl border border-pink-100/80 p-6">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-slate-900">アンケート内容</h2>
-            <span className="text-xs text-pink-600">必須は赤印</span>
           </div>
           <div className="grid gap-4 md:grid-cols-2">
             <FormField label="働いた時期" required>
@@ -364,7 +354,7 @@ export default function NewSurvey() {
                 <div className="flex justify-between text-xs text-slate-500">
                   <span>18</span>
                   <span>34</span>
-                  <span>50+</span>
+                  <span>50以上</span>
                 </div>
               </div>
             </div>
@@ -396,9 +386,9 @@ export default function NewSurvey() {
                 className="w-full accent-pink-500"
               />
                 <div className="flex justify-between text-xs text-slate-500">
-                  <span>50</span>
+                  <span>50以下</span>
                   <span>95</span>
-                  <span>140</span>
+                  <span>140以上</span>
                 </div>
               </div>
             </div>
@@ -476,7 +466,7 @@ export default function NewSurvey() {
             {/* キャストバックスライダー */}
             <div className="space-y-2">
               <div className="text-sm font-semibold text-slate-800">
-                キャストバック (60分単価)<span className="ml-1 text-pink-600">*</span>
+                キャストバック (60分単価)
               </div>
               <div className="space-y-2 rounded-2xl border border-slate-200 bg-white p-4">
                 <div className="flex items-center justify-between text-sm text-slate-700">
@@ -512,145 +502,155 @@ export default function NewSurvey() {
           </div>
         </section>
 
-        {/* コメント & 画像 */}
+        {/* コメント */}
         <section className="card-surface space-y-4 rounded-3xl border border-pink-100/80 p-6">
-          <h2 className="text-lg font-semibold text-slate-900">コメント & 画像</h2>
+          <h2 className="text-lg font-semibold text-slate-900">コメント</h2>
           <div className="grid gap-4 md:grid-cols-2">
-            <TextAreaField id="customerComment" label="客層の印象" />
-            <TextAreaField id="staffComment" label="スタッフ対応" />
-            <TextAreaField id="workEnvironmentComment" label="職場環境" />
+            <TextAreaField id="customerComment" label="客層について" />
+            <TextAreaField id="staffComment" label="スタッフ対応について" />
+            <TextAreaField id="workEnvironmentComment" label="環境について" />
             <TextAreaField id="etcComment" label="その他" />
-            <div className="space-y-2 md:col-span-2">
-              <label className="text-sm font-semibold text-slate-800">画像 (最大5枚、5MBまで)</label>
-              <div className="space-y-3 rounded-2xl border border-dashed border-slate-200 bg-white p-4">
-                <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-600">
-                  <span>
-                    {selectedFiles.length > 0
-                      ? `${selectedFiles.length}/${MAX_IMAGES}件の画像を選択中`
-                      : "まだ画像は選択されていません"}
-                  </span>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={remainingSlots <= 0}
-                  >
-                    📷 画像を追加
-                  </Button>
-                </div>
-                {imageError ? <p className="text-xs text-red-600">{imageError}</p> : null}
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  name="images"
-                  accept="image/*"
-                  multiple
-                  className="hidden"
-                  onChange={(e) => handleAddFiles(e.target.files)}
-                />
-                {selectedFiles.length > 0 ? (
-                  <ul className="space-y-2">
-                    {selectedFiles.map((item, index) => (
-                      <li
-                        key={`${item.preview}-${index}`}
-                        className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-3"
-                      >
-                        <button
-                          type="button"
-                          className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-50"
-                          onClick={() => setModalImage({ url: item.preview, name: item.file.name })}
-                        >
-                          <img src={item.preview} alt={item.file.name} className="h-full w-full object-cover" />
-                        </button>
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate font-semibold text-slate-700" title={item.file.name}>
-                            {item.file.name}
-                          </p>
-                          <p className="text-[10px] text-slate-400">
-                            {Math.max(0.1, item.file.size / (1024 * 1024)).toFixed(1)}MB
-                          </p>
-                        </div>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleRemoveFile(index)}
-                          aria-label="画像を削除"
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-4 w-4 text-red-500"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            aria-hidden="true"
-                          >
-                            <path d="M3 6h18" />
-                            <path d="M8 6V4h8v2" />
-                            <path d="M10 11v6" />
-                            <path d="M14 11v6" />
-                            <path d="M5 6l1 14h12l1-14" />
-                          </svg>
-                        </Button>
-                      </li>
-                    ))}
-                  </ul>
-                ) : null}
+          </div>
+        </section>
+
+        {/* 画像 */}
+        <section className="card-surface space-y-4 rounded-3xl border border-pink-100/80 p-6">
+          <h2 className="text-lg font-semibold text-slate-900">画像</h2>
+          <div className="space-y-2">
+            <label className="text-sm font-semibold text-slate-800">最大5枚・各5MBまで</label>
+            <div className="space-y-3 rounded-2xl border border-dashed border-slate-200 bg-white p-4">
+              <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-600">
+                <span>
+                  {selectedFiles.length > 0
+                    ? `${selectedFiles.length}/${MAX_IMAGES}件の画像を選択中`
+                    : "まだ画像は選択されていません"}
+                </span>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={remainingSlots <= 0}
+                >
+                  📷 画像を追加
+                </Button>
               </div>
+              {imageError ? <p className="text-xs text-red-600">{imageError}</p> : null}
+              <input
+                ref={fileInputRef}
+                type="file"
+                name="images"
+                accept="image/*"
+                multiple
+                className="hidden"
+                onChange={(e) => handleAddFiles(e.target.files)}
+              />
+              {selectedFiles.length > 0 ? (
+                <ul className="space-y-2">
+                  {selectedFiles.map((item, index) => (
+                    <li
+                      key={`${item.preview}-${index}`}
+                      className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-3"
+                    >
+                      <button
+                        type="button"
+                        className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-50"
+                        onClick={() => setModalImage({ url: item.preview, name: item.file.name })}
+                      >
+                        <img src={item.preview} alt={item.file.name} className="h-full w-full object-cover" />
+                      </button>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate font-semibold text-slate-700" title={item.file.name}>
+                          {item.file.name}
+                        </p>
+                        <p className="text-[10px] text-slate-400">
+                          {Math.max(0.1, item.file.size / (1024 * 1024)).toFixed(1)}MB
+                        </p>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRemoveFile(index)}
+                        aria-label="画像を削除"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-4 w-4 text-red-500"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          aria-hidden="true"
+                        >
+                          <path d="M3 6h18" />
+                          <path d="M8 6V4h8v2" />
+                          <path d="M10 11v6" />
+                          <path d="M14 11v6" />
+                          <path d="M5 6l1 14h12l1-14" />
+                        </svg>
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
             </div>
           </div>
         </section>
 
-        {/* 連絡先 & 満足度 */}
+        {/* 満足度 */}
         <section className="card-surface space-y-4 rounded-3xl border border-pink-100/80 p-6">
-          <h2 className="text-lg font-semibold text-slate-900">報酬受け取り用の連絡先 & 満足度</h2>
-          <div className="space-y-4">
-            <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4">
-              <div className="flex items-center gap-4">
-                <div className="scale-125 transform">
-                  <RatingStars value={ratingTouched ? rating : 0} />
-                </div>
-                <span className="text-base text-slate-800 font-semibold">
-                  {ratingTouched ? `${rating.toFixed(1)} / 5.0` : "未設定"}
-                </span>
+          <h2 className="text-lg font-semibold text-slate-900">
+            満足度<span className="ml-1 text-pink-600">*</span>
+          </h2>
+          <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4">
+            <div className="flex items-center gap-4">
+              <div className="scale-125 transform">
+                <RatingStars value={ratingTouched ? rating : 0} />
               </div>
-              <input type="hidden" name="rating" value={ratingTouched ? rating : ""} />
-              <input
-                type="range"
-                min="0"
-                max="5"
-                step="0.1"
-                value={rating}
-                onChange={(e) => {
-                  const val = Number(e.target.value);
-                  const clamped = Math.min(5, Math.max(0, val));
-                  const rounded = Math.round(clamped * 10) / 10;
-                  if (!Number.isFinite(rounded)) return;
-                  setRatingTouched(true);
-                  setRating(rounded);
-                }}
-                className="w-full accent-pink-500"
-              />
-              <div className="flex justify-between text-xs text-slate-500">
-                <span>0</span>
-                <span>2.5</span>
-                <span>5.0</span>
-              </div>
+              <span className="text-base text-slate-800 font-semibold">
+                {ratingTouched ? `${rating.toFixed(1)} / 5.0` : "未設定"}
+              </span>
             </div>
-            <FormField label="連絡先メールアドレス (任意)">
-              <input
-                id="emailAddress"
-                name="emailAddress"
-                type="email"
-                placeholder="example@makoto-club.jp"
-                className={baseInputClass}
-              />
-            </FormField>
+            <input type="hidden" name="rating" value={ratingTouched ? rating : ""} />
+            <input
+              type="range"
+              min="0"
+              max="5"
+              step="0.1"
+              value={rating}
+              onChange={(e) => {
+                const val = Number(e.target.value);
+                const clamped = Math.min(5, Math.max(0, val));
+                const rounded = Math.round(clamped * 10) / 10;
+                if (!Number.isFinite(rounded)) return;
+                setRatingTouched(true);
+                setRating(rounded);
+              }}
+              className="w-full accent-pink-500"
+            />
+            <div className="flex justify-between text-xs text-slate-500">
+              <span>0</span>
+              <span>2.5</span>
+              <span>5.0</span>
+            </div>
           </div>
+        </section>
+
+        {/* 連絡先 */}
+        <section className="card-surface space-y-4 rounded-3xl border border-pink-100/80 p-6">
+          <h2 className="text-lg font-semibold text-slate-900">報酬受け取り用の連絡先</h2>
+          <FormField label="連絡先メールアドレス (任意)">
+            <input
+              id="emailAddress"
+              name="emailAddress"
+              type="email"
+              placeholder="example@makoto-club.jp"
+              className={baseInputClass}
+            />
+          </FormField>
         </section>
 
         <Button type="submit" disabled={isSubmitting} className="w-full">

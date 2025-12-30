@@ -1,13 +1,14 @@
 type Props = {
   value: number;
   max?: number;
-  size?: "sm" | "md";
+  size?: "sm" | "md" | "lg";
 };
 
 export function RatingStars({ value, max = 5, size = "md" }: Props) {
   const clamped = Math.max(0, Math.min(value, max));
   const stars = "★".repeat(max);
-  const sizeClass = size === "sm" ? "text-sm" : "text-base";
+  const sizeClass =
+    size === "sm" ? "text-sm" : size === "lg" ? "text-2xl" : "text-base";
   const widthPercent = `${(clamped / max) * 100}%`;
 
   return (
