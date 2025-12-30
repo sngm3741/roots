@@ -18,6 +18,8 @@ Roots では ExecPlan ファイルを `docs/DEVLOG/` 配下に置き、
 - [x] (2025-12-31 00:00) フロント: 「その他」選択と入力欄の追加
 - [x] (2025-12-31 00:00) API/DB: survey_drafts に other フィールドを保存
 - [x] (2025-12-31 00:00) Admin: draft 一覧に other 値を表示
+- [x] (2025-12-31 00:00) /surveys/new: React Hook Form + zod でバリデーションを統一
+- [x] (2025-12-31 00:00) /surveys/new: 送信ボタン下のエラー要約とサーバーエラーモーダルを追加
 - [ ] (2025-12-31 00:00) 動作確認
 
 ## Surprises & Discoveries
@@ -30,6 +32,10 @@ Roots では ExecPlan ファイルを `docs/DEVLOG/` 配下に置き、
 
 - Decision: 「その他」の自由記入は survey_drafts のみに保存する。
   - Rationale: 管理者が目視で判断し、必要に応じて業種/勤務形態の候補を更新する運用と整合するため。
+  - Date/Author: 2025-12-31 / Codex
+
+- Decision: /surveys/new のバリデーションは React Hook Form + zod に統一する（HTMLネイティブは補助に留める）。
+  - Rationale: 現状の hidden/sliders による必須漏れを UI で確実に防ぐため。
   - Date/Author: 2025-12-31 / Codex
 
 ## Outcomes & Retrospective
