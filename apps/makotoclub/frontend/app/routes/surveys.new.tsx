@@ -7,7 +7,7 @@ import { RatingStars } from "../components/ui/rating-stars";
 
 type ActionError = { error: string };
 
-const WORK_TYPE_OPTIONS = ["在籍", "出稼ぎ"];
+const WORK_TYPE_OPTIONS = ["在籍", "出稼ぎ", "その他"];
 
 const PREFS = [
   "北海道",
@@ -67,6 +67,7 @@ const INDUSTRY_OPTIONS = [
   "DC",
   "風エス",
   "メンエス",
+  "その他",
 ];
 
 export async function action({ request, context }: ActionFunctionArgs) {
@@ -79,6 +80,10 @@ export async function action({ request, context }: ActionFunctionArgs) {
   const earnRaw = formData.get("averageEarning");
   const ratingRaw = formData.get("rating");
   const castBackRaw = formData.get("castBack");
+  const industryVal = (formData.get("industry") as string | null) || "";
+  const workTypeVal = (formData.get("workType") as string | null) || "";
+  const industryOtherVal = (formData.get("industryOther") as string | null)?.trim() || "";
+  const workTypeOtherVal = (formData.get("workTypeOther") as string | null)?.trim() || "";
 
   const ageVal = ageRaw === null || ageRaw === "" ? NaN : Number(ageRaw);
   const specVal = specRaw === null || specRaw === "" ? NaN : Number(specRaw);
@@ -107,6 +112,8 @@ export async function action({ request, context }: ActionFunctionArgs) {
     (castBackProvided && !castBackValid) ||
     (castBackValid && castBackVal < 0) ||
     (castBackValid && castBackVal > 30000) ||
+    (industryVal === "その他" && industryOtherVal === "") ||
+    (workTypeVal === "その他" && workTypeOtherVal === "") ||
     ratingVal < 0 ||
     ratingVal > 5
   ) {
@@ -138,9 +145,11 @@ export async function action({ request, context }: ActionFunctionArgs) {
     storeName: (formData.get("storeName") as string | null)?.trim() || "",
     branchName: (formData.get("branchName") as string | null)?.trim() || undefined,
     prefecture: (formData.get("prefecture") as string | null) || "",
-    industry: (formData.get("industry") as string | null) || "",
+    industry: industryVal,
+    industryOther: industryVal === "その他" ? industryOtherVal : undefined,
     visitedPeriod: (formData.get("visitedPeriod") as string | null) || "",
-    workType: (formData.get("workType") as string | null) || "",
+    workType: workTypeVal,
+    workTypeOther: workTypeVal === "その他" ? workTypeOtherVal : undefined,
     age: ageVal,
     specScore: specVal,
     waitTimeHours: waitVal,
@@ -192,6 +201,10 @@ export default function NewSurvey() {
   const [waitTime, setWaitTime] = useState<number>(0);
   const [averageEarning, setAverageEarning] = useState<number>(0);
   const [castBack, setCastBack] = useState<number>(0);
+  const [industry, setIndustry] = useState("");
+  const [industryOther, setIndustryOther] = useState("");
+  const [workType, setWorkType] = useState("");
+  const [workTypeOther, setWorkTypeOther] = useState("");
   const [ageTouched, setAgeTouched] = useState(false);
   const [specTouched, setSpecTouched] = useState(false);
   const [ratingTouched, setRatingTouched] = useState(false);
@@ -202,6 +215,8 @@ export default function NewSurvey() {
   const MAX_SIZE = 5 * 1024 * 1024; // 5MB
 
   const remainingSlots = Math.max(0, MAX_IMAGES - selectedFiles.length);
+  const isIndustryOther = industry === "その他";
+  const isWorkTypeOther = workType === "その他";
   const baseInputClass =
     "box-border w-full min-w-0 max-w-full rounded-xl border border-slate-200/90 bg-white px-3.5 py-2.5 text-base md:text-sm";
 
@@ -284,14 +299,46 @@ export default function NewSurvey() {
               </select>
             </FormField>
             <FormField label="業種" required>
-              <select id="industry" name="industry" required className={baseInputClass}>
-                <option value="">選択してください</option>
-                {INDUSTRY_OPTIONS.map((opt) => (
-                  <option key={opt} value={opt}>
-                    {opt}
-                  </option>
-                ))}
-              </select>
+              <>
+                <select
+                  id="industry"
+                  name="industry"
+                  required
+                  className={baseInputClass}
+                  value={industry}
+                  onChange={(e) => {
+                    const next = e.target.value;
+                    setIndustry(next);
+                    if (next !== "その他") setIndustryOther("");
+                  }}
+                >
+                  <option value="">選択してください</option>
+                  {INDUSTRY_OPTIONS.map((opt) => (
+                    <option key={opt} value={opt}>
+                      {opt}
+                    </option>
+                  ))}
+                </select>
+                <div
+                  className={`overflow-hidden transition-all duration-300 ${
+                    isIndustryOther ? "mt-2 max-h-40 opacity-100" : "max-h-0 opacity-0"
+                  }`}
+                >
+                  <label className="text-sm font-semibold text-slate-800" htmlFor="industryOther">
+                    その他の業種を記入
+                  </label>
+                  <textarea
+                    id="industryOther"
+                    name="industryOther"
+                    rows={3}
+                    required={isIndustryOther}
+                    disabled={!isIndustryOther}
+                    value={industryOther}
+                    onChange={(e) => setIndustryOther(e.target.value)}
+                    className={`${baseInputClass} mt-2 min-h-[96px]`}
+                  />
+                </div>
+              </>
             </FormField>
           </div>
         </section>
@@ -299,7 +346,7 @@ export default function NewSurvey() {
         {/* アンケート内容 */}
         <section className="card-surface space-y-4 rounded-3xl border border-pink-100/80 p-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-slate-900">アンケート内容</h2>
+            <h2 className="text-lg font-semibold text-slate-900">アンケート</h2>
           </div>
           <div className="grid gap-4 md:grid-cols-2">
             <FormField label="働いた時期" required>
@@ -313,24 +360,55 @@ export default function NewSurvey() {
               />
             </FormField>
             <FormField label="勤務形態" required>
-              <select id="workType" name="workType" required className={baseInputClass}>
-                <option value="">選択してください</option>
-                {WORK_TYPE_OPTIONS.map((opt) => (
-                  <option key={opt} value={opt}>
-                    {opt}
-                  </option>
-                ))}
-              </select>
+              <>
+                <select
+                  id="workType"
+                  name="workType"
+                  required
+                  className={baseInputClass}
+                  value={workType}
+                  onChange={(e) => {
+                    const next = e.target.value;
+                    setWorkType(next);
+                    if (next !== "その他") setWorkTypeOther("");
+                  }}
+                >
+                  <option value="">選択してください</option>
+                  {WORK_TYPE_OPTIONS.map((opt) => (
+                    <option key={opt} value={opt}>
+                      {opt}
+                    </option>
+                  ))}
+                </select>
+                <div
+                  className={`overflow-hidden transition-all duration-300 ${
+                    isWorkTypeOther ? "mt-2 max-h-40 opacity-100" : "max-h-0 opacity-0"
+                  }`}
+                >
+                  <label className="text-sm font-semibold text-slate-800" htmlFor="workTypeOther">
+                    その他の勤務形態を記入
+                  </label>
+                  <textarea
+                    id="workTypeOther"
+                    name="workTypeOther"
+                    rows={3}
+                    required={isWorkTypeOther}
+                    disabled={!isWorkTypeOther}
+                    value={workTypeOther}
+                    onChange={(e) => setWorkTypeOther(e.target.value)}
+                    className={`${baseInputClass} mt-2 min-h-[96px]`}
+                  />
+                </div>
+              </>
             </FormField>
 
             {/* 年齢スライダー */}
             <div className="space-y-2">
               <div className="text-sm font-semibold text-slate-800">
-                年齢 (18-50+)<span className="ml-1 text-pink-600">*</span>
+                年齢<span className="ml-1 text-pink-600">*</span>
               </div>
               <div className="space-y-2 rounded-2xl border border-slate-200 bg-white p-4">
               <div className="flex items-center justify-between text-sm text-slate-700">
-                <span>年齢</span>
                 <span className="font-semibold">
                   {ageTouched ? `${age} 歳` : "未設定"}
                 </span>
@@ -366,7 +444,6 @@ export default function NewSurvey() {
               </div>
               <div className="space-y-2 rounded-2xl border border-slate-200 bg-white p-4">
               <div className="flex items-center justify-between text-sm text-slate-700">
-                <span>スペック</span>
                 <span className="font-semibold">{specTouched ? specScore : "未設定"}</span>
               </div>
               <input type="hidden" name="specScore" value={specTouched ? specScore : ""} />
@@ -396,11 +473,10 @@ export default function NewSurvey() {
             {/* 平均待機時間スライダー */}
             <div className="space-y-2">
               <div className="text-sm font-semibold text-slate-800">
-                平均待機時間 (0-24h)<span className="ml-1 text-pink-600">*</span>
+                1日の平均待機時間<span className="ml-1 text-pink-600">*</span>
               </div>
               <div className="space-y-2 rounded-2xl border border-slate-200 bg-white p-4">
                 <div className="flex items-center justify-between text-sm text-slate-700">
-                  <span>平均待機時間</span>
                   <span className="font-semibold">{waitTouched ? `${waitTime} 時間` : "未設定"}</span>
                 </div>
                 <input type="hidden" name="waitTimeHours" value={waitTouched ? waitTime : ""} />
@@ -430,11 +506,10 @@ export default function NewSurvey() {
             {/* 平均稼ぎスライダー */}
             <div className="space-y-2">
               <div className="text-sm font-semibold text-slate-800">
-                平均稼ぎ (0-30万円)<span className="ml-1 text-pink-600">*</span>
+                1日の平均稼ぎ<span className="ml-1 text-pink-600">*</span>
               </div>
               <div className="space-y-2 rounded-2xl border border-slate-200 bg-white p-4">
                 <div className="flex items-center justify-between text-sm text-slate-700">
-                  <span>平均稼ぎ</span>
                   <span className="font-semibold">
                     {earningTouched ? `${averageEarning} 万円` : "未設定"}
                   </span>
@@ -443,7 +518,7 @@ export default function NewSurvey() {
                 <input
                   type="range"
                   min="0"
-                  max="30"
+                  max="20"
                   step="1"
                   value={averageEarning}
                   onChange={(e) => {
@@ -457,8 +532,8 @@ export default function NewSurvey() {
                 />
                 <div className="flex justify-between text-xs text-slate-500">
                   <span>0万円</span>
-                  <span>15万円</span>
-                  <span>30万円</span>
+                  <span>10万円</span>
+                  <span>20万円</span>
                 </div>
               </div>
             </div>
@@ -470,7 +545,6 @@ export default function NewSurvey() {
               </div>
               <div className="space-y-2 rounded-2xl border border-slate-200 bg-white p-4">
                 <div className="flex items-center justify-between text-sm text-slate-700">
-                  <span>キャストバック</span>
                   <span className="font-semibold">
                     {castTouched ? `${castBack.toLocaleString()} 円` : "未設定"}
                   </span>
@@ -479,8 +553,8 @@ export default function NewSurvey() {
                 <input
                   type="range"
                   min="0"
-                  max="30000"
-                  step="1000"
+                  max="20000"
+                  step="500"
                   value={castBack}
                   onChange={(e) => {
                     const val = Number(e.target.value);
@@ -493,8 +567,8 @@ export default function NewSurvey() {
                 />
                 <div className="flex justify-between text-xs text-slate-500">
                   <span>0円</span>
-                  <span>15,000円</span>
-                  <span>30,000円</span>
+                  <span>10,000円</span>
+                  <span>20,000円</span>
                 </div>
               </div>
             </div>
@@ -509,7 +583,7 @@ export default function NewSurvey() {
             <TextAreaField id="customerComment" label="客層について" />
             <TextAreaField id="staffComment" label="スタッフ対応について" />
             <TextAreaField id="workEnvironmentComment" label="環境について" />
-            <TextAreaField id="etcComment" label="その他" />
+            <TextAreaField id="etcComment" label="その他(稼ぎや全体的な感想など)" />
           </div>
         </section>
 

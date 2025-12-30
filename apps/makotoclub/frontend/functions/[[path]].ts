@@ -323,8 +323,10 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
       branchName,
       prefecture,
       industry,
+      industryOther,
       visitedPeriod,
       workType,
+      workTypeOther,
       age,
       specScore,
       waitTimeHours,
@@ -347,11 +349,11 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
     }
     await env.DB.prepare(
       `INSERT INTO survey_drafts
-      (id, store_id, store_name, store_branch, store_prefecture, store_area, store_industry, store_genre,
-       visited_period, work_type, age, spec_score, wait_time_hours, average_earning, rating,
+      (id, store_id, store_name, store_branch, store_prefecture, store_area, store_industry, industry_other, store_genre,
+       visited_period, work_type, work_type_other, age, spec_score, wait_time_hours, average_earning, rating,
        customer_comment, staff_comment, work_environment_comment, etc_comment, cast_back, email_address,
        image_urls, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     )
       .bind(
         id,
@@ -361,9 +363,11 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
         prefecture,
         area ?? null,
         industry,
+        industryOther ?? null,
         genre ?? null,
         visitedPeriod,
         workType,
+        workTypeOther ?? null,
         Number(age) || 0,
         Number(specScore) || 0,
         Number(waitTimeHours) || 0,

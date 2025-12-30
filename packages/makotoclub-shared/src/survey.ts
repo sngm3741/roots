@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const WORK_TYPES = ["在籍", "出稼ぎ"] as const;
+export const WORK_TYPES = ["在籍", "出稼ぎ", "その他"] as const;
 
 // フロント（draft投稿）用：店舗紐付け不要
 export const SurveyDraftInputSchema = z.object({
@@ -8,9 +8,11 @@ export const SurveyDraftInputSchema = z.object({
   branchName: z.string().optional(),
   prefecture: z.string().min(1),
   industry: z.string().min(1),
+  industryOther: z.string().optional(),
   genre: z.string().optional(),
   visitedPeriod: z.string().min(1), // YYYY-MM 前提
   workType: z.enum(WORK_TYPES),
+  workTypeOther: z.string().optional(),
   age: z.number().min(18).max(50),
   specScore: z.number().min(50).max(140),
   waitTimeHours: z.number().min(0).max(24),

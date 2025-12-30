@@ -51,6 +51,17 @@ export const DraftSurveyListPage = () => {
             <Card key={survey.id} className="flex flex-col gap-3">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="space-y-1">
+                  {(() => {
+                    const industryLabel =
+                      survey.industry === "その他" && survey.industryOther
+                        ? `その他（${survey.industryOther}）`
+                        : survey.industry;
+                    const workTypeLabel =
+                      survey.workType === "その他" && survey.workTypeOther
+                        ? `その他（${survey.workTypeOther}）`
+                        : survey.workType;
+                    return (
+                      <>
                   <div className="flex items-center gap-2">
                     <h3 className="text-lg font-semibold">
                       {survey.storeName}
@@ -59,14 +70,17 @@ export const DraftSurveyListPage = () => {
                     <Badge variant="outline">投稿</Badge>
                   </div>
                   <p className="text-sm text-slate-600">
-                    訪問時期: {survey.visitedPeriod} / 勤務形態: {survey.workType}
+                    訪問時期: {survey.visitedPeriod} / 勤務形態: {workTypeLabel}
                   </p>
                   <p className="text-sm text-slate-600">
                     平均報酬: {survey.averageEarning}万円 / 満足度: {survey.rating} / 5
                   </p>
                   <p className="text-sm text-slate-600">
-                    {survey.prefecture} {survey.area ?? ""} / 業種: {survey.industry} / ジャンル: {survey.genre ?? "-"}
+                    {survey.prefecture} {survey.area ?? ""} / 業種: {industryLabel} / ジャンル: {survey.genre ?? "-"}
                   </p>
+                      </>
+                    );
+                  })()}
                 </div>
                 <Button asChild size="sm" variant="secondary">
                   <Link to={`/surveys/${survey.id}/edit`}>詳細を見る</Link>

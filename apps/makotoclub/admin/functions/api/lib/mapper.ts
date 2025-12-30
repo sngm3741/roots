@@ -35,9 +35,11 @@ export type SurveyRow = {
   store_prefecture: string;
   store_area?: string | null;
   store_industry: string;
+  industry_other?: string | null;
   store_genre?: string | null;
   visited_period: string;
   work_type: string;
+  work_type_other?: string | null;
   age: number;
   spec_score: number;
   wait_time_hours: number;
@@ -118,9 +120,11 @@ export const mapSurvey = (row: SurveyRow) => {
     prefecture: row.store_prefecture,
     area: row.store_area ?? undefined,
     industry: row.store_industry,
+    industryOther: row.industry_other ?? undefined,
     genre: row.store_genre ?? undefined,
     visitedPeriod: row.visited_period,
     workType: row.work_type,
+    workTypeOther: row.work_type_other ?? undefined,
     age: row.age,
     specScore: row.spec_score,
     waitTimeHours: row.wait_time_hours,
