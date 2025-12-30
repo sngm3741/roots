@@ -58,7 +58,11 @@ export default function StoreDetailPage() {
 
   return (
     <main className="mx-auto max-w-5xl px-4 pb-12 pt-6 space-y-8">
-      <BreadcrumbLabelSetter label={store.storeName} branchName={store.branchName} />
+      <BreadcrumbLabelSetter
+        label={store.storeName}
+        branchName={store.branchName}
+        storeId={store.id}
+      />
 
       <div className="rounded-[24px] border border-pink-100 bg-white/90 p-6 shadow-[0_24px_60px_rgba(15,23,42,0.08)]">
         <div className="flex flex-wrap items-start justify-between gap-4">

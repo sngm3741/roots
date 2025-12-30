@@ -73,7 +73,7 @@ export function StoreCard({ store, className }: Props) {
 
       <div className="space-y-2 mb-4">
         <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-600">評価</span>
+          <span className="text-sm text-gray-600">満足度</span>
           <RatingStars value={store.averageRating ?? 0} size="sm" />
         </div>
         <div className="flex items-center justify-between">

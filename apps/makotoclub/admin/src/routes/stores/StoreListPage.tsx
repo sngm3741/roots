@@ -103,8 +103,8 @@ export const StoreListPage = () => {
           <Select id="store-sort" value={sortOption} onChange={(event) => setSortOption(event.target.value)}>
             <option value="createdAt-desc">新着順</option>
             <option value="createdAt-asc">古い順</option>
-            <option value="averageRating-desc">評価が高い順</option>
-            <option value="averageRating-asc">評価が低い順</option>
+            <option value="averageRating-desc">満足度が高い順</option>
+            <option value="averageRating-asc">満足度が低い順</option>
           </Select>
         </div>
         <Button
@@ -140,7 +140,7 @@ export const StoreListPage = () => {
                     {store.prefecture} {store.area ?? ""} / {store.genre ?? "ジャンル未設定"}
                   </p>
                   <p className="text-sm text-slate-600">
-                    平均評価: <span className="font-semibold">{store.averageRating.toFixed(1)}</span> / 平均時給:{" "}
+                    平均満足度: <span className="font-semibold">{store.averageRating.toFixed(1)}</span> / 平均時給:{" "}
                     {store.averageEarningLabel ?? "-"}
                   </p>
                   <p className="text-sm text-slate-600">

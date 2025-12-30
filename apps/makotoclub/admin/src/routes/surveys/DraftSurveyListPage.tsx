@@ -62,7 +62,7 @@ export const DraftSurveyListPage = () => {
                     訪問時期: {survey.visitedPeriod} / 勤務形態: {survey.workType}
                   </p>
                   <p className="text-sm text-slate-600">
-                    平均報酬: {survey.averageEarning}万円 / 評価: {survey.rating} / 5
+                    平均報酬: {survey.averageEarning}万円 / 満足度: {survey.rating} / 5
                   </p>
                   <p className="text-sm text-slate-600">
                     {survey.prefecture} {survey.area ?? ""} / 業種: {survey.industry} / ジャンル: {survey.genre ?? "-"}

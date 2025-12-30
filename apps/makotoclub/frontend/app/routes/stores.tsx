@@ -166,7 +166,7 @@ const GENRE_OPTIONS = ["熟女", "学園系", "スタンダード", "格安店",
 const SORT_OPTIONS = [
   { value: "", label: "新着順" },
   { value: "earning", label: "稼ぎ順" },
-  { value: "rating", label: "評価順" },
+  { value: "rating", label: "満足度順" },
 ];
 
 function SearchForm({ filters }: { filters: Record<string, string> }) {

@@ -144,8 +144,8 @@ export const SurveyListPage = () => {
           <Select id="survey-sort" value={sortOption} onChange={(event) => setSortOption(event.target.value)}>
             <option value="createdAt-desc">新着順</option>
             <option value="createdAt-asc">古い順</option>
-            <option value="rating-desc">評価が高い順</option>
-            <option value="rating-asc">評価が低い順</option>
+            <option value="rating-desc">満足度が高い順</option>
+            <option value="rating-asc">満足度が低い順</option>
             <option value="averageEarning-desc">平均稼ぎが高い順</option>
             <option value="averageEarning-asc">平均稼ぎが低い順</option>
           </Select>
@@ -183,7 +183,7 @@ export const SurveyListPage = () => {
                     {survey.storePrefecture} {survey.storeArea ?? ""}
                   </p>
                   <p className="text-sm text-slate-600">
-                    訪問時期: {survey.visitedPeriod} / 平均報酬: {survey.averageEarning}万円 / 評価: {survey.rating} / 5
+                    訪問時期: {survey.visitedPeriod} / 平均報酬: {survey.averageEarning}万円 / 満足度: {survey.rating} / 5
                   </p>
                 </div>
                 <div className="flex gap-2">

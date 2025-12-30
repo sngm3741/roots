@@ -64,7 +64,7 @@ Roots では ExecPlan ファイルを `docs/DEVLOG/` 配下に置き、
 ## Plan of Work
 
 - DB: `store_stats` を追加し、店舗の集計値（最小/最大/中央値/平均/件数）を保持する。
-- API: `/api/surveys` と `/api/stores` に spec/age 条件を追加し、検索条件がある場合は評価順の初期ソートにする。
+- API: `/api/surveys` と `/api/stores` に spec/age 条件を追加し、検索条件がある場合は満足度順の初期ソートにする。
 - 集計更新: アンケート追加/更新/削除時に該当店舗の集計を再計算して `store_stats` を更新する。
 - フロント: `/` の検索カードで検索対象トグルに応じて遷移先を切替し、`/surveys` と `/stores` で spec/age 条件を反映する。
 - 初期集計: `wrangler d1 execute` で `store_stats` をバックフィルする SQL を用意する。

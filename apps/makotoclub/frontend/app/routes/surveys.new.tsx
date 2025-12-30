@@ -605,9 +605,9 @@ export default function NewSurvey() {
           </div>
         </section>
 
-        {/* 連絡先 & 総合評価 */}
+        {/* 連絡先 & 満足度 */}
         <section className="card-surface space-y-4 rounded-3xl border border-pink-100/80 p-6">
-          <h2 className="text-lg font-semibold text-slate-900">連絡先 & 総合評価</h2>
+          <h2 className="text-lg font-semibold text-slate-900">報酬受け取り用の連絡先 & 満足度</h2>
           <div className="space-y-4">
             <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4">
               <div className="flex items-center gap-4">

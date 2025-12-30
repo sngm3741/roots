@@ -51,7 +51,11 @@ export default function SurveyDetailPage() {
 
   return (
     <main className="mx-auto max-w-5xl px-4 pb-12 pt-6 space-y-8">
-      <BreadcrumbLabelSetter label={survey.storeName} branchName={survey.storeBranch} />
+      <BreadcrumbLabelSetter
+        label={survey.storeName}
+        branchName={survey.storeBranch}
+        storeId={survey.storeId}
+      />
       <div className="rounded-[24px] border border-pink-100 bg-white/90 p-6 shadow-[0_24px_60px_rgba(15,23,42,0.08)] space-y-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="space-y-2">
@@ -73,7 +77,7 @@ export default function SurveyDetailPage() {
           </div>
           <div className="flex items-center gap-3 rounded-2xl bg-gradient-to-r from-pink-50 to-purple-50 px-4 py-3 border border-pink-100">
             <div className="text-center">
-              <p className="text-xs font-semibold text-slate-700">評価</p>
+              <p className="text-xs font-semibold text-slate-700">満足度</p>
               <p className="text-2xl font-bold text-pink-700">{(survey.rating ?? 0).toFixed(1)}</p>
             </div>
             <RatingStars value={survey.rating ?? 0} />

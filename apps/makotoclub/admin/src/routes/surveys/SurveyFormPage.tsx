@@ -326,7 +326,7 @@ export const SurveyFormPage = ({ mode }: Props) => {
                 />
               </div>
               <div className="space-y-2">
-                <Label>評価 (0-5)</Label>
+                <Label>満足度 (0-5)</Label>
                 <Input
                   type="number"
                   min={0}

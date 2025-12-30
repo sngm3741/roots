@@ -36,7 +36,7 @@ Cloudflare Functions (D1) の実装はこの契約に合わせる。
 
 ### クエリ
 - `name?`, `prefecture?`, `area?`, `industry?`, `genre?`, `page?`, `limit?`, `sort?`
-  - `sort` 値の想定: `""|undefined` = 新着, `oldest` = 古い順, `earning` = 稼ぎ順, `rating` = 評価順
+  - `sort` 値の想定: `""|undefined` = 新着, `oldest` = 古い順, `earning` = 稼ぎ順, `rating` = 満足度順
 
 ## surveys
 ### SurveySummary

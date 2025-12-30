@@ -20,11 +20,24 @@ const LABEL_MAP: Record<string, string> = {
 
 export const Breadcrumbs = () => {
   const location = useLocation();
-  const { lastLabel } = useBreadcrumbOverride();
+  const { lastLabel, lastStoreId } = useBreadcrumbOverride();
   const pathname = location.pathname;
 
   const crumbs = useMemo<Crumb[]>(() => {
     if (!pathname) return [{ label: "ホーム", href: "/" }];
+    if (/^\/surveys\/[^/]+$/.test(pathname)) {
+      return [
+        { label: "ホーム", href: "/" },
+        {
+          label: lastLabel ?? "店舗詳細",
+          href: lastStoreId ? `/stores/${lastStoreId}` : undefined,
+        },
+        { label: "アンケート" },
+      ];
+    }
+    if (/^\/stores\/[^/]+$/.test(pathname)) {
+      return [{ label: "ホーム", href: "/" }, { label: lastLabel ?? "店舗詳細" }];
+    }
     const segments = pathname.split("/").filter(Boolean);
     const items: Crumb[] = [{ label: "ホーム", href: "/" }];
     let currentPath = "";
@@ -49,11 +62,12 @@ export const Breadcrumbs = () => {
       }
       if (seg === "new") label = "新規作成";
 
-      items.push({ label, href: isLast ? undefined : currentPath });
+      const hideListLink = seg === "stores" || seg === "surveys";
+      items.push({ label, href: isLast || hideListLink ? undefined : currentPath });
     });
 
     return items;
-  }, [pathname, lastLabel]);
+  }, [pathname, lastLabel, lastStoreId]);
 
   if (crumbs.length <= 1) return null;
 
