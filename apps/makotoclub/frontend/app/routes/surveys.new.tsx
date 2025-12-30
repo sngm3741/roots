@@ -5,7 +5,7 @@ import { getApiBaseUrl } from "../config.server";
 import { Button } from "../components/ui/button";
 import { RatingStars } from "../components/ui/rating-stars";
 import { HelpIcon } from "../components/ui/help-icon";
-import { Controller, type UseFormRegister, useForm } from "react-hook-form";
+import { Controller, type FieldErrors, type UseFormRegister, useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -413,7 +413,7 @@ export default function NewSurvey() {
       encType: "multipart/form-data",
       replace: true,
     });
-  }, () => {
+  }, (formErrors: FieldErrors<SurveyFormValues>) => {
     const order: (keyof SurveyFormValues)[] = [
       "storeName",
       "prefecture",
@@ -434,12 +434,14 @@ export default function NewSurvey() {
     for (const field of order) {
       if (field === "industryOther" && !isIndustryOther) continue;
       if (field === "workTypeOther" && !isWorkTypeOther) continue;
-      const fieldError = errors[field];
+      const fieldError = formErrors[field];
       const forceOtherError =
         (field === "industryOther" && isIndustryOther && !industryOther?.trim()) ||
         (field === "workTypeOther" && isWorkTypeOther && !workTypeOther?.trim());
       if (fieldError || forceOtherError) {
-        setFocus(field);
+        requestAnimationFrame(() => {
+          setFocus(field);
+        });
         break;
       }
     }

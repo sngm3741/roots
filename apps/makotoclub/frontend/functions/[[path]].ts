@@ -353,7 +353,7 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
        visited_period, work_type, work_type_other, age, spec_score, wait_time_hours, average_earning, rating,
        customer_comment, staff_comment, work_environment_comment, etc_comment, cast_back, email_address,
        image_urls, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     )
       .bind(
         id,
