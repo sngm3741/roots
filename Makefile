@@ -7,11 +7,13 @@
 .PHONY: decrypt-configs
 .PHONY: makotoclub-frontend-preview makotoclub-admin-preview
 .PHONY: makotoclub-d1-backup
+.PHONY: git-push
 
 ROOT := $(CURDIR)
 GO ?= go
 GOCACHE ?= $(ROOT)/.gocache
 BACKUP_DIR ?= $(ROOT)/apps/makotoclub/backup
+MSG ?= dev
 
 help: ## ヘルプを表示
 	@awk 'BEGIN {FS = ":.*## "}; /^[a-zA-Z0-9_-]+:.*## / {printf "  %-28s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -84,3 +86,9 @@ makotoclub-d1-backup: ## MakotoClub D1 バックアップ（本番）
 	@backup="$(BACKUP_DIR)/d1-makotoclub-$$(date +%Y%m%d-%H%M%S).sql"; \
 	cd $(ROOT)/apps/makotoclub/frontend && npx wrangler d1 export makotoclub --remote --output "$$backup"; \
 	echo "$$backup"
+
+# git add/commit/push
+git-push: ## git add/commit/push（コミットメッセージは日本語）
+	@git add .
+	@git commit -m "$(MSG)"
+	@git push origin HEAD
