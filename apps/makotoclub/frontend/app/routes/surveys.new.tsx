@@ -1,5 +1,5 @@
-import { Form, Link, useActionData, useNavigation, useSubmit } from "react-router";
-import { useEffect, useRef, useState } from "react";
+import { Form, Link, useActionData, useLocation, useNavigation, useSubmit } from "react-router";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { type ActionFunctionArgs, redirect } from "react-router";
 import { getApiBaseUrl } from "../config.server";
 import { Button } from "../components/ui/button";
@@ -80,6 +80,7 @@ const surveySchema = z
     branchName: z.string().trim().optional().or(z.literal("")),
     prefecture: z.string().min(1, "都道府県の入力がされていません"),
     industry: z.string().min(1, "業種の入力がされていません"),
+    genre: z.string().trim().optional().or(z.literal("")),
     industryOther: z.string().trim().optional().or(z.literal("")),
     visitedPeriod: z
       .string()
@@ -151,6 +152,7 @@ export async function action({ request, context }: ActionFunctionArgs) {
   const ratingRaw = formData.get("rating");
   const castBackRaw = formData.get("castBack");
   const industryVal = (formData.get("industry") as string | null) || "";
+  const genreVal = (formData.get("genre") as string | null) || "";
   const workTypeVal = (formData.get("workType") as string | null) || "";
   const industryOtherVal = (formData.get("industryOther") as string | null)?.trim() || "";
   const workTypeOtherVal = (formData.get("workTypeOther") as string | null)?.trim() || "";
@@ -217,6 +219,7 @@ export async function action({ request, context }: ActionFunctionArgs) {
     branchName: (formData.get("branchName") as string | null)?.trim() || undefined,
     prefecture: (formData.get("prefecture") as string | null) || "",
     industry: industryVal,
+    genre: genreVal || undefined,
     industryOther: industryVal === "その他" ? industryOtherVal : undefined,
     visitedPeriod: (formData.get("visitedPeriod") as string | null) || "",
     workType: workTypeVal,
@@ -261,11 +264,14 @@ export async function action({ request, context }: ActionFunctionArgs) {
 export default function NewSurvey() {
   const actionData = useActionData<ActionResult>();
   const navigation = useNavigation();
+  const { search } = useLocation();
+  const prefillParams = useMemo(() => new URLSearchParams(search), [search]);
   const submit = useSubmit();
   const isSubmitting = navigation.state === "submitting";
   const {
     register,
     handleSubmit,
+    getValues,
     setValue,
     setFocus,
     control,
@@ -275,10 +281,11 @@ export default function NewSurvey() {
     resolver: zodResolver(surveySchema),
     shouldFocusError: false,
     defaultValues: {
-      storeName: "",
-      branchName: "",
-      prefecture: "",
-      industry: "",
+      storeName: prefillParams.get("storeName") ?? "",
+      branchName: prefillParams.get("branchName") ?? "",
+      prefecture: prefillParams.get("prefecture") ?? "",
+      industry: prefillParams.get("industry") ?? "",
+      genre: prefillParams.get("genre") ?? "",
       industryOther: "",
       visitedPeriod: "",
       workType: "",
@@ -348,6 +355,29 @@ export default function NewSurvey() {
   }, [isIndustryOther, setValue]);
 
   useEffect(() => {
+    const storeName = prefillParams.get("storeName") ?? "";
+    const branchName = prefillParams.get("branchName") ?? "";
+    const prefecture = prefillParams.get("prefecture") ?? "";
+    const industry = prefillParams.get("industry") ?? "";
+    const genre = prefillParams.get("genre") ?? "";
+    if (storeName && !getValues("storeName")) {
+      setValue("storeName", storeName, { shouldDirty: false });
+    }
+    if (branchName && !getValues("branchName")) {
+      setValue("branchName", branchName, { shouldDirty: false });
+    }
+    if (prefecture && !getValues("prefecture")) {
+      setValue("prefecture", prefecture, { shouldDirty: false });
+    }
+    if (industry && !getValues("industry")) {
+      setValue("industry", industry, { shouldDirty: false });
+    }
+    if (genre && !getValues("genre")) {
+      setValue("genre", genre, { shouldDirty: false });
+    }
+  }, [getValues, prefillParams, setValue]);
+
+  useEffect(() => {
     if (!isWorkTypeOther) {
       setValue("workTypeOther", "");
     }
@@ -398,6 +428,7 @@ export default function NewSurvey() {
     appendIfPresent("branchName", data.branchName);
     formData.set("prefecture", data.prefecture);
     formData.set("industry", data.industry);
+    appendIfPresent("genre", data.genre);
     appendIfPresent("industryOther", data.industryOther);
     formData.set("visitedPeriod", data.visitedPeriod);
     formData.set("workType", data.workType);
@@ -538,6 +569,9 @@ export default function NewSurvey() {
                   {industryOtherError ? <FieldError message={industryOtherError} /> : null}
                 </div>
               </>
+            </FormField>
+            <FormField label="ジャンル" errorMessage={errors.genre?.message}>
+              <input id="genre" {...register("genre")} className={baseInputClass} />
             </FormField>
           </div>
         </section>

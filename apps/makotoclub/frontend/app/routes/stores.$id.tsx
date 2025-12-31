@@ -7,6 +7,9 @@ import { RatingStars } from "../components/ui/rating-stars";
 import { BreadcrumbLabelSetter } from "../components/common/breadcrumb-label-setter";
 import { ImageGallery } from "../components/ui/image-gallery";
 import type { ImageGalleryItem } from "../components/ui/image-gallery";
+import { SurveyCount } from "../components/ui/survey-count";
+import { PostIcon } from "../components/ui/post-icon";
+import { formatDecimal1 } from "../lib/number-format";
 
 type LoaderData = {
   store: StoreDetail | null;
@@ -47,9 +50,8 @@ export default function StoreDetailPage() {
   }
 
   const waitLabel =
-    typeof store.waitTimeHours === "number" && !Number.isNaN(store.waitTimeHours)
-      ? `${store.waitTimeHours.toFixed(1)}h`
-      : store.waitTimeLabel ?? "-";
+    store.waitTimeLabel ??
+    (Number.isFinite(store.waitTimeHours) ? `${formatDecimal1(store.waitTimeHours)}時間` : "-");
 
   const photoItems: ImageGalleryItem[] = (store.surveys ?? []).flatMap((survey) => {
     const comment =
@@ -73,50 +75,60 @@ export default function StoreDetailPage() {
         storeId={store.id}
       />
 
-      <div className="rounded-[24px] border border-pink-100 bg-white/90 p-6 shadow-[0_24px_60px_rgba(15,23,42,0.08)]">
+      <div className="rounded-[24px] border border-sky-100 bg-sky-50/60 p-6 shadow-[0_24px_60px_rgba(15,23,42,0.08)]">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="space-y-2">
-            <div className="flex items-start gap-2 text-sm text-slate-500">
-              <span className="mt-[1px]">
-                <MapPinIcon />
-              </span>
-              <span>
-                {store.prefecture}
-                {store.area ? ` / ${store.area}` : ""}
-              </span>
-            </div>
             <h1 className="text-3xl font-bold text-slate-900">
               {store.storeName}
               {store.branchName ? ` ${store.branchName}` : ""}
             </h1>
-            <div className="flex flex-wrap gap-3 text-sm text-slate-700">
-              <span className="rounded-full bg-pink-50 px-3 py-1 font-semibold text-slate-800 border border-pink-100">
-                業種: {store.category}
+            <div className="flex items-center gap-2 text-sm text-slate-600">
+              <RatingStars value={store.averageRating ?? 0} size="lg" />
+              <span className="text-3xl font-bold text-red-500">
+                {(store.averageRating ?? 0).toFixed(1)}
               </span>
-              {store.genre && (
-                <span className="rounded-full bg-pink-50 px-3 py-1 font-semibold text-slate-800 border border-pink-100">
-                  ジャンル: {store.genre}
+            </div>
+            <SurveyCount count={store.surveys?.length ?? 0} />
+          </div>
+          <div className="w-full max-w-sm rounded-2xl border border-pink-200 bg-gradient-to-br from-pink-50 to-white p-4 shadow-sm shadow-pink-200">
+            <Button asChild className="w-full rounded-full py-6 text-base font-semibold">
+              <a
+                href={`/surveys/new?${new URLSearchParams({
+                  storeName: store.storeName,
+                  branchName: store.branchName ?? "",
+                  prefecture: store.prefecture,
+                  industry: store.category ?? "",
+                  genre: store.genre ?? "",
+                }).toString()}`}
+                className="flex items-center justify-center gap-3"
+              >
+                <PostIcon className="h-5 w-5" />
+                <span className="flex flex-col items-center leading-tight">
+                  <span className="text-xs font-medium">この店舗のアンケートを</span>
+                  <span className="text-base font-semibold">投稿する</span>
                 </span>
-              )}
+              </a>
+            </Button>
+            <div className="px-2 mt-2 text-xs font-semibold text-pink-700">
+            <p>
+              アンケートの投稿で
+            </p>
+            <p>
+            PayPayプレゼントキャンペーン中 🎁
+            </p>
             </div>
           </div>
-          <Button asChild variant="secondary" className="shadow-sm shadow-pink-200">
-            <a href="/surveys/new">アンケートを投稿</a>
-          </Button>
         </div>
 
         <div className="mt-6 grid gap-4 md:grid-cols-[2fr_1fr]">
           <section className="rounded-2xl border border-pink-100 bg-white/90 p-5 shadow-sm space-y-3">
-            <h2 className="text-lg font-semibold text-slate-900">概要</h2>
+            <h2 className="text-lg font-semibold text-slate-900">店舗基本情報</h2>
             <div className="text-sm text-slate-700 space-y-2">
-              <div className="flex items-center gap-3">
-                <span className="text-sm font-semibold text-slate-800">総評</span>
-                <span className="text-2xl font-bold text-pink-700 drop-shadow-sm">
-                  {(store.averageRating ?? 0).toFixed(1)}
-                </span>
-                <RatingStars value={store.averageRating ?? 0} />
-              </div>
               <div className="grid gap-2 md:grid-cols-2">
+                <InfoChip label="都道府県" value={store.prefecture} />
+                {store.area && <InfoChip label="エリア" value={store.area} />}
+                <InfoChip label="業種" value={store.category ?? "-"} />
+                {store.genre && <InfoChip label="ジャンル" value={store.genre} />}
                 <InfoChip label="稼ぎ平均" value={store.averageEarningLabel ?? "-"} />
                 <InfoChip label="待機時間" value={waitLabel} />
                 {store.businessHours && (
@@ -128,11 +140,6 @@ export default function StoreDetailPage() {
               </div>
             </div>
           </section>
-          <div className="rounded-2xl border border-purple-100 bg-gradient-to-br from-purple-50/80 to-white p-5 shadow-sm space-y-2">
-            <p className="text-sm font-semibold text-slate-800">最新アンケート数</p>
-            <p className="text-3xl font-bold text-slate-900">{store.surveys?.length ?? 0} 件</p>
-            <p className="text-xs text-slate-600">詳細は下のアンケート一覧から確認できます</p>
-          </div>
         </div>
       </div>
 
@@ -162,7 +169,7 @@ export default function StoreDetailPage() {
                     稼ぎ: {survey.averageEarning}万
                   </span>
                   <span className="rounded-full bg-pink-50 px-2.5 py-1 border border-pink-100">
-                    待機: {survey.waitTimeHours}h
+                    待機: {formatDecimal1(survey.waitTimeHours)}h
                   </span>
                 </div>
                 <p className="text-sm text-slate-700 line-clamp-3">
@@ -200,7 +207,15 @@ export default function StoreDetailPage() {
 function InfoChip({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-xl border border-slate-100 bg-slate-50 px-3 py-2 text-sm text-slate-800">
-      <span className="font-semibold">{label}</span>: <span className="font-medium">{value}</span>
+      <div className="flex items-center gap-2">
+        <span
+          className="w-1/3 block font-semibold"
+          style={{ textAlign: "justify", textAlignLast: "justify" }}
+        >
+          {label}:
+        </span>
+        <span className="w-1/2 font-medium text-slate-700">{value}</span>
+      </div>
     </div>
   );
 }

@@ -2,6 +2,8 @@ import type { StoreSummary } from "../../types/store";
 import { RatingStars } from "../ui/rating-stars";
 import { AverageEarningIcon, WaitTimeIcon } from "../ui/survey-metric-icons";
 import { CardTypeChip } from "../ui/card-type-chip";
+import { SurveyCount } from "../ui/survey-count";
+import { formatDecimal1 } from "../../lib/number-format";
 
 type Props = {
   store: StoreSummary;
@@ -13,14 +15,6 @@ function MapPinIcon() {
     <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <path d="M12 21s-6-5.686-6-10a6 6 0 1 1 12 0c0 4.314-6 10-6 10Z" />
       <circle cx="12" cy="11" r="2" />
-    </svg>
-  );
-}
-
-function MessageSquareIcon() {
-  return (
-    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z" />
     </svg>
   );
 }
@@ -38,7 +32,9 @@ export function StoreCard({ store, className }: Props) {
   const earningLabel =
     store.averageEarningLabel ||
     (Number.isFinite(store.averageEarning) ? `${(store.averageEarning / 10000).toFixed(0)}万円` : "-");
-  const waitLabel = store.waitTimeLabel || `${store.waitTimeHours || 0}時間`;
+  const waitLabel =
+    store.waitTimeLabel ??
+    (Number.isFinite(store.waitTimeHours) ? `${formatDecimal1(store.waitTimeHours)}時間` : "-");
 
   return (
     <a
@@ -89,10 +85,7 @@ export function StoreCard({ store, className }: Props) {
       </div>
 
       <div className="pt-3 border-t border-gray-100">
-        <div className="flex items-center gap-1.5 text-sm text-gray-600">
-          <MessageSquareIcon />
-          <span>{store.surveyCount}件のアンケート</span>
-        </div>
+        <SurveyCount count={store.surveyCount} />
       </div>
     </a>
   );

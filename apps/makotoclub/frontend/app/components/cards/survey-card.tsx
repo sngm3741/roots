@@ -7,6 +7,7 @@ import {
   WaitTimeIcon,
 } from "../ui/survey-metric-icons";
 import { CardTypeChip } from "../ui/card-type-chip";
+import { formatDecimal1 } from "../../lib/number-format";
 
 type Props = {
   survey: SurveySummary;
@@ -81,7 +82,9 @@ export function SurveyCard({ survey, className }: Props) {
             <WaitTimeIcon className="h-4 w-4 text-pink-600" />
             <span>平均待機時間</span>
           </div>
-          <span className="text-sm text-gray-900">{survey.waitTimeHours}時間</span>
+          <span className="text-sm text-gray-900">
+            {formatDecimal1(survey.waitTimeHours)}時間
+          </span>
         </div>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5 text-sm text-gray-600">

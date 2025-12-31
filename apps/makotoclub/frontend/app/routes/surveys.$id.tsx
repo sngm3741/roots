@@ -14,6 +14,7 @@ import {
   SpecIcon,
   WaitTimeIcon,
 } from "../components/ui/survey-metric-icons";
+import { formatDecimal1 } from "../lib/number-format";
 
 type LoaderData = {
   survey: SurveyDetail | null;
@@ -117,7 +118,7 @@ export default function SurveyDetailPage() {
                     <span className="font-semibold">待機</span>
                   </div>
                   <div className="text-lg font-semibold text-slate-900 md:text-2xl">
-                    {survey.waitTimeHours}
+                    {formatDecimal1(survey.waitTimeHours)}
                     <span className="ml-1 text-sm font-semibold text-slate-500">時間</span>
                   </div>
                 </div>
