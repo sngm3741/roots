@@ -55,9 +55,9 @@ export function SurveyCard({ survey, className }: Props) {
           {survey.storeArea && <span className="text-gray-400">・</span>}
           {survey.storeArea && <span>{survey.storeArea}</span>}
         </div>
-        <h3 className="text-gray-900 mb-1">
+        <h3 className="text-gray-900 mb-1 font-bold text-2xl">
           {survey.storeName}
-          {survey.storeBranch && <span className="text-gray-600 ml-1">{survey.storeBranch}</span>}
+          {survey.storeBranch && <span className="text-gray-600 ml-1 text-xl">{survey.storeBranch}</span>}
         </h3>
         <div className="flex items-center gap-2 text-sm text-gray-600">
           <RatingStars value={survey.rating ?? 0} size="lg" />

@@ -179,6 +179,14 @@ const parseNumberParam = (value: string | null) => {
   return Number.isFinite(num) ? num : null;
 };
 
+const isBotUserAgent = (userAgent: string | null) => {
+  if (!userAgent) return false;
+  const ua = userAgent.toLowerCase();
+  return /bot|crawler|spider|headless|preview|fetch|scrape|monitor|httpclient|wget|curl|postman|axios|python|go-http-client|okhttp|java/.test(
+    ua,
+  );
+};
+
 const extractClientIp = (request: Request) => {
   const cfIp = request.headers.get("cf-connecting-ip");
   if (cfIp) return cfIp.trim();
@@ -275,6 +283,36 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
     const ctype = obj.httpMetadata?.contentType ?? "application/octet-stream";
     headers.set("Content-Type", ctype);
     return new Response(body, { headers });
+  }
+
+  // POST /api/metrics/pv（累計PVの記録）
+  if (pathname === "/api/metrics/pv" && request.method === "POST") {
+    const userAgent = request.headers.get("user-agent");
+    if (isBotUserAgent(userAgent)) {
+      return Response.json({ ignored: true });
+    }
+    let body: { path?: string } | null = null;
+    try {
+      body = (await request.json()) as { path?: string };
+    } catch {
+      body = null;
+    }
+    const path = body?.path && body.path.startsWith("/") ? body.path : "/";
+    const now = new Date().toISOString();
+
+    await env.DB.prepare(
+      `INSERT INTO page_view_counts (path, count, updated_at)
+       VALUES (?, 1, ?)
+       ON CONFLICT(path) DO UPDATE SET count = count + 1, updated_at = excluded.updated_at`,
+    )
+      .bind(path, now)
+      .run();
+
+    const row = await env.DB.prepare("SELECT count FROM page_view_counts WHERE path = ?")
+      .bind(path)
+      .first();
+
+    return Response.json({ path, count: row?.count ?? 0 });
   }
 
   // GET /api/surveys

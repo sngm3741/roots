@@ -5,6 +5,7 @@ DROP TABLE IF EXISTS survey_drafts;
 DROP TABLE IF EXISTS surveys;
 DROP TABLE IF EXISTS stores;
 DROP TABLE IF EXISTS access_logs;
+DROP TABLE IF EXISTS page_view_counts;
 
 CREATE TABLE stores (
   id TEXT PRIMARY KEY,
@@ -116,3 +117,9 @@ CREATE TABLE access_logs (
 );
 
 CREATE INDEX idx_access_logs_created_at ON access_logs(created_at);
+
+CREATE TABLE page_view_counts (
+  path TEXT PRIMARY KEY,
+  count INTEGER NOT NULL,
+  updated_at TEXT NOT NULL
+);

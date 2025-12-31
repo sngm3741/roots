@@ -55,9 +55,9 @@ export function StoreCard({ store, className }: Props) {
           {store.area && <span className="text-gray-400">・</span>}
           {store.area && <span>{store.area}</span>}
         </div>
-        <h3 className="text-gray-900 mb-1">
+        <h3 className="text-gray-900 mb-1 font-bold text-2xl">
           {store.storeName}
-          {store.branchName && <span className="text-gray-600 ml-1">{store.branchName}</span>}
+          {store.branchName && <span className="text-gray-600 ml-1 text-xl">{store.branchName}</span>}
         </h3>
         <div className="flex items-center gap-2 text-sm text-gray-600">
           <RatingStars value={store.averageRating ?? 0} size="lg" />

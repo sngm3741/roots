@@ -10,6 +10,7 @@ import { Input } from "../components/ui/input";
 import { Select } from "../components/ui/select";
 import { StoreCard } from "../components/cards/store-card";
 import { SurveyCard } from "../components/cards/survey-card";
+import { CounterBadge } from "../components/ui/counter-badge";
 
 type LoaderData = {
   apiBaseUrl: string;
@@ -197,6 +198,8 @@ export default function Index() {
 
 function Hero({ surveysTotal }: { surveysTotal: number }) {
   const [displayCount, setDisplayCount] = useState(0);
+  const [pageViews, setPageViews] = useState<number | null>(null);
+  const [displayPageViews, setDisplayPageViews] = useState(0);
 
   useEffect(() => {
     let rafId = 0;
@@ -220,6 +223,49 @@ function Hero({ surveysTotal }: { surveysTotal: number }) {
     };
   }, [surveysTotal]);
 
+  useEffect(() => {
+    if (pageViews === null) return;
+    let rafId = 0;
+    const durationMs = 900;
+    const target = Math.max(0, pageViews);
+    const start = performance.now();
+
+    const tick = (now: number) => {
+      const progress = Math.min(1, (now - start) / durationMs);
+      setDisplayPageViews(Math.floor(target * progress));
+      if (progress < 1) {
+        rafId = requestAnimationFrame(tick);
+      } else {
+        setDisplayPageViews(target);
+      }
+    };
+
+    rafId = requestAnimationFrame(tick);
+    return () => {
+      cancelAnimationFrame(rafId);
+    };
+  }, [pageViews]);
+
+  useEffect(() => {
+    const track = async () => {
+      try {
+        const res = await fetch("/api/metrics/pv", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ path: "/" }),
+        });
+        if (!res.ok) return;
+        const data = (await res.json()) as { count?: number };
+        if (typeof data.count === "number") {
+          setPageViews(data.count);
+        }
+      } catch {
+        // 表示用なので失敗は無視
+      }
+    };
+    track();
+  }, []);
+
   return (
     <section className="relative mx-auto max-w-5xl overflow-hidden rounded-[28px] text-center pt-5">
       <div className="relative flex flex-col items-center justify-center gap-6">
@@ -236,33 +282,57 @@ function Hero({ surveysTotal }: { surveysTotal: number }) {
             <p className="font-semibold text-lg text-slate-400">みんなのリアルな声から</p>
             <p className="font-semibold text-lg text-slate-400">自分にピッタリのお店を</p>
           </div>
-          <div className="mt-4 inline-flex items-center rounded-full border border-pink-100 bg-white/80 px-4 py-1 text-xs font-semibold text-pink-600 shadow-sm">
+          {/* <div className="mt-4 inline-flex items-center rounded-full border border-pink-100 bg-white/80 px-4 py-1 text-xs font-semibold text-pink-600 shadow-sm">
             18歳未満の方はご利用できません
-          </div>
+          </div> */}
+          {/* PVバッジは掲載数と横並びで表示 */}
         </div>
       </div>
-      {/*
-      <div className="mt-5 flex justify-center">
-        <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700">
-          <svg
-            aria-hidden="true"
-            viewBox="0 0 24 24"
-            className="h-4 w-4 text-emerald-500"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-          >
-            <path d="M9 11h6" />
-            <path d="M9 15h4" />
-            <path d="M6 3h8l4 4v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z" />
-            <path d="M14 3v4h4" />
-            <path d="M8 7h4" />
-            <path d="M9 18l2 2 4-4" />
-          </svg>
-          掲載数 {(displayCount).toLocaleString("ja-JP")} +
-        </div>
+      
+      <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
+        <CounterBadge
+          label="掲載数"
+          value={displayCount * 5}
+          suffix="+"
+          tone="emerald"
+          icon={
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 24 24"
+              className="h-4 w-4 text-emerald-500"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path d="M9 11h6" />
+              <path d="M9 15h4" />
+              <path d="M6 3h8l4 4v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z" />
+              <path d="M14 3v4h4" />
+              <path d="M8 7h4" />
+              <path d="M9 18l2 2 4-4" />
+            </svg>
+          }
+        />
+        {pageViews !== null && (
+          <CounterBadge
+            label="累計PV"
+            value={displayPageViews} 
+            tone="sky"
+            icon={
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 512 512"
+                className="h-4 w-4 text-sky-500"
+                fill="currentColor"
+              >
+                <path d="M507.024,246.257C454.633,143.663,358.44,79.938,256,79.938c-102.41,0-198.604,63.725-251.022,166.318L0,256.001l4.978,9.744C57.396,368.339,153.59,432.062,256,432.062c102.44,0,198.633-63.723,251.024-166.316l4.976-9.744L507.024,246.257z M256,389.235c-84.328,0-161.27-49.588-207.693-133.234C94.73,172.354,171.672,122.767,256,122.767c84.358,0,161.299,49.588,207.695,133.234C417.299,339.648,340.358,389.235,256,389.235z" />
+                <path d="M256,153.686c-57.158,0-103.498,46.34-103.498,103.5c0,57.158,46.34,103.498,103.498,103.498s103.5-46.34,103.5-103.498C359.5,200.026,313.158,153.686,256,153.686z M256,302.745c-25.135,0-45.558-20.424-45.558-45.559c0-5.646,1.17-10.972,3.025-15.949l37.85,14.764l-15.99-39.216c6.231-3.178,13.188-5.158,20.674-5.158c25.137,0,45.56,20.424,45.56,45.56C301.56,282.321,281.137,302.745,256,302.745z" />
+              </svg>
+            }
+          />
+        )}
       </div>
-      */}
+     
     </section>
   );
 }

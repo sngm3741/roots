@@ -131,7 +131,7 @@ export function Header() {
                   className="ml-2 w-8 h-8 rounded-lg object-cover"
                 />
                 <span className="absolute left-1/2 -translate-x-1/2 whitespace-nowrap italic text-xl font-semibold text-gray-700">
-                  コラボ情報 🎉
+                  コラボ情報 🤝
                 </span>
               </div>
             </div>
