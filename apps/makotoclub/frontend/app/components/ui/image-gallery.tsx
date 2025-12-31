@@ -5,22 +5,43 @@ export type ImageGalleryItem = {
   url: string;
   surveyId: string;
   comment?: string | null;
+  commentParts?: Array<string | null | undefined>;
 };
 
 type Props = {
   items: ImageGalleryItem[];
 };
 
-const toSummary = (text?: string | null) => {
-  const trimmed = (text ?? "").trim();
-  if (!trimmed) return "コメントなし";
-  return trimmed.length > 60 ? `${trimmed.slice(0, 60)}...` : trimmed;
+const buildLimitedComment = (parts: Array<string | null | undefined>, limit: number) => {
+  const cleaned = parts
+    .map((text) => (text ?? "").trim())
+    .filter((text) => text.length > 0);
+  if (cleaned.length === 0) return "";
+  let combined = "";
+  for (const text of cleaned) {
+    const next = combined ? `${combined}\n${text}` : text;
+    if (next.length > limit) {
+      return combined || text;
+    }
+    combined = next;
+  }
+  return combined;
+};
+
+const toSummary = (item: ImageGalleryItem) => {
+  const summary = item.commentParts
+    ? buildLimitedComment(item.commentParts, 60)
+    : buildLimitedComment([item.comment], 60);
+  return summary || "コメントなし";
 };
 
 export function ImageGallery({ items }: Props) {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const activeItem = activeIndex != null ? items[activeIndex] : null;
-  const activeSummary = useMemo(() => toSummary(activeItem?.comment), [activeItem?.comment]);
+  const activeSummary = useMemo(
+    () => (activeItem ? toSummary(activeItem) : "コメントなし"),
+    [activeItem],
+  );
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -56,7 +77,7 @@ export function ImageGallery({ items }: Props) {
             />
             <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-900/80 via-slate-900/40 to-transparent px-3 py-2 text-left text-xs text-white">
               <span className="inline-block whitespace-pre-wrap break-words rounded-md bg-slate-900/50 px-2 py-1">
-                {toSummary(item.comment)}
+                {toSummary(item)}
               </span>
             </div>
           </button>

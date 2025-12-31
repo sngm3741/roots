@@ -69,22 +69,18 @@ export default function StoreDetailPage() {
     store.waitTimeLabel ??
     (Number.isFinite(store.waitTimeHours) ? `${formatDecimal1(store.waitTimeHours)}時間` : "-");
 
-  const photoItems: ImageGalleryItem[] = (store.surveys ?? []).flatMap((survey) => {
-    const comment = buildLimitedComment(
-      [
+  const photoItems: ImageGalleryItem[] = (store.surveys ?? []).flatMap((survey) =>
+    (survey.imageUrls ?? []).map((url) => ({
+      url,
+      surveyId: survey.id,
+      commentParts: [
         survey.customerComment,
         survey.staffComment,
         survey.workEnvironmentComment,
         survey.etcComment,
       ],
-      60,
-    );
-    return (survey.imageUrls ?? []).map((url) => ({
-      url,
-      surveyId: survey.id,
-      comment,
-    }));
-  });
+    })),
+  );
 
   return (
     <main className="mx-auto max-w-5xl px-4 pb-12 pt-6 space-y-8">
@@ -240,20 +236,4 @@ function InfoChip({ label, value }: { label: string; value: string }) {
       </div>
     </div>
   );
-}
-
-function buildLimitedComment(parts: Array<string | null | undefined>, limit: number) {
-  const cleaned = parts
-    .map((text) => (text ?? "").trim())
-    .filter((text) => text.length > 0);
-  if (cleaned.length === 0) return "";
-  let combined = "";
-  for (const text of cleaned) {
-    const next = combined ? `${combined}\n${text}` : text;
-    if (next.length > limit) {
-      return combined || text;
-    }
-    combined = next;
-  }
-  return combined;
 }
