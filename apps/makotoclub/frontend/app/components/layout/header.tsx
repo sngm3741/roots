@@ -11,52 +11,12 @@ const navItems = [
 
 const collabItems = [
   {
-    id: "store-a",
-    title: "やりすぎサークル",
-    label: "雑費タダ！",
-    description: "マコトクラブからのご応募で永続雑費0円！",
-    imageUrl: "/d0d6c55e-2273-4ce4-b38d-447ef1131226.png",
-    href: "/collabs/store-a",
-  },
-  {
-    id: "store-b",
-    title: "E-プラス",
-    label: "3万円キャッシュバック！",
-    description: "マコトクラブからのご応募で3万円キャッシュバック！",
-    imageUrl: "/b669f0ff-67fc-4748-8771-3a5299a55413.png",
-    href: "/collabs/store-b",
-  },
-  {
-    id: "store-c",
-    title: "メイクアップ",
-    label: "寮費0円！",
-    description: "出稼ぎ限定！寮費0円！",
-    imageUrl: "/bc674797-4408-46f2-b136-97ddda4083af.png",
-    href: "/collabs/store-c",
-  },
-  {
-    id: "store-a",
-    title: "やりすぎサークル",
-    label: "雑費タダ！",
-    description: "マコトクラブからのご応募で永続雑費0円！",
-    imageUrl: "/d0d6c55e-2273-4ce4-b38d-447ef1131226.png",
-    href: "/collabs/store-a",
-  },
-  {
-    id: "store-b",
-    title: "E-プラス",
-    label: "3万円キャッシュバック！",
-    description: "マコトクラブからのご応募で3万円キャッシュバック！",
-    imageUrl: "/b669f0ff-67fc-4748-8771-3a5299a55413.png",
-    href: "/collabs/store-b",
-  },
-  {
-    id: "store-c",
-    title: "メイクアップ",
-    label: "寮費0円！",
-    description: "出稼ぎ限定！寮費0円！",
-    imageUrl: "/bc674797-4408-46f2-b136-97ddda4083af.png",
-    href: "/collabs/store-c",
+    id: "partner",
+    title: "提携店舗募集中",
+    label: "掲載のご相談はこちら",
+    description: "掲載・提携をご希望の店舗運営者様はお問い合わせください。",
+    imageUrl: "/logo.jpeg",
+    href: "/contact",
   },
 ];
 
