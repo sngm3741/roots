@@ -1,5 +1,6 @@
 import type { StoreSummary } from "../../types/store";
 import { RatingStars } from "../ui/rating-stars";
+import { AverageEarningIcon, WaitTimeIcon } from "../ui/survey-metric-icons";
 
 type Props = {
   store: StoreSummary;
@@ -11,15 +12,6 @@ function MapPinIcon() {
     <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <path d="M12 21s-6-5.686-6-10a6 6 0 1 1 12 0c0 4.314-6 10-6 10Z" />
       <circle cx="12" cy="11" r="2" />
-    </svg>
-  );
-}
-
-function ClockIcon() {
-  return (
-    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <circle cx="12" cy="12" r="9" />
-      <path d="M12 7v5l3 3" />
     </svg>
   );
 }
@@ -54,39 +46,39 @@ export function StoreCard({ store, className }: Props) {
       aria-label={`${store.storeName}${store.branchName ? ` ${store.branchName}` : ""} の詳細へ`}
     >
       <div className="mb-3">
-        <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
-          <MapPinIcon />
-          <span>{store.prefecture}</span>
-          {store.area && <span className="text-gray-400">・</span>}
-          {store.area && <span>{store.area}</span>}
+        <div className="flex items-start justify-between gap-3 mb-2">
+          <div className="flex items-center gap-2 text-sm text-gray-600">
+            <MapPinIcon />
+            <span>{store.prefecture}</span>
+            {store.area && <span className="text-gray-400">・</span>}
+            {store.area && <span>{store.area}</span>}
+          </div>
+          <Badge>{store.category}</Badge>
         </div>
         <h3 className="text-gray-900 mb-1">
           {store.storeName}
           {store.branchName && <span className="text-gray-600 ml-1">{store.branchName}</span>}
         </h3>
-      </div>
-
-      <div className="flex flex-wrap gap-2 mb-4">
-        <Badge>{store.category}</Badge>
-        {store.genre && <Badge>{store.genre}</Badge>}
+        <div className="flex items-center gap-2 text-sm text-gray-600">
+          <RatingStars value={store.averageRating ?? 0} size="lg" />
+          <span className="text-2xl font-bold text-red-500">
+            {(store.averageRating ?? 0).toFixed(1)}
+          </span>
+        </div>
       </div>
 
       <div className="space-y-2 mb-4">
         <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-600">満足度</span>
-          <RatingStars value={store.averageRating ?? 0} size="sm" />
-        </div>
-        <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5 text-sm text-gray-600">
-            <span className="flex items-center justify-center w-4 h-4 text-base">¥</span>
+            <AverageEarningIcon className="h-4 w-4 text-white" />
             <span>平均稼ぎ</span>
           </div>
           <span className="text-sm text-gray-900">{earningLabel}</span>
         </div>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5 text-sm text-gray-600">
-            <ClockIcon />
-            <span>平均待機</span>
+            <WaitTimeIcon className="h-4 w-4 text-pink-600" />
+            <span>平均待機時間</span>
           </div>
           <span className="text-sm text-gray-900">{waitLabel}</span>
         </div>

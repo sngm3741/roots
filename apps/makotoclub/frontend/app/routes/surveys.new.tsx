@@ -1,4 +1,4 @@
-import { Form, useActionData, useNavigation, useSubmit } from "react-router";
+import { Form, Link, useActionData, useNavigation, useSubmit } from "react-router";
 import { useEffect, useRef, useState } from "react";
 import { type ActionFunctionArgs, redirect } from "react-router";
 import { getApiBaseUrl } from "../config.server";
@@ -9,7 +9,7 @@ import { Controller, type FieldErrors, type UseFormRegister, useForm } from "rea
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-type ActionError = { error: string };
+type ActionResult = { error?: string; success?: boolean; hasEmail?: boolean };
 
 const WORK_TYPE_OPTIONS = ["在籍", "出稼ぎ", "その他"];
 
@@ -209,6 +209,9 @@ export async function action({ request, context }: ActionFunctionArgs) {
     }
   }
 
+  const hasEmail = Boolean(
+    (formData.get("emailAddress") as string | null)?.trim(),
+  );
   const payload = {
     storeName: (formData.get("storeName") as string | null)?.trim() || "",
     branchName: (formData.get("branchName") as string | null)?.trim() || undefined,
@@ -252,11 +255,11 @@ export async function action({ request, context }: ActionFunctionArgs) {
     return { error: message };
   }
 
-  return redirect("/surveys");
+  return { success: true, hasEmail };
 }
 
 export default function NewSurvey() {
-  const actionData = useActionData<ActionError>();
+  const actionData = useActionData<ActionResult>();
   const navigation = useNavigation();
   const submit = useSubmit();
   const isSubmitting = navigation.state === "submitting";
@@ -292,6 +295,10 @@ export default function NewSurvey() {
   const [imageError, setImageError] = useState<string | null>(null);
   const [modalImage, setModalImage] = useState<{ url: string; name: string } | null>(null);
   const [serverError, setServerError] = useState<string | null>(null);
+  const [successModal, setSuccessModal] = useState<{ open: boolean; hasEmail: boolean }>({
+    open: false,
+    hasEmail: false,
+  });
   const [ageUi, setAgeUi] = useState<number>(18);
   const [specUi, setSpecUi] = useState<number>(50);
   const [ratingUi, setRatingUi] = useState<number>(0);
@@ -326,6 +333,13 @@ export default function NewSurvey() {
       setServerError(actionData.error);
     }
   }, [actionData?.error]);
+
+  useEffect(() => {
+    if (actionData?.success) {
+      setServerError(null);
+      setSuccessModal({ open: true, hasEmail: Boolean(actionData.hasEmail) });
+    }
+  }, [actionData?.success, actionData?.hasEmail]);
 
   useEffect(() => {
     if (!isIndustryOther) {
@@ -1015,6 +1029,42 @@ export default function NewSurvey() {
           {isSubmitting ? "送信中..." : "投稿する"}
         </Button>
       </Form>
+
+      {successModal.open ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
+          onClick={() => setSuccessModal({ open: false, hasEmail: false })}
+        >
+          <div
+            className="w-full max-w-md rounded-2xl bg-white p-5 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-base font-semibold text-slate-900">
+              アンケートが投稿されました。
+            </h3>
+            {successModal.hasEmail ? (
+              <p className="mt-2 text-sm text-slate-600">
+                報酬のPayPayリンクは内容の審査後に指定のメールアドレスにお送りします。
+              </p>
+            ) : null}
+            <div className="mt-4 flex items-center justify-between gap-3">
+              <Link
+                to="/"
+                className="inline-flex items-center justify-center rounded-full border border-pink-200 bg-pink-50 px-4 py-2 text-sm font-semibold text-pink-600 transition hover:border-pink-300 hover:bg-pink-100"
+              >
+                ホームへ戻る
+              </Link>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => setSuccessModal({ open: false, hasEmail: false })}
+              >
+                閉じる
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {serverError ? (
         <div
