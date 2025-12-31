@@ -618,12 +618,13 @@ function ResultsSection({
   const isSurvey = target === "surveys";
   const itemsEmpty = isSurvey ? surveys.length === 0 : stores.length === 0;
   const title = isSurvey ? "アンケート" : "店舗情報";
-  const countLabel = hasFilters ? "検索結果" : "新着";
+  // const countLabel = hasFilters ? "検索結果" : "新着";
   return (
     <section className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="text-sm font-semibold text-slate-700">
-          {countLabel} {total.toLocaleString("ja-JP")} 件
+          {/* {countLabel}  */}
+          {total.toLocaleString("ja-JP")} 件
         </div>
         <SortBar target={target} filters={filters} sort={sort} />
       </div>
