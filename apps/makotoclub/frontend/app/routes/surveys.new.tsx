@@ -498,6 +498,9 @@ export default function NewSurvey() {
           <p className="text-sm text-slate-600">
             🎁 アンケートの回答者にPayPay1000円分プレゼント 🎁
           </p>
+          <p className="mt-2 text-xs font-semibold text-pink-600">
+            18歳未満の方はご利用できません
+          </p>
         </div>
       </header>
 

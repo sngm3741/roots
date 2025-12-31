@@ -5,6 +5,7 @@ import { PostIcon } from "../ui/post-icon";
 const navItems = [
   { label: "よくある質問", href: "/faq" },
   { label: "お問い合わせ", href: "/contact" },
+  { label: "投稿ガイドライン", href: "/guideline" },
   { label: "利用規約", href: "/terms" },
   { label: "運営会社情報", href: "/company" },
 ];

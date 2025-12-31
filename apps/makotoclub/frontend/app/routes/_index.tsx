@@ -236,6 +236,9 @@ function Hero({ surveysTotal }: { surveysTotal: number }) {
             <p className="font-semibold text-lg text-slate-400">みんなのリアルな声から</p>
             <p className="font-semibold text-lg text-slate-400">自分にピッタリのお店を</p>
           </div>
+          <div className="mt-4 inline-flex items-center rounded-full border border-pink-100 bg-white/80 px-4 py-1 text-xs font-semibold text-pink-600 shadow-sm">
+            18歳未満の方はご利用できません
+          </div>
         </div>
       </div>
       {/*

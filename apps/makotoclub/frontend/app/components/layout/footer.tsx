@@ -12,6 +12,9 @@ export function Footer() {
             />
           </div>
           <div className="flex items-center gap-6 text-sm text-gray-600">
+            <a className="hover:text-gray-900 transition-colors" href="/guideline">
+              投稿ガイドライン
+            </a>
             <a className="hover:text-gray-900 transition-colors" href="/terms">
               利用規約
             </a>
