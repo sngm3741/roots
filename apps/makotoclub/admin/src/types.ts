@@ -28,3 +28,11 @@ export type Survey = SurveyInput & {
 };
 
 export type SurveyPayload = SurveyInput & { id?: string };
+
+export type AccessLogEntry = {
+  ipMasked: string;
+  path: string;
+  method: string;
+  status: number;
+  createdAt: string;
+};

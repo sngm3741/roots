@@ -1,4 +1,4 @@
-import { Store, StorePayload, Survey, SurveyPayload } from "../types";
+import { AccessLogEntry, Store, StorePayload, Survey, SurveyPayload } from "../types";
 
 type ListResponse<T> = { items: T[]; total: number };
 
@@ -34,4 +34,6 @@ export const adminApi = {
     fetchJson<Survey>(`/api/surveys/${id}`, { method: "PUT", body: JSON.stringify(payload) }),
   deleteSurvey: (id: string) => fetchJson<{ success: boolean }>(`/api/surveys/${id}`, { method: "DELETE" }),
   listDraftSurveys: () => fetchJson<ListResponse<Survey>>("/api/surveys/drafts"),
+  listAccessLogs: (page = 1, limit = 50) =>
+    fetchJson<ListResponse<AccessLogEntry>>(`/api/access-logs?page=${page}&limit=${limit}`),
 };

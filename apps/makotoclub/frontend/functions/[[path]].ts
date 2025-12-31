@@ -179,10 +179,49 @@ const parseNumberParam = (value: string | null) => {
   return Number.isFinite(num) ? num : null;
 };
 
+const extractClientIp = (request: Request) => {
+  const cfIp = request.headers.get("cf-connecting-ip");
+  if (cfIp) return cfIp.trim();
+  const forwarded = request.headers.get("x-forwarded-for");
+  if (!forwarded) return null;
+  return forwarded.split(",")[0]?.trim() ?? null;
+};
+
+const writeAccessLog = async (request: Request, env: Env, status: number) => {
+  if (!env.DB) return;
+  const now = new Date().toISOString();
+  const ip = extractClientIp(request);
+  const userAgent = request.headers.get("user-agent");
+  const path = new URL(request.url).pathname;
+  const method = request.method;
+  try {
+    await env.DB.prepare(
+      `INSERT INTO access_logs (id, ip, user_agent, path, method, status, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    )
+      .bind(
+        crypto.randomUUID(),
+        ip,
+        userAgent ?? null,
+        path,
+        method,
+        status,
+        now,
+      )
+      .run();
+  } catch (error) {
+    console.error("アクセスログの保存に失敗しました", error);
+  }
+};
+
 async function handleApi(request: Request, env: Env): Promise<Response | null> {
   const url = new URL(request.url);
   const { pathname } = url;
   const bucket = env.makotoclub_assets;
+  const respondWithLog = async (response: Response) => {
+    await writeAccessLog(request, env, response.status || 200);
+    return response;
+  };
 
   // Allow Chrome devtools request to fail fast with 204 to avoid router error
   if (pathname === "/.well-known/appspecific/com.chrome.devtools.json") {
@@ -191,13 +230,21 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
 
   // POST /api/uploads (multipart, single file)
   if (pathname === "/api/uploads" && request.method === "POST") {
-    if (!bucket) return new Response("R2 bucket not configured", { status: 500 });
+    if (!bucket) {
+      return await respondWithLog(new Response("R2 bucket not configured", { status: 500 }));
+    }
     const form = await request.formData();
     const file = form.get("file");
-    if (!file || !(file instanceof File)) return new Response("file is required", { status: 400 });
+    if (!file || !(file instanceof File)) {
+      return await respondWithLog(new Response("file is required", { status: 400 }));
+    }
     const maxSize = 5 * 1024 * 1024; // 5MB
-    if (file.size > maxSize) return new Response("file too large", { status: 413 });
-    if (!file.type?.startsWith("image/")) return new Response("only image/* allowed", { status: 400 });
+    if (file.size > maxSize) {
+      return await respondWithLog(new Response("file too large", { status: 413 }));
+    }
+    if (!file.type?.startsWith("image/")) {
+      return await respondWithLog(new Response("only image/* allowed", { status: 400 }));
+    }
 
     const cleanName = file.name.replace(/[^\w.\-]/g, "_").slice(-80);
     const key = `${Date.now()}-${crypto.randomUUID()}-${cleanName}`;
@@ -207,12 +254,14 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
       },
     });
 
-    return Response.json({
-      key,
-      url: `${url.origin}/api/uploads/${key}`,
-      contentType: file.type,
-      size: file.size,
-    });
+    return await respondWithLog(
+      Response.json({
+        key,
+        url: `${url.origin}/api/uploads/${key}`,
+        contentType: file.type,
+        size: file.size,
+      }),
+    );
   }
 
   // GET /api/uploads/:key -> stream from R2
@@ -313,7 +362,7 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
     try {
       payload = await request.json();
     } catch {
-      return new Response("Invalid JSON", { status: 400 });
+      return await respondWithLog(new Response("Invalid JSON", { status: 400 }));
     }
 
     const id = crypto.randomUUID();
@@ -345,7 +394,7 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
     } = payload || {};
 
     if (!storeName || !prefecture || !industry || !visitedPeriod || !workType) {
-      return new Response("Missing required fields", { status: 400 });
+      return await respondWithLog(new Response("Missing required fields", { status: 400 }));
     }
     await env.DB.prepare(
       `INSERT INTO survey_drafts
@@ -385,7 +434,9 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
       )
       .run();
 
-    return new Response(null, { status: 201, headers: { Location: `/api/surveys/${id}` } });
+    return await respondWithLog(
+      new Response(null, { status: 201, headers: { Location: `/api/surveys/${id}` } }),
+    );
   }
 
   // GET /api/stores
