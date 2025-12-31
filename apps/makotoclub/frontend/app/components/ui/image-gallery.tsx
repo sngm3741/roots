@@ -14,7 +14,7 @@ type Props = {
 const toSummary = (text?: string | null) => {
   const trimmed = (text ?? "").trim();
   if (!trimmed) return "コメントなし";
-  return trimmed.length > 100 ? `${trimmed.slice(0, 100)}...` : trimmed;
+  return trimmed.length > 60 ? `${trimmed.slice(0, 60)}...` : trimmed;
 };
 
 export function ImageGallery({ items }: Props) {
@@ -55,7 +55,9 @@ export function ImageGallery({ items }: Props) {
               loading="lazy"
             />
             <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-900/80 via-slate-900/40 to-transparent px-3 py-2 text-left text-xs text-white">
-              {toSummary(item.comment)}
+              <span className="inline-block whitespace-pre-wrap break-words rounded-md bg-slate-900/50 px-2 py-1">
+                {toSummary(item.comment)}
+              </span>
             </div>
           </button>
         ))}
@@ -84,7 +86,7 @@ export function ImageGallery({ items }: Props) {
               <p className="text-sm text-slate-700">{activeSummary}</p>
               <div className="flex justify-end">
                 <Button asChild>
-                  <a href={`/surveys/${activeItem.surveyId}`}>アンケート詳細へ</a>
+                  <a href={`/surveys/${activeItem.surveyId}`}>このアンケートを見る</a>
                 </Button>
               </div>
             </div>

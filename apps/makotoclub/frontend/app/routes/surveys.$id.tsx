@@ -45,12 +45,15 @@ export default function SurveyDetailPage() {
     );
   }
 
-  const comment =
-    survey.customerComment ||
-    survey.workEnvironmentComment ||
-    survey.staffComment ||
-    survey.etcComment ||
-    "";
+  const comment = buildLimitedComment(
+    [
+      survey.customerComment,
+      survey.staffComment,
+      survey.workEnvironmentComment,
+      survey.etcComment,
+    ],
+    60,
+  );
   const galleryItems: ImageGalleryItem[] = (survey.imageUrls ?? []).map((url) => ({
     url,
     surveyId: survey.id,
@@ -183,6 +186,22 @@ export default function SurveyDetailPage() {
       </div>
     </main>
   );
+}
+
+function buildLimitedComment(parts: Array<string | null | undefined>, limit: number) {
+  const cleaned = parts
+    .map((text) => (text ?? "").trim())
+    .filter((text) => text.length > 0);
+  if (cleaned.length === 0) return "";
+  let combined = "";
+  for (const text of cleaned) {
+    const next = combined ? `${combined}\n${text}` : text;
+    if (next.length > limit) {
+      return combined || text;
+    }
+    combined = next;
+  }
+  return combined;
 }
 
 function formatVisitedPeriod(value: string) {
