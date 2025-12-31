@@ -573,9 +573,6 @@ export default function NewSurvey() {
                 </div>
               </>
             </FormField>
-            <FormField label="ジャンル" errorMessage={errors.genre?.message}>
-              <input id="genre" {...register("genre")} className={baseInputClass} />
-            </FormField>
           </div>
         </section>
 
