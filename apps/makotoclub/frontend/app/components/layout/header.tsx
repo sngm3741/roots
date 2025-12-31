@@ -150,7 +150,7 @@ export function Header() {
                 className="block rounded-2xl border border-pink-100/70 bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-pink-200 hover:shadow-md"
               >
                 <div className="p-4">
-                  <div className="flex items-start gap-4">
+                  <div className="flex items-center gap-4">
                     <img
                       src={item.imageUrl}
                       alt={`${item.title}のビジュアル`}
