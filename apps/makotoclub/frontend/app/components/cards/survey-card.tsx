@@ -6,6 +6,7 @@ import {
   SpecIcon,
   WaitTimeIcon,
 } from "../ui/survey-metric-icons";
+import { CardTypeChip } from "../ui/card-type-chip";
 
 type Props = {
   survey: SurveySummary;
@@ -35,20 +36,23 @@ export function SurveyCard({ survey, className }: Props) {
   return (
     <a
       href={href}
-      className={`w-full bg-white rounded-2xl p-6 border border-gray-200 hover:shadow-lg hover:border-pink-200 transition-all duration-200 text-left ${className ?? ""}`}
+      className={`w-full bg-pink-50/60 rounded-2xl p-6 border border-pink-100 hover:shadow-lg hover:border-pink-200 transition-all duration-200 text-left ${className ?? ""}`}
       aria-label={`${survey.storeName}のアンケート詳細へ`}
     >
       <div className="mb-3">
         <div className="flex items-start justify-between gap-3 mb-2">
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <MapPinIcon />
-            <span>{survey.storePrefecture}</span>
-            {survey.storeArea && <span className="text-gray-400">・</span>}
-            {survey.storeArea && <span>{survey.storeArea}</span>}
-          </div>
+          <CardTypeChip label="アンケート" variant="survey" />
           <div className="flex items-center gap-1.5 text-xs text-gray-500">
             <span>{visitedPeriodLabel}</span>
           </div>
+        </div>
+        <div className="flex items-start gap-2 text-sm text-gray-600 mb-1 pt-2">
+          <span className="mt-[1px]">
+            <MapPinIcon />
+          </span>
+          <span>{survey.storePrefecture}</span>
+          {survey.storeArea && <span className="text-gray-400">・</span>}
+          {survey.storeArea && <span>{survey.storeArea}</span>}
         </div>
         <h3 className="text-gray-900 mb-1">
           {survey.storeName}

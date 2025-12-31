@@ -12,6 +12,15 @@ type LoaderData = {
   store: StoreDetail | null;
 };
 
+function MapPinIcon() {
+  return (
+    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M12 21s-6-5.686-6-10a6 6 0 1 1 12 0c0 4.314-6 10-6 10Z" />
+      <circle cx="12" cy="11" r="2" />
+    </svg>
+  );
+}
+
 export async function loader({ params, context, request }: LoaderFunctionArgs) {
   const apiBaseUrl = getApiBaseUrl(context.cloudflare?.env ?? {}, new URL(request.url).origin);
   const storeId = params.id!;
@@ -67,10 +76,15 @@ export default function StoreDetailPage() {
       <div className="rounded-[24px] border border-pink-100 bg-white/90 p-6 shadow-[0_24px_60px_rgba(15,23,42,0.08)]">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="space-y-2">
-            <p className="text-sm text-slate-500">
-              {store.prefecture}
-              {store.area ? ` / ${store.area}` : ""}
-            </p>
+            <div className="flex items-start gap-2 text-sm text-slate-500">
+              <span className="mt-[1px]">
+                <MapPinIcon />
+              </span>
+              <span>
+                {store.prefecture}
+                {store.area ? ` / ${store.area}` : ""}
+              </span>
+            </div>
             <h1 className="text-3xl font-bold text-slate-900">
               {store.storeName}
               {store.branchName ? ` ${store.branchName}` : ""}

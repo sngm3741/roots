@@ -1,6 +1,7 @@
 import type { StoreSummary } from "../../types/store";
 import { RatingStars } from "../ui/rating-stars";
 import { AverageEarningIcon, WaitTimeIcon } from "../ui/survey-metric-icons";
+import { CardTypeChip } from "../ui/card-type-chip";
 
 type Props = {
   store: StoreSummary;
@@ -26,7 +27,7 @@ function MessageSquareIcon() {
 
 function Badge({ children }: { children: React.ReactNode }) {
   return (
-    <span className="inline-flex items-center justify-center rounded-md border px-2 py-1 text-xs font-semibold bg-pink-50 text-pink-700 border-pink-100">
+    <span className="inline-flex items-center justify-center rounded-md border px-2 py-1 text-xs font-semibold bg-sky-500/50 text-slate-100 border-slate-100">
       {children}
     </span>
   );
@@ -42,18 +43,21 @@ export function StoreCard({ store, className }: Props) {
   return (
     <a
       href={href}
-      className={`w-full bg-white rounded-2xl p-6 border border-gray-200 hover:shadow-lg hover:border-pink-200 transition-all duration-200 text-left ${className ?? ""}`}
+      className={`w-full bg-sky-50/60 rounded-2xl p-6 border border-sky-100 hover:shadow-lg hover:border-sky-200 transition-all duration-200 text-left ${className ?? ""}`}
       aria-label={`${store.storeName}${store.branchName ? ` ${store.branchName}` : ""} の詳細へ`}
     >
       <div className="mb-3">
         <div className="flex items-start justify-between gap-3 mb-2">
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <MapPinIcon />
-            <span>{store.prefecture}</span>
-            {store.area && <span className="text-gray-400">・</span>}
-            {store.area && <span>{store.area}</span>}
-          </div>
+          <CardTypeChip label="店舗" variant="store" />
           <Badge>{store.category}</Badge>
+        </div>
+        <div className="flex items-start gap-2 text-sm text-gray-600 mb-1 pt-2">
+          <span className="mt-[1px]">
+            <MapPinIcon />
+          </span>
+          <span>{store.prefecture}</span>
+          {store.area && <span className="text-gray-400">・</span>}
+          {store.area && <span>{store.area}</span>}
         </div>
         <h3 className="text-gray-900 mb-1">
           {store.storeName}
