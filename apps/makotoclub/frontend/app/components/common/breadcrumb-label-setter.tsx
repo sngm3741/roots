@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useLayoutEffect } from "react";
 import { useBreadcrumbOverride } from "./breadcrumb-context";
 
 type Props = {
@@ -10,7 +10,7 @@ type Props = {
 export const BreadcrumbLabelSetter = ({ label, branchName, storeId }: Props) => {
   const { setLastLabel, setLastStoreId } = useBreadcrumbOverride();
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (label) {
       setLastLabel(branchName ? `${label} ${branchName}` : label);
     }
