@@ -174,9 +174,9 @@ export default function SurveyDetailPage() {
               <h2 className="text-lg font-semibold text-slate-900">投稿画像</h2>
               <p className="text-xs text-slate-500">左右にスワイプできます</p>
             </div>
-            <ImageGallery items={galleryItems} />
-          </section>
-        )}
+          <ImageGallery items={galleryItems} hideCaption hideModalDetails />
+        </section>
+      )}
 
         <div className="flex justify-end">
           <Button variant="secondary" asChild className="shadow-sm shadow-pink-200">

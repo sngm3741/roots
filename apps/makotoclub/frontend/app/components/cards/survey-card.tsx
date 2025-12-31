@@ -103,9 +103,7 @@ export function SurveyCard({ survey, className }: Props) {
       </div>
 
       <div className="pt-3 border-t border-gray-100 mb-3">
-        <p className="text-sm text-gray-600 whitespace-pre-line line-clamp-4">
-          {comment.length > 120 ? `${comment.slice(0, 120)}...` : comment}
-        </p>
+        <p className="text-sm text-gray-600 whitespace-pre-line line-clamp-4">{comment}</p>
       </div>
 
     </a>
@@ -121,18 +119,25 @@ function formatVisitedPeriod(value: string) {
   return `${year}年${monthNumber}月`;
 }
 
-function buildComment(parts: Array<string | null | undefined>) {
+function buildComment(parts: Array<string | null | undefined>, limit = 120) {
   const cleaned = parts
     .map((text) => (text ?? "").trim())
     .filter((text) => text.length > 0);
   if (cleaned.length === 0) return "";
   let combined = "";
+  let truncated = false;
   for (const text of cleaned) {
-    const next = combined ? `${combined}\n${text}` : text;
-    if (next.length > 120) {
-      return combined || text;
+    const separator = combined ? "\n" : "";
+    const next = `${combined}${separator}${text}`;
+    if (next.length > limit) {
+      const remaining = limit - combined.length - separator.length;
+      if (remaining > 0) {
+        combined = `${combined}${separator}${text.slice(0, remaining)}`;
+      }
+      truncated = true;
+      break;
     }
     combined = next;
   }
-  return combined;
+  return truncated ? `${combined}...` : combined;
 }
