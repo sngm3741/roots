@@ -45,15 +45,19 @@ export default function SurveyDetailPage() {
     );
   }
 
-  const galleryItems: ImageGalleryItem[] = (survey.imageUrls ?? []).map((url) => ({
-    url,
-    surveyId: survey.id,
-    commentParts: [
+  const comment = buildLimitedComment(
+    [
       survey.customerComment,
       survey.staffComment,
       survey.workEnvironmentComment,
       survey.etcComment,
     ],
+    60,
+  );
+  const galleryItems: ImageGalleryItem[] = (survey.imageUrls ?? []).map((url) => ({
+    url,
+    surveyId: survey.id,
+    comment,
   }));
   const visitedPeriodLabel = formatVisitedPeriod(survey.visitedPeriod);
 
@@ -189,6 +193,22 @@ function formatVisitedPeriod(value: string) {
   if (!match) return value;
   const month = Number.parseInt(match[2], 10);
   return `${match[1]}年${month}月`;
+}
+
+function buildLimitedComment(parts: Array<string | null | undefined>, limit: number) {
+  const cleaned = parts
+    .map((text) => (text ?? "").trim())
+    .filter((text) => text.length > 0);
+  if (cleaned.length === 0) return "";
+  let combined = "";
+  for (const text of cleaned) {
+    const next = combined ? `${combined}\n${text}` : text;
+    if (next.length > limit) {
+      return combined || text;
+    }
+    combined = next;
+  }
+  return combined;
 }
 
 function InfoPill({ label, value }: { label: string; value: string }) {
