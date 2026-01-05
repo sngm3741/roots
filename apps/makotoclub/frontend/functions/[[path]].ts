@@ -93,7 +93,7 @@ const ensureResvg = () => {
 let ogpFontDataPromise: Promise<ArrayBuffer> | null = null;
 const loadOgFontData = (origin: string) => {
   if (!ogpFontDataPromise) {
-    const fontUrl = new URL("/fonts/NotoSansJP-Regular.otf", origin);
+    const fontUrl = new URL("/fonts/NotoSansJP-Regular.ttf", origin);
     ogpFontDataPromise = fetch(fontUrl).then((res) => {
       if (!res.ok) {
         throw new Error("OGPフォントの取得に失敗しました。");
