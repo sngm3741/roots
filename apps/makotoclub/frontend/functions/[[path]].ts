@@ -90,10 +90,15 @@ const ensureResvg = () => {
 };
 
 let ogpFontDataPromise: Promise<ArrayBuffer> | null = null;
-const loadOgFontData = () => {
+const loadOgFontData = (origin: string) => {
   if (!ogpFontDataPromise) {
-    const fontUrl = new URL("./assets/NotoSansJP-Regular.otf", import.meta.url);
-    ogpFontDataPromise = fetch(fontUrl).then((res) => res.arrayBuffer());
+    const fontUrl = new URL("/fonts/NotoSansJP-Regular.otf", origin);
+    ogpFontDataPromise = fetch(fontUrl).then((res) => {
+      if (!res.ok) {
+        throw new Error("OGPフォントの取得に失敗しました。");
+      }
+      return res.arrayBuffer();
+    });
   }
   return ogpFontDataPromise;
 };
@@ -295,152 +300,157 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
 
   // GET /api/og/surveys/:id -> OGP画像生成
   if (pathname.startsWith("/api/og/surveys/") && request.method === "GET") {
-    if (!env.DB) {
-      return new Response("DBが設定されていません。", { status: 500 });
-    }
-    const id = pathname.replace("/api/og/surveys/", "").trim();
-    if (!id) {
-      return new Response("アンケートIDが指定されていません。", { status: 400 });
-    }
+    try {
+      if (!env.DB) {
+        return new Response("DBが設定されていません。", { status: 500 });
+      }
+      const id = pathname.replace("/api/og/surveys/", "").trim();
+      if (!id) {
+        return new Response("アンケートIDが指定されていません。", { status: 400 });
+      }
 
-    const row = await env.DB.prepare(
-      `SELECT store_name, store_branch, rating, customer_comment, staff_comment, work_environment_comment, etc_comment
-       FROM surveys WHERE id = ? AND deleted_at IS NULL`,
-    )
-      .bind(id)
-      .first();
+      const row = await env.DB.prepare(
+        `SELECT store_name, store_branch, rating, customer_comment, staff_comment, work_environment_comment, etc_comment
+         FROM surveys WHERE id = ? AND deleted_at IS NULL`,
+      )
+        .bind(id)
+        .first();
 
-    if (!row) {
-      return new Response("アンケートが見つかりませんでした。", { status: 404 });
-    }
+      if (!row) {
+        return new Response("アンケートが見つかりませんでした。", { status: 404 });
+      }
 
-    const storeName = row.store_name as string;
-    const storeBranch = row.store_branch as string | null;
-    const rating = Number(row.rating ?? 0);
-    const stars = buildStars(rating);
-    const commentText = buildOgpComment(row, 200);
-    const title = `${storeName}${storeBranch ? ` ${storeBranch}` : ""}`;
+      const storeName = row.store_name as string;
+      const storeBranch = row.store_branch as string | null;
+      const rating = Number(row.rating ?? 0);
+      const stars = buildStars(rating);
+      const commentText = buildOgpComment(row, 200);
+      const title = `${storeName}${storeBranch ? ` ${storeBranch}` : ""}`;
 
-    const fontData = await loadOgFontData();
-    await ensureResvg();
+      const fontData = await loadOgFontData(new URL(request.url).origin);
+      await ensureResvg();
 
-    const svg = await satori(
-      createElement(
-        "div",
-        {
-          style: {
-            width: "1200px",
-            height: "630px",
-            display: "flex",
-            background: "linear-gradient(135deg, #ffe4e6 0%, #fff7ed 100%)",
-            padding: "40px",
-            fontFamily: "Noto Sans JP",
-          },
-        },
+      const svg = await satori(
         createElement(
           "div",
           {
             style: {
-              width: "100%",
-              height: "100%",
-              background: "#ffffff",
-              borderRadius: "36px",
-              border: "2px solid #fbcfe8",
-              padding: "48px",
+              width: "1200px",
+              height: "630px",
               display: "flex",
-              flexDirection: "column",
-              gap: "28px",
-              boxShadow: "0 30px 80px rgba(15, 23, 42, 0.08)",
+              background: "linear-gradient(135deg, #ffe4e6 0%, #fff7ed 100%)",
+              padding: "40px",
+              fontFamily: "Noto Sans JP",
             },
           },
           createElement(
             "div",
             {
               style: {
-                fontSize: "28px",
-                color: "#db2777",
-                fontWeight: 700,
-                letterSpacing: "0.02em",
-              },
-            },
-            "マコトクラブ",
-          ),
-          createElement(
-            "div",
-            {
-              style: {
-                fontSize: "46px",
-                fontWeight: 700,
-                color: "#0f172a",
-                lineHeight: 1.2,
-              },
-            },
-            title,
-          ),
-          createElement(
-            "div",
-            {
-              style: {
+                width: "100%",
+                height: "100%",
+                background: "#ffffff",
+                borderRadius: "36px",
+                border: "2px solid #fbcfe8",
+                padding: "48px",
                 display: "flex",
-                alignItems: "center",
-                gap: "16px",
+                flexDirection: "column",
+                gap: "28px",
+                boxShadow: "0 30px 80px rgba(15, 23, 42, 0.08)",
               },
             },
-            createElement(
-              "div",
-              { style: { fontSize: "30px", color: "#db2777" } },
-              stars,
-            ),
             createElement(
               "div",
               {
                 style: {
                   fontSize: "28px",
-                  fontWeight: 700,
                   color: "#db2777",
+                  fontWeight: 700,
+                  letterSpacing: "0.02em",
                 },
               },
-              rating.toFixed(1),
+              "マコトクラブ",
+            ),
+            createElement(
+              "div",
+              {
+                style: {
+                  fontSize: "46px",
+                  fontWeight: 700,
+                  color: "#0f172a",
+                  lineHeight: 1.2,
+                },
+              },
+              title,
+            ),
+            createElement(
+              "div",
+              {
+                style: {
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "16px",
+                },
+              },
+              createElement(
+                "div",
+                { style: { fontSize: "30px", color: "#db2777" } },
+                stars,
+              ),
+              createElement(
+                "div",
+                {
+                  style: {
+                    fontSize: "28px",
+                    fontWeight: 700,
+                    color: "#db2777",
+                  },
+                },
+                rating.toFixed(1),
+              ),
+            ),
+            createElement(
+              "div",
+              {
+                style: {
+                  fontSize: "24px",
+                  color: "#334155",
+                  whiteSpace: "pre-wrap",
+                  lineHeight: 1.5,
+                },
+              },
+              commentText,
             ),
           ),
-          createElement(
-            "div",
-            {
-              style: {
-                fontSize: "24px",
-                color: "#334155",
-                whiteSpace: "pre-wrap",
-                lineHeight: 1.5,
-              },
-            },
-            commentText,
-          ),
         ),
-      ),
-      {
-        width: 1200,
-        height: 630,
-        fonts: [
-          {
-            name: "Noto Sans JP",
-            data: fontData,
-            weight: 400,
-            style: "normal",
-          },
-        ],
-      },
-    );
+        {
+          width: 1200,
+          height: 630,
+          fonts: [
+            {
+              name: "Noto Sans JP",
+              data: fontData,
+              weight: 400,
+              style: "normal",
+            },
+          ],
+        },
+      );
 
-    const resvg = new Resvg(svg);
-    const pngData = resvg.render();
-    const pngBuffer = pngData.asPng();
+      const resvg = new Resvg(svg);
+      const pngData = resvg.render();
+      const pngBuffer = pngData.asPng();
 
-    return new Response(pngBuffer, {
-      headers: {
-        "Content-Type": "image/png",
-        "Cache-Control": "public, max-age=3600",
-      },
-    });
+      return new Response(pngBuffer, {
+        headers: {
+          "Content-Type": "image/png",
+          "Cache-Control": "public, max-age=3600",
+        },
+      });
+    } catch (error) {
+      console.error("OGP画像の生成に失敗しました", error);
+      return new Response("OGP画像の生成に失敗しました。", { status: 500 });
+    }
   }
 
   // POST /api/uploads (multipart, single file)
