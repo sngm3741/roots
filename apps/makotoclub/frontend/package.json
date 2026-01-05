@@ -14,11 +14,13 @@
     "@hookform/resolvers": "^3.9.1",
     "@react-router/cloudflare": "7.10.1",
     "@react-router/node": "7.10.1",
+    "@resvg/resvg-wasm": "^2.4.2",
     "isbot": "^5.1.31",
     "react": "^19.2.1",
     "react-dom": "^19.2.1",
     "react-hook-form": "^7.56.2",
     "react-router": "7.10.1",
+    "satori": "^0.10.13",
     "zod": "^3.25.76"
   },
   "devDependencies": {

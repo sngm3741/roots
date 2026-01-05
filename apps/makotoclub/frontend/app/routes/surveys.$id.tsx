@@ -20,6 +20,43 @@ type LoaderData = {
   survey: SurveyDetail | null;
 };
 
+export const meta = ({
+  data,
+  params,
+}: {
+  data?: LoaderData;
+  params: { id?: string };
+}) => {
+  const survey = data?.survey ?? null;
+  const titleBase = survey
+    ? `${survey.storeName}${survey.storeBranch ? ` ${survey.storeBranch}` : ""}のアンケート`
+    : "アンケート";
+  const title = `${titleBase} | マコトクラブ`;
+  const visitedLabel = survey ? formatVisitedPeriod(survey.visitedPeriod) : "";
+  const ratingLabel =
+    survey && typeof survey.rating === "number" ? `${survey.rating.toFixed(1)}` : "";
+  const description = survey
+    ? `${titleBase}。満足度${ratingLabel ? ` ${ratingLabel}` : ""}、訪問時期${visitedLabel ? ` ${visitedLabel}` : ""}`
+    : "マコトクラブのアンケート詳細";
+  const image = `https://makoto-club.com/api/og/surveys/${params.id ?? ""}`;
+  const url = `https://makoto-club.com/surveys/${params.id ?? ""}`;
+
+  return [
+    { title },
+    { name: "description", content: description },
+    { property: "og:title", content: title },
+    { property: "og:description", content: description },
+    { property: "og:image", content: image },
+    { property: "og:url", content: url },
+    { property: "og:site_name", content: "マコトクラブ" },
+    { property: "og:type", content: "article" },
+    { name: "twitter:card", content: "summary_large_image" },
+    { name: "twitter:title", content: title },
+    { name: "twitter:description", content: description },
+    { name: "twitter:image", content: image },
+  ];
+};
+
 export async function loader({ params, context, request }: LoaderFunctionArgs) {
   const apiBaseUrl = getApiBaseUrl(context.cloudflare?.env ?? {}, new URL(request.url).origin);
   const id = params.id!;

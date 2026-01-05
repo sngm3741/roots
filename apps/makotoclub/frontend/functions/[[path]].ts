@@ -3,6 +3,10 @@ import { createPagesFunctionHandler } from "@react-router/cloudflare";
 import type { ServerBuild } from "react-router";
 // @ts-ignore generated at build time
 import * as buildModule from "../build/server/index.js";
+import { createElement } from "react";
+import satori from "satori";
+import { Resvg } from "@resvg/resvg-wasm";
+import resvgWasm from "@resvg/resvg-wasm/index_bg.wasm";
 
 // Minimal types for typecheck
 type D1Database = any;
@@ -75,6 +79,59 @@ type StoreStats = {
   helpfulCount?: number | null;
   averageEarningLabel?: string | null;
   waitTimeLabel?: string | null;
+};
+
+let resvgReady: Promise<void> | null = null;
+const ensureResvg = () => {
+  if (!resvgReady) {
+    resvgReady = Resvg.initWasm(resvgWasm);
+  }
+  return resvgReady;
+};
+
+let ogpFontDataPromise: Promise<ArrayBuffer> | null = null;
+const loadOgFontData = () => {
+  if (!ogpFontDataPromise) {
+    const fontUrl = new URL("./assets/NotoSansJP-Regular.otf", import.meta.url);
+    ogpFontDataPromise = fetch(fontUrl).then((res) => res.arrayBuffer());
+  }
+  return ogpFontDataPromise;
+};
+
+const truncateText = (text: string, limit: number) => {
+  if (text.length <= limit) return text;
+  return text.slice(0, limit);
+};
+
+const buildStars = (rating: number) => {
+  const safe = Math.max(0, Math.min(5, Math.round(rating)));
+  return "★".repeat(safe) + "☆".repeat(5 - safe);
+};
+
+const buildOgpComment = (
+  survey: {
+    customer_comment?: string | null;
+    staff_comment?: string | null;
+    work_environment_comment?: string | null;
+    etc_comment?: string | null;
+  },
+  limit: number,
+) => {
+  const parts = [
+    { label: "客層", text: survey.customer_comment },
+    { label: "スタッフ対応", text: survey.staff_comment },
+    { label: "環境", text: survey.work_environment_comment },
+    { label: "その他", text: survey.etc_comment },
+  ]
+    .map((item) => {
+      const body = (item.text ?? "").trim();
+      if (!body) return "";
+      return `【${item.label}】\n${body}`;
+    })
+    .filter((text) => text.length > 0);
+
+  const combined = parts.join("\n\n");
+  return truncateText(combined || "コメントなし", limit);
 };
 
 const mapStore = (row: StoreRow, stats?: StoreStats) => {
@@ -234,6 +291,156 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
   // Allow Chrome devtools request to fail fast with 204 to avoid router error
   if (pathname === "/.well-known/appspecific/com.chrome.devtools.json") {
     return new Response(null, { status: 204 });
+  }
+
+  // GET /api/og/surveys/:id -> OGP画像生成
+  if (pathname.startsWith("/api/og/surveys/") && request.method === "GET") {
+    if (!env.DB) {
+      return new Response("DBが設定されていません。", { status: 500 });
+    }
+    const id = pathname.replace("/api/og/surveys/", "").trim();
+    if (!id) {
+      return new Response("アンケートIDが指定されていません。", { status: 400 });
+    }
+
+    const row = await env.DB.prepare(
+      `SELECT store_name, store_branch, rating, customer_comment, staff_comment, work_environment_comment, etc_comment
+       FROM surveys WHERE id = ? AND deleted_at IS NULL`,
+    )
+      .bind(id)
+      .first();
+
+    if (!row) {
+      return new Response("アンケートが見つかりませんでした。", { status: 404 });
+    }
+
+    const storeName = row.store_name as string;
+    const storeBranch = row.store_branch as string | null;
+    const rating = Number(row.rating ?? 0);
+    const stars = buildStars(rating);
+    const commentText = buildOgpComment(row, 200);
+    const title = `${storeName}${storeBranch ? ` ${storeBranch}` : ""}`;
+
+    const fontData = await loadOgFontData();
+    await ensureResvg();
+
+    const svg = await satori(
+      createElement(
+        "div",
+        {
+          style: {
+            width: "1200px",
+            height: "630px",
+            display: "flex",
+            background: "linear-gradient(135deg, #ffe4e6 0%, #fff7ed 100%)",
+            padding: "40px",
+            fontFamily: "Noto Sans JP",
+          },
+        },
+        createElement(
+          "div",
+          {
+            style: {
+              width: "100%",
+              height: "100%",
+              background: "#ffffff",
+              borderRadius: "36px",
+              border: "2px solid #fbcfe8",
+              padding: "48px",
+              display: "flex",
+              flexDirection: "column",
+              gap: "28px",
+              boxShadow: "0 30px 80px rgba(15, 23, 42, 0.08)",
+            },
+          },
+          createElement(
+            "div",
+            {
+              style: {
+                fontSize: "28px",
+                color: "#db2777",
+                fontWeight: 700,
+                letterSpacing: "0.02em",
+              },
+            },
+            "マコトクラブ",
+          ),
+          createElement(
+            "div",
+            {
+              style: {
+                fontSize: "46px",
+                fontWeight: 700,
+                color: "#0f172a",
+                lineHeight: 1.2,
+              },
+            },
+            title,
+          ),
+          createElement(
+            "div",
+            {
+              style: {
+                display: "flex",
+                alignItems: "center",
+                gap: "16px",
+              },
+            },
+            createElement(
+              "div",
+              { style: { fontSize: "30px", color: "#db2777" } },
+              stars,
+            ),
+            createElement(
+              "div",
+              {
+                style: {
+                  fontSize: "28px",
+                  fontWeight: 700,
+                  color: "#db2777",
+                },
+              },
+              rating.toFixed(1),
+            ),
+          ),
+          createElement(
+            "div",
+            {
+              style: {
+                fontSize: "24px",
+                color: "#334155",
+                whiteSpace: "pre-wrap",
+                lineHeight: 1.5,
+              },
+            },
+            commentText,
+          ),
+        ),
+      ),
+      {
+        width: 1200,
+        height: 630,
+        fonts: [
+          {
+            name: "Noto Sans JP",
+            data: fontData,
+            weight: 400,
+            style: "normal",
+          },
+        ],
+      },
+    );
+
+    const resvg = new Resvg(svg);
+    const pngData = resvg.render();
+    const pngBuffer = pngData.asPng();
+
+    return new Response(pngBuffer, {
+      headers: {
+        "Content-Type": "image/png",
+        "Cache-Control": "public, max-age=3600",
+      },
+    });
   }
 
   // POST /api/uploads (multipart, single file)
