@@ -411,6 +411,7 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
                 {
                   style: {
                     position: "relative",
+                    display: "flex",
                     width: "340px",
                     height: "64px",
                   },
