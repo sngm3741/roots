@@ -449,6 +449,14 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
       });
     } catch (error) {
       console.error("OGP画像の生成に失敗しました", error);
+      const message =
+        error instanceof Error ? error.message : "原因不明のエラーが発生しました。";
+      const debug = new URL(request.url).searchParams.get("debug");
+      if (debug === "1") {
+        return new Response(`OGP画像の生成に失敗しました。詳細: ${message}`, {
+          status: 500,
+        });
+      }
       return new Response("OGP画像の生成に失敗しました。", { status: 500 });
     }
   }
