@@ -122,6 +122,7 @@ const buildOgpComment = (
     etc_comment?: string | null;
   },
   limit: number,
+  maxLines: number,
 ) => {
   const parts = [
     { label: "客層", text: survey.customer_comment },
@@ -137,7 +138,13 @@ const buildOgpComment = (
     .filter((text) => text.length > 0);
 
   const combined = parts.join("\n\n");
-  return truncateText(combined || "コメントなし", limit);
+  const trimmed = truncateText(combined || "コメントなし", limit);
+  const lines = trimmed.split("\n");
+  if (lines.length <= maxLines) return trimmed;
+  const sliced = lines.slice(0, maxLines);
+  const last = sliced[sliced.length - 1] ?? "";
+  sliced[sliced.length - 1] = last.endsWith("...") ? last : `${last}...`;
+  return sliced.join("\n");
 };
 
 const mapStore = (row: StoreRow, stats?: StoreStats) => {
@@ -337,7 +344,7 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
       const storeBranch = row.store_branch as string | null;
       const rating = Number(row.rating ?? 0);
       const stars = buildStars(rating);
-      const commentText = buildOgpComment(row, 200);
+      const commentText = buildOgpComment(row, 200, 9);
       const title = `${storeName}${storeBranch ? ` ${storeBranch}` : ""}`;
 
       const fontData = await loadOgFontData(new URL(request.url).origin);
@@ -381,7 +388,7 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
                   letterSpacing: "0.02em",
                 },
               },
-              "マコトクラブ",
+              "#匿名店舗アンケート",
             ),
             createElement(
               "div",

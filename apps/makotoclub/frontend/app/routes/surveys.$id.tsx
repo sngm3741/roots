@@ -111,9 +111,10 @@ export default function SurveyDetailPage() {
       try {
         await navigator.share(data);
         return;
-      } catch {
-        // 共有をキャンセルした場合は何もしない
-        return;
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") {
+          return;
+        }
       }
     }
 
