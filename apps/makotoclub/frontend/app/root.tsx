@@ -15,6 +15,29 @@ import { Footer } from "./components/layout/footer";
 import { BreadcrumbProvider } from "./components/common/breadcrumb-context";
 import { Breadcrumbs } from "./components/common/breadcrumbs";
 
+export const meta: Route.MetaFunction = () => {
+  const title = "マコトクラブ";
+  const description =
+    "夜の仕事探しはマコトクラブで！ リアルなアンケートから自分にピッタリのお店を選べます";
+  const image = "https://makoto-club.com/ogp.png";
+  const url = "https://makoto-club.com/";
+
+  return [
+    { title },
+    { name: "description", content: description },
+    { property: "og:title", content: title },
+    { property: "og:description", content: description },
+    { property: "og:image", content: image },
+    { property: "og:url", content: url },
+    { property: "og:site_name", content: "マコトクラブ" },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary_large_image" },
+    { name: "twitter:title", content: title },
+    { name: "twitter:description", content: description },
+    { name: "twitter:image", content: image },
+  ];
+};
+
 export const links: Route.LinksFunction = () => [
   { rel: "icon", href: "/favicon.png", type: "image/png" },
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
