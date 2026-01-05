@@ -5,7 +5,7 @@ import type { ServerBuild } from "react-router";
 import * as buildModule from "../build/server/index.js";
 import { createElement } from "react";
 import satori from "satori";
-import { Resvg } from "@resvg/resvg-wasm";
+import { Resvg, initWasm } from "@resvg/resvg-wasm";
 import resvgWasm from "@resvg/resvg-wasm/index_bg.wasm";
 
 // Minimal types for typecheck
@@ -84,7 +84,7 @@ type StoreStats = {
 let resvgReady: Promise<void> | null = null;
 const ensureResvg = () => {
   if (!resvgReady) {
-    resvgReady = Resvg.initWasm(resvgWasm);
+    resvgReady = initWasm(resvgWasm);
   }
   return resvgReady;
 };
