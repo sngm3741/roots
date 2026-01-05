@@ -6,6 +6,7 @@ DROP TABLE IF EXISTS surveys;
 DROP TABLE IF EXISTS stores;
 DROP TABLE IF EXISTS access_logs;
 DROP TABLE IF EXISTS page_view_counts;
+DROP TABLE IF EXISTS page_view_counts_daily;
 
 CREATE TABLE stores (
   id TEXT PRIMARY KEY,
@@ -122,4 +123,12 @@ CREATE TABLE page_view_counts (
   path TEXT PRIMARY KEY,
   count INTEGER NOT NULL,
   updated_at TEXT NOT NULL
+);
+
+CREATE TABLE page_view_counts_daily (
+  path TEXT NOT NULL,
+  date TEXT NOT NULL,
+  count INTEGER NOT NULL,
+  updated_at TEXT NOT NULL,
+  PRIMARY KEY (path, date)
 );

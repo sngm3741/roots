@@ -298,21 +298,41 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
       body = null;
     }
     const path = body?.path && body.path.startsWith("/") ? body.path : "/";
-    const now = new Date().toISOString();
+    const now = new Date();
+    const nowIso = now.toISOString();
+    const today = nowIso.slice(0, 10);
 
     await env.DB.prepare(
       `INSERT INTO page_view_counts (path, count, updated_at)
        VALUES (?, 1, ?)
        ON CONFLICT(path) DO UPDATE SET count = count + 1, updated_at = excluded.updated_at`,
     )
-      .bind(path, now)
+      .bind(path, nowIso)
+      .run();
+
+    await env.DB.prepare(
+      `INSERT INTO page_view_counts_daily (path, date, count, updated_at)
+       VALUES (?, ?, 1, ?)
+       ON CONFLICT(path, date) DO UPDATE SET count = count + 1, updated_at = excluded.updated_at`,
+    )
+      .bind(path, today, nowIso)
       .run();
 
     const row = await env.DB.prepare("SELECT count FROM page_view_counts WHERE path = ?")
       .bind(path)
       .first();
+    const dailyRow = await env.DB.prepare(
+      "SELECT count FROM page_view_counts_daily WHERE path = ? AND date = ?",
+    )
+      .bind(path)
+      .first();
 
-    return Response.json({ path, count: row?.count ?? 0 });
+    return Response.json({
+      path,
+      count: row?.count ?? 0,
+      todayCount: dailyRow?.count ?? 0,
+      date: today,
+    });
   }
 
   // GET /api/surveys

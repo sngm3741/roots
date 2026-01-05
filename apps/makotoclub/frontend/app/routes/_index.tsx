@@ -199,6 +199,8 @@ export default function Index() {
 function Hero({ surveysTotal }: { surveysTotal: number }) {
   const [displayCount, setDisplayCount] = useState(0);
   const [pageViews, setPageViews] = useState<number | null>(null);
+  const [pageViewsToday, setPageViewsToday] = useState<number | null>(null);
+  const [pvMode, setPvMode] = useState<"total" | "today">("total");
   const [displayPageViews, setDisplayPageViews] = useState(0);
 
   useEffect(() => {
@@ -223,11 +225,14 @@ function Hero({ surveysTotal }: { surveysTotal: number }) {
     };
   }, [surveysTotal]);
 
+  const pvTarget = pvMode === "total" ? pageViews : pageViewsToday;
+  const canTogglePv = pageViewsToday !== null;
+
   useEffect(() => {
-    if (pageViews === null) return;
+    if (pvTarget === null) return;
     let rafId = 0;
     const durationMs = 900;
-    const target = Math.max(0, pageViews);
+    const target = Math.max(0, pvTarget);
     const start = performance.now();
 
     const tick = (now: number) => {
@@ -244,7 +249,7 @@ function Hero({ surveysTotal }: { surveysTotal: number }) {
     return () => {
       cancelAnimationFrame(rafId);
     };
-  }, [pageViews]);
+  }, [pvTarget]);
 
   useEffect(() => {
     const track = async () => {
@@ -255,9 +260,12 @@ function Hero({ surveysTotal }: { surveysTotal: number }) {
           body: JSON.stringify({ path: "/" }),
         });
         if (!res.ok) return;
-        const data = (await res.json()) as { count?: number };
+        const data = (await res.json()) as { count?: number; todayCount?: number };
         if (typeof data.count === "number") {
           setPageViews(data.count);
+        }
+        if (typeof data.todayCount === "number") {
+          setPageViewsToday(data.todayCount);
         }
       } catch {
         // 表示用なので失敗は無視
@@ -315,9 +323,18 @@ function Hero({ surveysTotal }: { surveysTotal: number }) {
         />
         {pageViews !== null && (
           <CounterBadge
-            label="累計PV"
+            label={pvMode === "total" ? "累計PV" : "本日PV"}
             value={displayPageViews} 
             tone="sky"
+            onClick={
+              canTogglePv
+                ? () => {
+                    setPvMode((current) => (current === "total" ? "today" : "total"));
+                  }
+                : undefined
+            }
+            pressed={pvMode === "today"}
+            ariaLabel={canTogglePv ? "タップでPV表示を切り替え" : "累計PV"}
             icon={
               <svg
                 aria-hidden="true"
