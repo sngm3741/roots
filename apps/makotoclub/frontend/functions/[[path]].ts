@@ -118,9 +118,9 @@ const truncateText = (text: string, limit: number) => {
   return text.slice(0, limit);
 };
 
-const buildStars = (rating: number) => {
-  const safe = Math.max(0, Math.min(5, Math.round(rating)));
-  return "★".repeat(safe) + "☆".repeat(5 - safe);
+const buildStarFillPercent = (rating: number) => {
+  const safe = Math.max(0, Math.min(5, rating));
+  return `${(safe / 5) * 100}%`;
 };
 
 const buildOgpComment = (
@@ -352,7 +352,7 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
       const storeName = row.store_name as string;
       const storeBranch = row.store_branch as string | null;
       const rating = Number(row.rating ?? 0);
-      const stars = buildStars(rating);
+      const starFill = buildStarFillPercent(rating);
       const commentText = buildOgpComment(row, 200, 9);
       const fontData = await loadOgFontData(env, new URL(request.url).origin);
       await ensureResvg();
@@ -408,8 +408,45 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
               },
               createElement(
                 "div",
-                { style: { fontSize: "56px", color: "#db2777", letterSpacing: "0.08em" } },
-                stars,
+                {
+                  style: {
+                    position: "relative",
+                    width: "340px",
+                    height: "64px",
+                  },
+                },
+                createElement(
+                  "div",
+                  {
+                    style: {
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      fontSize: "56px",
+                      color: "#fbcfe8",
+                      letterSpacing: "0.08em",
+                      lineHeight: 1,
+                    },
+                  },
+                  "★★★★★",
+                ),
+                createElement(
+                  "div",
+                  {
+                    style: {
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      width: starFill,
+                      overflow: "hidden",
+                      fontSize: "56px",
+                      color: "#db2777",
+                      letterSpacing: "0.08em",
+                      lineHeight: 1,
+                    },
+                  },
+                  "★★★★★",
+                ),
               ),
               createElement(
                 "div",
