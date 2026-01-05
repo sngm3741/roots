@@ -6,6 +6,7 @@ import * as buildModule from "../build/server/index.js";
 import { createElement } from "react";
 import satori from "satori";
 import { Resvg, initWasm } from "@resvg/resvg-wasm";
+// @ts-ignore resvgのwasmは型が無いので明示的に無視する
 import resvgWasm from "@resvg/resvg-wasm/index_bg.wasm";
 
 // Minimal types for typecheck
@@ -440,8 +441,11 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
       const resvg = new Resvg(svg);
       const pngData = resvg.render();
       const pngBuffer = pngData.asPng();
+      const arrayBuffer = new ArrayBuffer(pngBuffer.length);
+      new Uint8Array(arrayBuffer).set(pngBuffer);
+      const pngBlob = new Blob([arrayBuffer], { type: "image/png" });
 
-      return new Response(pngBuffer, {
+      return new Response(pngBlob, {
         headers: {
           "Content-Type": "image/png",
           "Cache-Control": "public, max-age=3600",
