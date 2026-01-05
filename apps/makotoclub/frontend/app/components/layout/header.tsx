@@ -85,7 +85,7 @@ export function Header() {
                   className="bg-gradient-to-r from-pink-400 to-purple-500 text-white rounded-xl text-center shadow-lg hover:shadow-xl transition-all duration-200"
                 >
                   <a
-                    href="/surveys/new"
+                    href="/new"
                     onClick={() => {
                       setMobileMenuOpen(false);
                     }}
@@ -196,7 +196,7 @@ export function Header() {
                   className="w-full bg-gradient-to-r from-pink-400 to-purple-500 text-white rounded-xl text-center shadow-lg hover:shadow-xl transition-all duration-200"
                 >
                   <a
-                    href="/surveys/new"
+                    href="/new"
                     onClick={() => {
                       setMobileMenuOpen(false);
                     }}

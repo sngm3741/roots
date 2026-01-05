@@ -113,7 +113,7 @@ export default function StoreDetailPage() {
           <div className="w-full rounded-2xl border border-pink-200 bg-gradient-to-br from-pink-50 to-white p-4 shadow-sm shadow-pink-200">
             <Button asChild className="w-full rounded-full py-6 text-base font-semibold">
               <a
-                href={`/surveys/new?${new URLSearchParams({
+                href={`/new?${new URLSearchParams({
                   storeName: store.storeName,
                   branchName: store.branchName ?? "",
                   prefecture: store.prefecture,
@@ -206,7 +206,7 @@ export default function StoreDetailPage() {
             <div className="space-y-3 rounded-2xl border border-pink-100 bg-white/95 p-4 shadow-sm">
               <p className="text-sm text-slate-600">アンケートがありません。</p>
               <Button asChild>
-                <a href="/surveys/new">アンケートを追加する</a>
+                <a href="/new">アンケートを追加する</a>
               </Button>
             </div>
           )}

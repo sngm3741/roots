@@ -25,7 +25,7 @@ export const Breadcrumbs = () => {
 
   const crumbs = useMemo<Crumb[]>(() => {
     if (!pathname) return [{ label: "ホーム", href: "/" }];
-    if (pathname === "/surveys/new") {
+    if (pathname === "/surveys/new" || pathname === "/new") {
       return [{ label: "ホーム", href: "/" }, { label: "アンケート投稿" }];
     }
     if (/^\/surveys\/[^/]+$/.test(pathname)) {

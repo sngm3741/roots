@@ -8,6 +8,7 @@ export default [
   route("surveys", "routes/surveys.tsx"),
   route("surveys/:id", "routes/surveys.$id.tsx"),
   route("surveys/new", "routes/surveys.new.tsx"),
+  route("new", "routes/surveys.new.tsx"),
   route("contact", "routes/contact.tsx"),
   route("privacy", "routes/privacy.tsx"),
   route("terms", "routes/terms.tsx"),

@@ -76,7 +76,7 @@ export default function Surveys() {
             <h1 className="text-2xl font-bold text-slate-900">アンケート一覧</h1>
           </div>
           <Button asChild className="shadow-sm shadow-pink-200">
-            <a href="/surveys/new">アンケートを投稿</a>
+            <a href="/new">アンケートを投稿</a>
           </Button>
         </header>
 

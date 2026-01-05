@@ -78,7 +78,7 @@ export default function Stores() {
             </p>
           </div>
           <Button asChild variant="secondary" className="shadow-sm shadow-pink-200">
-            <a href="/surveys/new">アンケートを投稿</a>
+            <a href="/new">アンケートを投稿</a>
           </Button>
         </header>
 
