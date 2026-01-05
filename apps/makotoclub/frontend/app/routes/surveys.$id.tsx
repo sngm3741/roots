@@ -103,7 +103,7 @@ export default function SurveyDetailPage() {
     const url = window.location.href;
     const data = {
       title: `${shareTitle}のアンケート`,
-      text: "マコトクラブの匿名店舗アンケート",
+      text: "#マコトクラブ",
       url,
     };
 
