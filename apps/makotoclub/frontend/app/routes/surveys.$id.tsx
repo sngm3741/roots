@@ -29,16 +29,14 @@ export const meta = ({
 }) => {
   const survey = data?.survey ?? null;
   const titleBase = survey
-    ? `${survey.storeName}${survey.storeBranch ? ` ${survey.storeBranch}` : ""}`
+    ? `${survey.storeName}${survey.storeBranch ? ` ${survey.storeBranch}` : ""}${
+        survey.storePrefecture
+          ? ` (${survey.storePrefecture}${survey.storeArea ? ` ${survey.storeArea}` : ""})`
+          : ""
+      }`
     : "アンケート";
   const title = `${titleBase}`;
-  const visitedLabel = survey ? formatVisitedPeriod(survey.visitedPeriod) : "";
-  const ratingLabel =
-    survey && typeof survey.rating === "number" ? `${survey.rating.toFixed(1)}` : "";
-  // const description = survey
-  //   ? `${titleBase}。満足度${ratingLabel ? ` ${ratingLabel}` : ""}、訪問時期${visitedLabel ? ` ${visitedLabel}` : ""}`
-  //   : "マコトクラブのアンケート詳細";
-  const description = survey && "アンケートの投稿でPayPay最大500円プレゼント中🎁"
+  const description = survey && "アンケートの投稿でPayPay最大500円プレゼント中🎁";
   const image = `https://makoto-club.com/api/og/surveys/${params.id ?? ""}`;
   const url = `https://makoto-club.com/surveys/${params.id ?? ""}`;
 
