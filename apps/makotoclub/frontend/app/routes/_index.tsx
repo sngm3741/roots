@@ -200,7 +200,7 @@ function Hero({ surveysTotal }: { surveysTotal: number }) {
   const [displayCount, setDisplayCount] = useState(0);
   const [pageViews, setPageViews] = useState<number | null>(null);
   const [pageViewsToday, setPageViewsToday] = useState<number | null>(null);
-  const [pvMode, setPvMode] = useState<"total" | "today">("total");
+  const [pvMode, setPvMode] = useState<"total" | "today">("today");
   const [displayPageViews, setDisplayPageViews] = useState(0);
 
   useEffect(() => {
@@ -266,6 +266,8 @@ function Hero({ surveysTotal }: { surveysTotal: number }) {
         }
         if (typeof data.todayCount === "number") {
           setPageViewsToday(data.todayCount);
+        } else {
+          setPvMode("total");
         }
       } catch {
         // 表示用なので失敗は無視
@@ -323,7 +325,7 @@ function Hero({ surveysTotal }: { surveysTotal: number }) {
         />
         {pageViews !== null && (
           <CounterBadge
-            label={pvMode === "total" ? "累計PV" : "本日PV"}
+            label={pvMode === "total" ? "PV数(累計)" : "PV数(今日)"}
             value={displayPageViews} 
             tone="sky"
             onClick={
