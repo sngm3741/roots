@@ -345,8 +345,6 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
       const rating = Number(row.rating ?? 0);
       const stars = buildStars(rating);
       const commentText = buildOgpComment(row, 200, 9);
-      const title = `${storeName}${storeBranch ? ` ${storeBranch}` : ""}`;
-
       const fontData = await loadOgFontData(new URL(request.url).origin);
       await ensureResvg();
 
@@ -394,33 +392,21 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
               "div",
               {
                 style: {
-                  fontSize: "40px",
-                  fontWeight: 700,
-                  color: "#0f172a",
-                  lineHeight: 1.2,
-                },
-              },
-              title,
-            ),
-            createElement(
-              "div",
-              {
-                style: {
                   display: "flex",
                   alignItems: "center",
-                  gap: "16px",
+                  gap: "20px",
                 },
               },
               createElement(
                 "div",
-                { style: { fontSize: "28px", color: "#db2777" } },
+                { style: { fontSize: "56px", color: "#db2777", letterSpacing: "0.08em" } },
                 stars,
               ),
               createElement(
                 "div",
                 {
                   style: {
-                    fontSize: "26px",
+                    fontSize: "52px",
                     fontWeight: 700,
                     color: "#db2777",
                   },
