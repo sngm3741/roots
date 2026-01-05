@@ -60,6 +60,33 @@ export default function SurveyDetailPage() {
     comment,
   }));
   const visitedPeriodLabel = formatVisitedPeriod(survey.visitedPeriod);
+  const shareTitle = `${survey.storeName}${survey.storeBranch ? ` ${survey.storeBranch}` : ""}`;
+
+  const handleShare = async () => {
+    const url = window.location.href;
+    const data = {
+      title: `${shareTitle}のアンケート`,
+      text: "マコトクラブの匿名店舗アンケート",
+      url,
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(data);
+        return;
+      } catch {
+        // 共有をキャンセルした場合は何もしない
+        return;
+      }
+    }
+
+    try {
+      await navigator.clipboard.writeText(url);
+      window.alert("リンクをコピーしました。");
+    } catch {
+      window.alert("共有に失敗しました。");
+    }
+  };
 
   return (
     <main className="mx-auto max-w-5xl px-4 pb-12 pt-6 space-y-8">
@@ -78,10 +105,33 @@ export default function SurveyDetailPage() {
               </p>
               <p className="text-xs text-slate-400">{visitedPeriodLabel}</p>
             </div>
-            <h1 className="text-3xl font-bold text-slate-900">
-              {survey.storeName}
-              {survey.storeBranch ? ` ${survey.storeBranch}` : ""}
-            </h1>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h1 className="text-3xl font-bold text-slate-900">
+                {survey.storeName}
+                {survey.storeBranch ? ` ${survey.storeBranch}` : ""}
+              </h1>
+              <button
+                type="button"
+                onClick={handleShare}
+                className="inline-flex items-center gap-2 rounded-full border border-pink-100 bg-pink-50 px-3 py-1 text-xs font-semibold text-pink-700 shadow-sm transition hover:bg-pink-100"
+              >
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 24 24"
+                  className="h-4 w-4"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                >
+                  <path d="M15 8a3 3 0 1 0-2.83-4H12a3 3 0 0 0 0 6h.17A3 3 0 0 0 15 8Z" />
+                  <path d="M6 14a3 3 0 1 0 2.83 4H9a3 3 0 0 0 0-6h-.17A3 3 0 0 0 6 14Z" />
+                  <path d="M18 18a3 3 0 1 0-2.83-4H15a3 3 0 0 0 0 6h.17A3 3 0 0 0 18 18Z" />
+                  <path d="M13.2 8.8 8.8 13.2" />
+                  <path d="M15.2 15.2 10.8 10.8" />
+                </svg>
+                共有
+              </button>
+            </div>
             <div className="rounded-2xl border border-pink-100 bg-white/95 p-4 shadow-sm">
               <div className="flex items-center justify-between gap-3">
                 <div>
