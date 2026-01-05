@@ -305,9 +305,21 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
       if (!env.DB) {
         return new Response("DBが設定されていません。", { status: 500 });
       }
+      if (!bucket) {
+        return new Response("R2が設定されていません。", { status: 500 });
+      }
       const id = pathname.replace("/api/og/surveys/", "").trim();
       if (!id) {
         return new Response("アンケートIDが指定されていません。", { status: 400 });
+      }
+
+      const cacheKey = `ogp/surveys/${id}.png`;
+      const cached = await bucket.get(cacheKey);
+      if (cached) {
+        const headers = new Headers();
+        headers.set("Content-Type", cached.httpMetadata?.contentType ?? "image/png");
+        headers.set("Cache-Control", "public, max-age=86400");
+        return new Response(cached.body ?? cached, { headers });
       }
 
       const row = await env.DB.prepare(
@@ -339,8 +351,8 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
               width: "1200px",
               height: "630px",
               display: "flex",
-              background: "linear-gradient(135deg, #ffe4e6 0%, #fff7ed 100%)",
-              padding: "40px",
+              background: "#fdf2f8",
+              padding: "32px",
               fontFamily: "Noto Sans JP",
             },
           },
@@ -351,20 +363,19 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
                 width: "100%",
                 height: "100%",
                 background: "#ffffff",
-                borderRadius: "36px",
-                border: "2px solid #fbcfe8",
-                padding: "48px",
+                borderRadius: "28px",
+                border: "2px solid #f9a8d4",
+                padding: "40px",
                 display: "flex",
                 flexDirection: "column",
-                gap: "28px",
-                boxShadow: "0 30px 80px rgba(15, 23, 42, 0.08)",
+                gap: "20px",
               },
             },
             createElement(
               "div",
               {
                 style: {
-                  fontSize: "28px",
+                  fontSize: "24px",
                   color: "#db2777",
                   fontWeight: 700,
                   letterSpacing: "0.02em",
@@ -376,7 +387,7 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
               "div",
               {
                 style: {
-                  fontSize: "46px",
+                  fontSize: "40px",
                   fontWeight: 700,
                   color: "#0f172a",
                   lineHeight: 1.2,
@@ -395,14 +406,14 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
               },
               createElement(
                 "div",
-                { style: { fontSize: "30px", color: "#db2777" } },
+                { style: { fontSize: "28px", color: "#db2777" } },
                 stars,
               ),
               createElement(
                 "div",
                 {
                   style: {
-                    fontSize: "28px",
+                    fontSize: "26px",
                     fontWeight: 700,
                     color: "#db2777",
                   },
@@ -414,7 +425,7 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
               "div",
               {
                 style: {
-                  fontSize: "24px",
+                  fontSize: "22px",
                   color: "#334155",
                   whiteSpace: "pre-wrap",
                   lineHeight: 1.5,
@@ -445,10 +456,14 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
       new Uint8Array(arrayBuffer).set(pngBuffer);
       const pngBlob = new Blob([arrayBuffer], { type: "image/png" });
 
+      await bucket.put(cacheKey, pngBlob, {
+        httpMetadata: { contentType: "image/png" },
+      });
+
       return new Response(pngBlob, {
         headers: {
           "Content-Type": "image/png",
-          "Cache-Control": "public, max-age=3600",
+          "Cache-Control": "public, max-age=86400",
         },
       });
     } catch (error) {
