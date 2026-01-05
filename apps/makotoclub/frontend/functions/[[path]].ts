@@ -324,7 +324,7 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
     const dailyRow = await env.DB.prepare(
       "SELECT count FROM page_view_counts_daily WHERE path = ? AND date = ?",
     )
-      .bind(path)
+      .bind(path, today)
       .first();
 
     return Response.json({
