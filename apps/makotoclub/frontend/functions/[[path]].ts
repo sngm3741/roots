@@ -16,6 +16,7 @@ type R2Bucket = any;
 type Env = {
   DB: D1Database;
   makotoclub_assets?: R2Bucket;
+  ASSETS?: { fetch: (input: Request | string | URL) => Promise<Response> };
 };
 
 type StoreRow = {
@@ -91,14 +92,22 @@ const ensureResvg = () => {
 };
 
 let ogpFontDataPromise: Promise<ArrayBuffer> | null = null;
-const loadOgFontData = (origin: string) => {
+const loadOgFontData = (env: Env, origin: string) => {
   if (!ogpFontDataPromise) {
     const fontUrl = new URL("/fonts/NotoSansJP-Regular.ttf", origin);
-    ogpFontDataPromise = fetch(fontUrl).then((res) => {
+    ogpFontDataPromise = (async () => {
+      const res = env.ASSETS ? await env.ASSETS.fetch(fontUrl) : await fetch(fontUrl);
       if (!res.ok) {
         throw new Error("OGPフォントの取得に失敗しました。");
       }
+      const contentType = res.headers.get("content-type") ?? "";
+      if (contentType.includes("text/html")) {
+        throw new Error("OGPフォントの取得に失敗しました。");
+      }
       return res.arrayBuffer();
+    })().catch((error) => {
+      ogpFontDataPromise = null;
+      throw error;
     });
   }
   return ogpFontDataPromise;
@@ -345,7 +354,7 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
       const rating = Number(row.rating ?? 0);
       const stars = buildStars(rating);
       const commentText = buildOgpComment(row, 200, 9);
-      const fontData = await loadOgFontData(new URL(request.url).origin);
+      const fontData = await loadOgFontData(env, new URL(request.url).origin);
       await ensureResvg();
 
       const svg = await satori(
