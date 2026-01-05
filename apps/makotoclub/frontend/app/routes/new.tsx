@@ -1,2 +1,2 @@
-export { action, loader } from "./surveys.new";
+export { action } from "./surveys.new";
 export { default } from "./surveys.new";
