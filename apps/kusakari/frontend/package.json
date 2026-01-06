@@ -1,0 +1,42 @@
+{
+  "name": "kusakari-frontend",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "react-router build",
+    "dev": "react-router dev",
+    "preview": "npm run build && wrangler pages dev ./build/client --inspector-port=0",
+    "deploy": "npm run build && wrangler pages deploy ./build/client",
+    "start": "npm run preview",
+    "typecheck": "react-router typegen && tsc"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^3.9.1",
+    "@react-router/cloudflare": "7.10.1",
+    "@react-router/node": "7.10.1",
+    "@resvg/resvg-wasm": "^2.4.2",
+    "isbot": "^5.1.31",
+    "lucide-react": "^0.487.0",
+    "react": "^19.2.1",
+    "react-dom": "^19.2.1",
+    "react-hook-form": "^7.56.2",
+    "react-router": "7.10.1",
+    "sonner": "^2.0.3",
+    "satori": "^0.10.13",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@react-router/dev": "7.10.1",
+    "@tailwindcss/vite": "^4.1.13",
+    "@types/node": "^22",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "@radix-ui/react-slot": "^1.1.2",
+    "clsx": "^2.1.1",
+    "tailwindcss": "^4.1.13",
+    "typescript": "^5.9.2",
+    "vite": "^7.1.7",
+    "vite-tsconfig-paths": "^5.1.4",
+    "wrangler": "^4.53.0"
+  }
+}
