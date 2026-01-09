@@ -1,0 +1,44 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Zen Maru Gothic", "Hiragino Kaku Gothic ProN",
+    "Hiragino Sans", "Noto Sans JP", sans-serif;
+  --color-lilink-bg: #f7f4ee;
+  --color-lilink-ink: #1f2a33;
+  --color-lilink-muted: #6b7280;
+  --color-lilink-accent: #2f7d6a;
+  --color-lilink-card: #ffffff;
+  --color-lilink-border: #e8e1d6;
+  --radius-lilink: 18px;
+  --shadow-lilink: 0 18px 48px rgba(31, 42, 51, 0.08);
+  --shadow-lilink-soft: 0 8px 22px rgba(31, 42, 51, 0.08);
+}
+
+html,
+body {
+  min-height: 100%;
+  font-family: var(--font-sans);
+  color: var(--color-lilink-ink);
+  background:
+    radial-gradient(circle at 12% 18%, rgba(47, 125, 106, 0.08), transparent 45%),
+    radial-gradient(circle at 85% 8%, rgba(229, 204, 169, 0.22), transparent 40%),
+    linear-gradient(180deg, #f7f4ee 0%, #fbfaf7 45%, #f2efe7 100%);
+}
+
+.lilink-card {
+  background: var(--color-lilink-card);
+  border: 1px solid var(--color-lilink-border);
+  border-radius: var(--radius-lilink);
+  box-shadow: var(--shadow-lilink-soft);
+}
+
+.lilink-card:hover {
+  box-shadow: var(--shadow-lilink);
+  border-color: rgba(47, 125, 106, 0.4);
+}
+
+.lilink-chip {
+  border-radius: 999px;
+  border: 1px solid rgba(47, 125, 106, 0.18);
+  background: rgba(47, 125, 106, 0.08);
+}
