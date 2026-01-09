@@ -967,7 +967,13 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
       .bind(...params)
       .first();
     const rows = await env.DB.prepare(
-      `SELECT * FROM surveys WHERE ${whereClause} ORDER BY ${orderBy} LIMIT ? OFFSET ?`,
+      `SELECT
+        s.*,
+        (SELECT COUNT(*) FROM survey_comments sc WHERE sc.survey_id = s.id AND sc.deleted_at IS NULL) AS comment_count
+       FROM surveys s
+       WHERE ${whereClause}
+       ORDER BY ${orderBy}
+       LIMIT ? OFFSET ?`,
     )
       .bind(...params, limit, offset)
       .all();
@@ -984,7 +990,11 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
   if (pathname.startsWith("/api/surveys/") && request.method === "GET") {
     const id = pathname.replace("/api/surveys/", "");
     const row = await env.DB.prepare(
-      "SELECT * FROM surveys WHERE id = ? AND deleted_at IS NULL",
+      `SELECT
+        s.*,
+        (SELECT COUNT(*) FROM survey_comments sc WHERE sc.survey_id = s.id AND sc.deleted_at IS NULL) AS comment_count
+       FROM surveys s
+       WHERE s.id = ? AND s.deleted_at IS NULL`,
     )
       .bind(id)
       .first();
@@ -1181,7 +1191,13 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
     if (!store) return new Response("Not Found", { status: 404 });
 
     const surveys = await env.DB.prepare(
-      "SELECT * FROM surveys WHERE store_id = ? AND deleted_at IS NULL ORDER BY created_at DESC LIMIT 10",
+      `SELECT
+        s.*,
+        (SELECT COUNT(*) FROM survey_comments sc WHERE sc.survey_id = s.id AND sc.deleted_at IS NULL) AS comment_count
+       FROM surveys s
+       WHERE s.store_id = ? AND s.deleted_at IS NULL
+       ORDER BY s.created_at DESC
+       LIMIT 10`,
     )
       .bind(id)
       .all();
@@ -1207,7 +1223,13 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
     const storeId = pathname.split("/")[3];
     const limit = Number(url.searchParams.get("limit") || "50");
     const rows = await env.DB.prepare(
-      "SELECT * FROM surveys WHERE store_id = ? AND deleted_at IS NULL ORDER BY created_at DESC LIMIT ?",
+      `SELECT
+        s.*,
+        (SELECT COUNT(*) FROM survey_comments sc WHERE sc.survey_id = s.id AND sc.deleted_at IS NULL) AS comment_count
+       FROM surveys s
+       WHERE s.store_id = ? AND s.deleted_at IS NULL
+       ORDER BY s.created_at DESC
+       LIMIT ?`,
     )
       .bind(storeId, limit)
       .all();

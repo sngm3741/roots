@@ -1,5 +1,5 @@
 import type { SurveySummary } from "../../types/survey";
-import { BarChart3, CircleDollarSign, Clock, MapPin, ThumbsUp, User } from "lucide-react";
+import { BarChart3, CircleDollarSign, Clock, MapPin, MessageCircle, ThumbsUp, User } from "lucide-react";
 import { RatingStars } from "../ui/rating-stars";
 import { formatDecimal1 } from "../../lib/number-format";
 
@@ -31,6 +31,7 @@ export function SurveyCard({
   const visitedPeriodLabel = formatVisitedPeriod(survey.visitedPeriod);
   const rating = typeof survey.rating === "number" ? survey.rating : 0;
   const helpfulCount = survey.helpfulCount ?? 0;
+  const commentCount = survey.commentCount ?? 0;
   const fadeChars = 10;
   const shouldFade = commentData.hasMore;
   const fadeHead = shouldFade
@@ -158,10 +159,18 @@ export function SurveyCard({
         </div>
       </a>
 
-      <div className="flex w-full items-center justify-center gap-2 rounded-xl bg-white/70 px-4 py-2.5 text-sm font-medium text-gray-700">
-        <ThumbsUp className="h-4 w-4" />
-        <span>役に立った ({helpfulCount})</span>
-      </div>
+      <a href={href} className="block" aria-hidden="true">
+        <div className="flex w-full items-center justify-between rounded-xl bg-white/70 px-4 py-2.5 text-sm font-medium text-gray-700">
+          <div className="flex items-center gap-1.5">
+            <ThumbsUp className="h-4 w-4" />
+            <span>役に立った {helpfulCount}</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <MessageCircle className="h-4 w-4" />
+            <span>コメント {commentCount}</span>
+          </div>
+        </div>
+      </a>
     </div>
   );
 }
