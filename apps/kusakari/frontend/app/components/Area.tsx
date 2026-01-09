@@ -1,31 +1,35 @@
-import { MapPin, CheckCircle, XCircle } from 'lucide-react';
+import { MapPin, CheckCircle, XCircle } from "lucide-react";
 
-export function Area() {
+interface AreaProps {
+  showHeading?: boolean;
+}
+
+export function Area({ showHeading = true }: AreaProps) {
   const areas = [
-    { name: '半田市', available: true },
-    { name: '常滑市', available: true },
-    { name: '東海市', available: true },
-    { name: '大府市', available: true },
-    { name: '知多市', available: true },
-    { name: '東浦町', available: true },
-    { name: '阿久比町', available: true },
-    { name: '武豊町', available: true },
-    { name: '美浜町', available: true },
-    { name: '南知多町', available: true }
+    { name: "半田市", available: true },
+    { name: "常滑市", available: true },
+    { name: "東海市", available: true },
+    { name: "大府市", available: true },
+    { name: "知多市", available: true },
+    { name: "東浦町", available: true },
+    { name: "阿久比町", available: true },
+    { name: "武豊町", available: true },
+    { name: "美浜町", available: true },
+    { name: "南知多町", available: true },
   ];
 
   return (
     <section id="area" className="py-16 lg:py-24 bg-white">
       <div className="container mx-auto px-4 sm:px-6">
-        <div className="text-center mb-12 lg:mb-16">
-          <h2 className="text-gray-900 mb-4">
-            <span className="block text-lg text-emerald-600 font-bold mb-2">SERVICE AREA</span>
-            <span className="text-3xl lg:text-4xl">対応エリア</span>
-          </h2>
-          <p className="text-lg text-gray-700 mt-4">
-            知多半島全域に対応しています
-          </p>
-        </div>
+        {showHeading ? (
+          <div className="text-center mb-12 lg:mb-16">
+            <h2 className="text-gray-900 mb-4">
+              <span className="block text-lg text-emerald-600 font-bold mb-2">SERVICE AREA</span>
+              <span className="text-3xl lg:text-4xl">対応エリア</span>
+            </h2>
+            <p className="text-lg text-gray-700 mt-4">知多半島全域に対応しています</p>
+          </div>
+        ) : null}
 
         <div className="max-w-4xl mx-auto">
           <div className="bg-gradient-to-br from-emerald-50 to-blue-50 rounded-2xl p-8 lg:p-12 shadow-lg">
@@ -36,7 +40,7 @@ export function Area() {
 
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
               {areas.map((area, index) => (
-                <div 
+                <div
                   key={index}
                   className="flex items-center gap-3 bg-white p-4 rounded-lg shadow-sm"
                 >

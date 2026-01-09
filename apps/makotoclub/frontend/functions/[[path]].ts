@@ -584,7 +584,12 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
     const path = body?.path && body.path.startsWith("/") ? body.path : "/";
     const now = new Date();
     const nowIso = now.toISOString();
-    const today = nowIso.slice(0, 10);
+    const today = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Tokyo",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(now);
 
     await env.DB.prepare(
       `INSERT INTO page_view_counts (path, count, updated_at)

@@ -1,25 +1,25 @@
-import { Award, MapPinned, Users } from 'lucide-react';
+import { Award, MapPinned, Users } from "lucide-react";
 
 export function Strengths() {
   const strengths = [
     {
       icon: <MapPinned className="text-white" size={48} />,
-      title: '知多半島特化',
-      description: '知多半島エリアに特化することで、移動コストを最小化。迅速な対応と低価格を実現しています。',
-      color: 'bg-emerald-600'
+      title: "知多半島特化",
+      description: "知多半島エリアに特化することで、移動コストを最小化。迅速な対応と低価格を実現しています。",
+      color: "bg-emerald-600",
     },
     {
       icon: <Award className="text-white" size={48} />,
-      title: '公共事業請負実績あり',
-      description: '市町村の公共事業を請け負った実績があり、品質と信頼性が証明されています。',
-      color: 'bg-blue-600'
+      title: "公共事業請負実績あり",
+      description: "市町村の公共事業を請け負った実績があり、品質と信頼性が証明されています。",
+      color: "bg-blue-600",
     },
     {
       icon: <Users className="text-white" size={48} />,
-      title: '熟練作業者のみ対応',
-      description: '経験豊富な熟練作業者が丁寧に作業を行います。近隣への配慮も徹底しています。',
-      color: 'bg-teal-600'
-    }
+      title: "熟練作業者のみ対応",
+      description: "経験豊富な熟練作業者が丁寧に作業を行います。近隣への配慮も徹底しています。",
+      color: "bg-teal-600",
+    },
   ];
 
   return (
@@ -37,20 +37,16 @@ export function Strengths() {
 
         <div className="grid md:grid-cols-3 gap-8 lg:gap-10">
           {strengths.map((strength, index) => (
-            <div 
+            <div
               key={index}
               className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow"
             >
-              <div className={`${strength.color} p-8 flex justify-center`}>
-                {strength.icon}
-              </div>
+              <div className={`${strength.color} p-8 flex justify-center`}>{strength.icon}</div>
               <div className="p-6">
                 <h3 className="text-xl font-bold text-gray-900 mb-3 text-center">
                   {strength.title}
                 </h3>
-                <p className="text-gray-600 leading-relaxed">
-                  {strength.description}
-                </p>
+                <p className="text-gray-600 leading-relaxed">{strength.description}</p>
               </div>
             </div>
           ))}

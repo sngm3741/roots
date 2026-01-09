@@ -1,31 +1,17 @@
-import { ArrowRight, CheckCircle } from 'lucide-react';
-import { ImageWithFallback } from './figma/ImageWithFallback';
+import { Link } from "react-router";
+import { ArrowRight, CheckCircle } from "lucide-react";
+import { ImageWithFallback } from "./figma/ImageWithFallback";
 
 export function Hero() {
-  const scrollToContact = () => {
-    const element = document.getElementById('contact');
-    if (element) {
-      const headerOffset = 80;
-      const elementPosition = element.getBoundingClientRect().top;
-      const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-      
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: 'smooth'
-      });
-    }
-  };
-
   return (
     <section className="relative bg-gradient-to-br from-emerald-50 to-white pt-32 pb-20 lg:pt-40 lg:pb-28">
       <div className="container mx-auto px-4 sm:px-6">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
-          {/* 左側：テキストコンテンツ */}
           <div className="space-y-8">
             <div className="inline-block bg-emerald-100 text-emerald-800 px-4 py-2 rounded-full text-sm font-bold">
               知多半島エリア特化
             </div>
-            
+
             <h1 className="text-gray-900 leading-tight">
               <span className="block text-3xl sm:text-4xl lg:text-5xl">知多半島の草刈り・除草管理</span>
               <span className="block text-2xl sm:text-3xl lg:text-4xl mt-3 text-emerald-700">法人・施設管理者向け</span>
@@ -37,13 +23,13 @@ export function Hero() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 pt-4">
-              <button
-                onClick={scrollToContact}
+              <Link
+                to="/contact"
                 className="bg-emerald-600 text-white px-8 py-4 rounded-lg hover:bg-emerald-700 transition-colors font-bold text-lg flex items-center justify-center gap-2 shadow-lg"
               >
                 無料見積・お問い合わせ
                 <ArrowRight size={20} />
-              </button>
+              </Link>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4 pt-4">
@@ -58,7 +44,6 @@ export function Hero() {
             </div>
           </div>
 
-          {/* 右側：画像 */}
           <div className="relative">
             <div className="aspect-[4/3] rounded-2xl overflow-hidden shadow-2xl">
               <ImageWithFallback
@@ -67,7 +52,6 @@ export function Hero() {
                 className="w-full h-full object-cover"
               />
             </div>
-            {/* 装飾 */}
             <div className="absolute -z-10 top-8 right-8 w-full h-full bg-emerald-200 rounded-2xl"></div>
           </div>
         </div>

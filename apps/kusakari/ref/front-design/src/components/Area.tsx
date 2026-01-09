@@ -1,0 +1,73 @@
+import { MapPin, CheckCircle, XCircle } from 'lucide-react';
+
+export function Area() {
+  const areas = [
+    { name: '半田市', available: true },
+    { name: '常滑市', available: true },
+    { name: '東海市', available: true },
+    { name: '大府市', available: true },
+    { name: '知多市', available: true },
+    { name: '東浦町', available: true },
+    { name: '阿久比町', available: true },
+    { name: '武豊町', available: true },
+    { name: '美浜町', available: true },
+    { name: '南知多町', available: true }
+  ];
+
+  return (
+    <section id="area" className="py-16 lg:py-24 bg-white">
+      <div className="container mx-auto px-4 sm:px-6">
+        <div className="text-center mb-12 lg:mb-16">
+          <h2 className="text-gray-900 mb-4">
+            <span className="block text-lg text-emerald-600 font-bold mb-2">SERVICE AREA</span>
+            <span className="text-3xl lg:text-4xl">対応エリア</span>
+          </h2>
+          <p className="text-lg text-gray-700 mt-4">
+            知多半島全域に対応しています
+          </p>
+        </div>
+
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-gradient-to-br from-emerald-50 to-blue-50 rounded-2xl p-8 lg:p-12 shadow-lg">
+            <div className="flex items-center gap-3 mb-8">
+              <MapPin className="text-emerald-600" size={32} />
+              <h3 className="text-2xl font-bold text-gray-900">対応可能エリア一覧</h3>
+            </div>
+
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+              {areas.map((area, index) => (
+                <div 
+                  key={index}
+                  className="flex items-center gap-3 bg-white p-4 rounded-lg shadow-sm"
+                >
+                  <CheckCircle className="text-emerald-600 flex-shrink-0" size={24} />
+                  <span className="font-bold text-gray-900">{area.name}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="bg-white rounded-lg p-6 border-2 border-blue-200">
+              <div className="flex items-start gap-3">
+                <XCircle className="text-blue-600 flex-shrink-0 mt-1" size={24} />
+                <div>
+                  <h4 className="font-bold text-gray-900 mb-2">エリア外のお客様へ</h4>
+                  <p className="text-gray-700 leading-relaxed">
+                    上記エリア外のご依頼につきましては、原則として対応しておりません。<br />
+                    ただし、規模や条件によっては対応可能な場合もございますので、まずはお気軽にご相談ください。
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-8 text-center">
+            <p className="text-gray-600 mb-4">
+              知多半島エリアに特化することで、移動コストを削減し、<br className="hidden sm:block" />
+              迅速な対応と低価格を実現しています。
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
