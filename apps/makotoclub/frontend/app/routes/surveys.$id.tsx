@@ -1,12 +1,11 @@
 import { type LoaderFunctionArgs, useLoaderData } from "react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { getApiBaseUrl } from "../config.server";
-import { fetchSurveyDetail } from "../lib/surveys.server";
-import type { SurveyDetail } from "../types/survey";
+import { fetchSurveyComments, fetchSurveyDetail } from "../lib/surveys.server";
+import type { SurveyComment, SurveyDetail } from "../types/survey";
 import { RatingStars } from "../components/ui/rating-stars";
 import { HelpIcon } from "../components/ui/help-icon";
 import { BreadcrumbLabelSetter } from "../components/common/breadcrumb-label-setter";
-import { Button } from "../components/ui/button";
 import { ImageGallery } from "../components/ui/image-gallery";
 import type { ImageGalleryItem } from "../components/ui/image-gallery";
 import { formatDecimal1 } from "../lib/number-format";
@@ -15,13 +14,18 @@ import {
   CircleDollarSign,
   Clock,
   MapPin,
+  MessageCircle,
   Share2,
   User,
   ThumbsUp,
+  ThumbsDown,
+  Flag,
+  MessageSquare,
 } from "lucide-react";
 
 type LoaderData = {
   survey: SurveyDetail | null;
+  comments: SurveyComment[];
 };
 
 export const meta = ({
@@ -65,17 +69,21 @@ export async function loader({ params, context, request }: LoaderFunctionArgs) {
   const id = params.id!;
 
   let survey: SurveyDetail | null = null;
+  let comments: SurveyComment[] = [];
   try {
-    survey = await fetchSurveyDetail({ API_BASE_URL: apiBaseUrl }, id);
+    [survey, comments] = await Promise.all([
+      fetchSurveyDetail({ API_BASE_URL: apiBaseUrl }, id),
+      fetchSurveyComments({ API_BASE_URL: apiBaseUrl }, id),
+    ]);
   } catch (error) {
     console.error("Failed to load survey detail", error);
   }
 
-  return Response.json({ survey });
+  return Response.json({ survey, comments });
 }
 
 export default function SurveyDetailPage() {
-  const { survey } = useLoaderData() as LoaderData;
+  const { survey, comments: initialComments } = useLoaderData() as LoaderData;
 
   if (!survey) {
     return (
@@ -105,6 +113,16 @@ export default function SurveyDetailPage() {
   const [helpfulCount, setHelpfulCount] = useState(survey.helpfulCount ?? 0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const helpfulKey = `survey-helpful:${survey.id}`;
+  const [comments, setComments] = useState<SurveyComment[]>(initialComments);
+  const [commentName, setCommentName] = useState("");
+  const [commentBody, setCommentBody] = useState("");
+  const [replyName, setReplyName] = useState("");
+  const [replyBody, setReplyBody] = useState("");
+  const [replyToId, setReplyToId] = useState<string | null>(null);
+  const [commentError, setCommentError] = useState<string | null>(null);
+  const [isCommentSubmitting, setIsCommentSubmitting] = useState(false);
+  const [expandedReplies, setExpandedReplies] = useState<Set<string>>(new Set());
+  const commentMaxChars = 1000;
 
   useEffect(() => {
     try {
@@ -116,6 +134,10 @@ export default function SurveyDetailPage() {
       // localStorage が使えない環境では無視
     }
   }, [helpfulKey]);
+
+  useEffect(() => {
+    setComments(initialComments);
+  }, [initialComments]);
 
   const handleShare = async () => {
     const url = window.location.href;
@@ -167,6 +189,92 @@ export default function SurveyDetailPage() {
       // 表示用なので失敗は無視
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const commentsByParent = useMemo(() => {
+    const map = new Map<string | null, SurveyComment[]>();
+    for (const comment of comments) {
+      const key = comment.parentId ?? null;
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(comment);
+    }
+    for (const [key, list] of map.entries()) {
+      list.sort((a, b) => {
+        const aTime = Date.parse(a.createdAt) || 0;
+        const bTime = Date.parse(b.createdAt) || 0;
+        if (key === null) {
+          return bTime - aTime;
+        }
+        return aTime - bTime;
+      });
+    }
+    return map;
+  }, [comments]);
+
+  const toggleReplies = (id: string) => {
+    setExpandedReplies((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const submitComment = async (params: {
+    body: string;
+    authorName: string;
+    parentId?: string | null;
+  }) => {
+    const body = params.body.trim();
+    const authorName = params.authorName.trim();
+    if (!body) {
+      setCommentError("コメント本文が必要です。");
+      return;
+    }
+    if (body.length > 1000) {
+      setCommentError("コメントは1000文字以内で入力してください。");
+      return;
+    }
+    if (authorName.length > 40) {
+      setCommentError("ハンドルネームは40文字以内で入力してください。");
+      return;
+    }
+    setCommentError(null);
+    setIsCommentSubmitting(true);
+    try {
+      const res = await fetch(`/api/surveys/${survey.id}/comments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          body,
+          authorName: authorName || undefined,
+          parentId: params.parentId ?? undefined,
+        }),
+      });
+      if (!res.ok) {
+        const msg = await res.text();
+        setCommentError(msg || "投稿に失敗しました。");
+        setIsCommentSubmitting(false);
+        return;
+      }
+      const data = (await res.json()) as SurveyComment;
+      setComments((prev) => [...prev, data]);
+      if (params.parentId) {
+        setExpandedReplies((prev) => new Set(prev).add(params.parentId!));
+      }
+      setCommentBody("");
+      setCommentName("");
+      setReplyBody("");
+      setReplyName("");
+      setReplyToId(null);
+    } catch {
+      setCommentError("投稿に失敗しました。");
+    } finally {
+      setIsCommentSubmitting(false);
     }
   };
 
@@ -307,9 +415,96 @@ export default function SurveyDetailPage() {
               <h2 className="text-lg font-semibold text-slate-900">投稿画像</h2>
               <p className="text-xs text-slate-500">左右にスワイプできます</p>
             </div>
-          <ImageGallery items={galleryItems} hideCaption hideModalDetails />
+            <ImageGallery items={galleryItems} hideCaption hideModalDetails />
+          </section>
+        )}
+
+        <section className="space-y-4">
+          <div className="rounded-2xl border border-slate-100 bg-white shadow-lg overflow-hidden">
+            <div className="bg-gradient-to-r from-pink-50 to-purple-50 px-6 py-4 border-b border-slate-100">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="rounded-lg bg-white p-1.5 shadow-sm">
+                    <MessageCircle className="h-4 w-4 text-pink-600" />
+                  </div>
+                  <span className="text-sm text-slate-700">コメント</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-5 px-6 py-5">
+              <div className="space-y-2">
+                <label className="text-sm text-slate-600">ハンドルネーム（任意）</label>
+                <input
+                  type="text"
+                  value={commentName}
+                  onChange={(e) => setCommentName(e.target.value)}
+                  className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:border-pink-400 focus:outline-none"
+                  placeholder="お名前を入力"
+                  maxLength={40}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm text-slate-600">内容</label>
+                <textarea
+                  value={commentBody}
+                  onChange={(e) => setCommentBody(e.target.value)}
+                  className="w-full min-h-[160px] rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:border-pink-400 focus:outline-none resize-none"
+                  placeholder="コメントを入力してください..."
+                  maxLength={commentMaxChars}
+                />
+                <div className="flex items-center justify-between text-xs">
+                  <span
+                    className={
+                      commentBody.length > commentMaxChars * 0.9
+                        ? "text-pink-600"
+                        : "text-slate-500"
+                    }
+                  >
+                    {commentBody.length} / {commentMaxChars}
+                  </span>
+                </div>
+              </div>
+              {commentError && <p className="text-xs text-red-500">{commentError}</p>}
+              <div className="flex justify-end pt-2">
+                <button
+                  type="button"
+                  onClick={() => submitComment({ body: commentBody, authorName: commentName })}
+                  disabled={isCommentSubmitting || !commentBody.trim()}
+                  className="rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 px-6 py-2.5 text-sm font-semibold text-white shadow-md transition hover:from-pink-600 hover:to-purple-700 disabled:opacity-50"
+                >
+                  送信
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            {(commentsByParent.get(null) ?? []).map((comment) => (
+              <CommentThread
+                key={comment.id}
+                comment={comment}
+                depth={0}
+                childrenMap={commentsByParent}
+                expandedReplies={expandedReplies}
+                onToggleReplies={toggleReplies}
+                onReply={(id) => setReplyToId(id)}
+                activeReplyId={replyToId}
+                replyName={replyName}
+                replyBody={replyBody}
+                onReplyNameChange={setReplyName}
+                onReplyBodyChange={setReplyBody}
+                onSubmitReply={(parentId, body, authorName) =>
+                  submitComment({ parentId, body, authorName })
+                }
+                isSubmitting={isCommentSubmitting}
+              />
+            ))}
+            {comments.length === 0 && (
+              <p className="text-sm text-slate-500">まだコメントがありません。</p>
+            )}
+          </div>
         </section>
-      )}
 
       </div>
     </main>
@@ -321,6 +516,16 @@ function formatVisitedPeriod(value: string) {
   if (!match) return value;
   const month = Number.parseInt(match[2], 10);
   return `${match[1]}年${month}月`;
+}
+
+function formatCommentTime(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, "0")}/${String(
+    date.getDate(),
+  ).padStart(2, "0")} ${String(date.getHours()).padStart(2, "0")}:${String(
+    date.getMinutes(),
+  ).padStart(2, "0")}`;
 }
 
 function buildLimitedComment(parts: Array<string | null | undefined>, limit: number) {
@@ -386,6 +591,248 @@ function CommentCard({
     <div className="rounded-2xl border border-pink-100 bg-white/95 p-5 shadow-sm space-y-2">
       {hideTitle ? null : <h2 className="text-lg font-semibold text-slate-900">{title}</h2>}
       <p className="text-sm text-slate-700 whitespace-pre-wrap break-words">{body || "コメントなし"}</p>
+    </div>
+  );
+}
+
+function CommentThread({
+  comment,
+  depth,
+  childrenMap,
+  expandedReplies,
+  onToggleReplies,
+  onReply,
+  activeReplyId,
+  replyName,
+  replyBody,
+  onReplyNameChange,
+  onReplyBodyChange,
+  onSubmitReply,
+  isSubmitting,
+}: {
+  comment: SurveyComment;
+  depth: number;
+  childrenMap: Map<string | null, SurveyComment[]>;
+  expandedReplies: Set<string>;
+  onToggleReplies: (id: string) => void;
+  onReply: (id: string) => void;
+  activeReplyId: string | null;
+  replyName: string;
+  replyBody: string;
+  onReplyNameChange: (value: string) => void;
+  onReplyBodyChange: (value: string) => void;
+  onSubmitReply: (parentId: string, body: string, authorName: string) => void;
+  isSubmitting: boolean;
+}) {
+  const replies = childrenMap.get(comment.id) ?? [];
+  const hasHiddenReplies = depth === 0 && replies.length > 0;
+  const showReplies = depth === 0 && expandedReplies.has(comment.id);
+  const author = comment.authorName?.trim() ? comment.authorName : "名無しさん";
+  const isAnonymous = author === "名無しさん";
+  const [goodCount, setGoodCount] = useState(comment.goodCount ?? 0);
+  const [badCount, setBadCount] = useState(comment.badCount ?? 0);
+  const [userVote, setUserVote] = useState<"good" | "bad" | null>(null);
+  const [isVoteSubmitting, setIsVoteSubmitting] = useState(false);
+  const voteKey = `comment-vote:${comment.id}`;
+  const [isReported, setIsReported] = useState(false);
+  const reportKey = `comment-report:${comment.id}`;
+
+  useEffect(() => {
+    setGoodCount(comment.goodCount ?? 0);
+    setBadCount(comment.badCount ?? 0);
+  }, [comment.goodCount, comment.badCount]);
+
+  useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem(voteKey);
+      if (stored === "good" || stored === "bad") {
+        setUserVote(stored);
+      }
+      const reported = window.localStorage.getItem(reportKey);
+      if (reported === "1") {
+        setIsReported(true);
+      }
+    } catch {
+      // localStorage が使えない環境では無視
+    }
+  }, [voteKey, reportKey]);
+
+  const handleReport = () => {
+    if (isReported) return;
+    setIsReported(true);
+    try {
+      window.localStorage.setItem(reportKey, "1");
+    } catch {
+      // localStorage が使えない環境では無視
+    }
+    window.alert("通報しました。");
+  };
+
+  const submitVote = async (voteType: "good" | "bad") => {
+    if (userVote || isVoteSubmitting) return;
+    setIsVoteSubmitting(true);
+    try {
+      const res = await fetch(`/api/comments/${comment.id}/vote`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ voteType }),
+      });
+      if (!res.ok) {
+        setIsVoteSubmitting(false);
+        return;
+      }
+      const data = (await res.json()) as { goodCount?: number; badCount?: number };
+      if (typeof data.goodCount === "number") setGoodCount(data.goodCount);
+      if (typeof data.badCount === "number") setBadCount(data.badCount);
+      setUserVote(voteType);
+      try {
+        window.localStorage.setItem(voteKey, voteType);
+      } catch {
+        // localStorage が使えない環境では無視
+      }
+    } catch {
+      // 表示用なので失敗は無視
+    } finally {
+      setIsVoteSubmitting(false);
+    }
+  };
+
+  return (
+    <div className={`space-y-3 ${depth > 0 ? "pl-4 border-l border-pink-100" : ""}`}>
+      <div className="rounded-2xl bg-white p-4 shadow-lg transition-shadow duration-300 hover:shadow-xl">
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <h3 className="font-semibold text-pink-600">{author}</h3>
+          </div>
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-gray-500">{formatCommentTime(comment.createdAt)}</span>
+            <button
+              type="button"
+              onClick={handleReport}
+              className={`h-8 w-8 rounded-full transition ${
+                isReported
+                  ? "text-red-300 cursor-not-allowed"
+                  : "text-gray-400 hover:bg-red-50 hover:text-red-500"
+              }`}
+              aria-label="通報"
+              disabled={isReported}
+            >
+              <Flag className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+
+        <div className="mb-2 min-h-[60px]">
+          <p className="text-gray-700 leading-relaxed whitespace-pre-wrap break-all">{comment.body}</p>
+        </div>
+
+        <div className="flex items-center justify-between border-t border-gray-100 pt-4 text-sm text-gray-600">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => submitVote("good")}
+              disabled={Boolean(userVote) || isVoteSubmitting}
+              className={`inline-flex items-center gap-1.5 rounded-full px-2 py-1 font-medium transition ${
+                userVote === "good"
+                  ? "text-blue-600 bg-blue-50"
+                  : "text-gray-600 hover:text-blue-600 hover:bg-blue-50"
+              } ${userVote ? "opacity-60" : ""}`}
+              aria-pressed={userVote === "good"}
+            >
+              <ThumbsUp className={`h-4 w-4 ${userVote === "good" ? "fill-current" : ""}`} />
+              <span className="text-sm font-medium">{goodCount > 0 ? goodCount : ""}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => submitVote("bad")}
+              disabled={Boolean(userVote) || isVoteSubmitting}
+              className={`inline-flex items-center gap-1.5 rounded-full px-2 py-1 font-medium transition ${
+                userVote === "bad"
+                  ? "text-red-600 bg-red-50"
+                  : "text-gray-600 hover:text-red-600 hover:bg-red-50"
+              } ${userVote ? "opacity-60" : ""}`}
+              aria-pressed={userVote === "bad"}
+            >
+              <ThumbsDown className={`h-4 w-4 ${userVote === "bad" ? "fill-current" : ""}`} />
+              <span className="text-sm font-medium">{badCount > 0 ? badCount : ""}</span>
+            </button>
+            {depth === 0 ? (
+              <button
+                type="button"
+                className="inline-flex items-center gap-1.5 rounded-full px-2 py-1 font-medium text-gray-600 transition hover:bg-purple-50 hover:text-purple-600"
+                onClick={() => onReply(comment.id)}
+              >
+                <MessageSquare className="h-4 w-4" />
+                返信
+              </button>
+            ) : null}
+            {hasHiddenReplies && (
+              <button
+                type="button"
+                className="rounded-full px-2 py-1 font-medium text-gray-600 transition hover:bg-pink-50 hover:text-pink-600"
+                onClick={() => onToggleReplies(comment.id)}
+              >
+                {showReplies ? "返信を隠す" : `返信を表示（${replies.length}件）`}
+              </button>
+            )}
+          </div>
+          <button
+            type="button"
+            className="inline-flex items-center gap-1.5 rounded-full px-2 py-1 font-medium text-gray-600 transition hover:bg-green-50 hover:text-green-600"
+          >
+            <Share2 className="h-4 w-4" />
+            共有
+          </button>
+        </div>
+        {activeReplyId === comment.id && (
+          <div className="space-y-2 rounded-xl border border-pink-100 bg-pink-50/40 p-3">
+            <input
+              type="text"
+              value={replyName}
+              onChange={(e) => onReplyNameChange(e.target.value)}
+              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs focus:border-pink-400 focus:outline-none"
+              placeholder="ハンドルネーム（任意）"
+              maxLength={40}
+            />
+            <textarea
+              value={replyBody}
+              onChange={(e) => onReplyBodyChange(e.target.value)}
+              className="w-full min-h-[80px] rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:border-pink-400 focus:outline-none"
+              placeholder="返信を書く（1000文字まで）"
+              maxLength={1000}
+            />
+            <div className="flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => onSubmitReply(comment.id, replyBody, replyName)}
+                disabled={isSubmitting}
+                className="rounded-full bg-gradient-to-r from-pink-500 to-purple-600 px-4 py-1.5 text-xs font-semibold text-white transition hover:from-pink-600 hover:to-purple-700 disabled:opacity-60"
+              >
+                返信投稿
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+      {showReplies &&
+        replies.map((reply) => (
+          <CommentThread
+            key={reply.id}
+            comment={reply}
+            depth={depth + 1}
+            childrenMap={childrenMap}
+            expandedReplies={expandedReplies}
+            onToggleReplies={onToggleReplies}
+            onReply={onReply}
+            activeReplyId={activeReplyId}
+            replyName={replyName}
+            replyBody={replyBody}
+            onReplyNameChange={onReplyNameChange}
+            onReplyBodyChange={onReplyBodyChange}
+            onSubmitReply={onSubmitReply}
+            isSubmitting={isSubmitting}
+          />
+        ))}
     </div>
   );
 }

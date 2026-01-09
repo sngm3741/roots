@@ -69,8 +69,21 @@ type SurveyRow = {
   email_address?: string | null;
   image_urls?: string | null;
   helpful_count?: number | null;
+  comment_count?: number | null;
   created_at: string;
   updated_at: string;
+};
+
+type SurveyCommentRow = {
+  id: string;
+  survey_id: string;
+  parent_id?: string | null;
+  author_name?: string | null;
+  body: string;
+  good_count?: number | null;
+  bad_count?: number | null;
+  created_at: string;
+  deleted_at?: string | null;
 };
 
 type StoreStats = {
@@ -223,10 +236,23 @@ const mapSurvey = (row: SurveyRow) => {
     emailAddress: row.email_address ?? undefined,
     imageUrls,
     helpfulCount: row.helpful_count ?? undefined,
+    commentCount: row.comment_count ?? undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
 };
+
+const mapSurveyComment = (row: SurveyCommentRow) => ({
+  id: row.id,
+  surveyId: row.survey_id,
+  parentId: row.parent_id ?? null,
+  authorName: row.author_name ?? null,
+  body: row.body,
+  goodCount: row.good_count ?? 0,
+  badCount: row.bad_count ?? 0,
+  createdAt: row.created_at,
+  deletedAt: row.deleted_at ?? null,
+});
 
 const computeSurveyStats = (surveys: ReturnType<typeof mapSurvey>[]) => {
   const count = surveys.length;
@@ -666,6 +692,168 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
 
     return Response.json({
       count: countRow?.helpful_count ?? 0,
+      already: !didInsert,
+    });
+  }
+
+  // GET/POST /api/surveys/:id/comments（SNSコメント）
+  const commentMatch = pathname.match(/^\/api\/surveys\/([^/]+)\/comments$/);
+  if (commentMatch) {
+    const surveyId = commentMatch[1];
+    if (request.method === "GET") {
+      const rows = await env.DB.prepare(
+        `SELECT *
+         FROM survey_comments
+         WHERE survey_id = ? AND deleted_at IS NULL
+         ORDER BY created_at DESC`,
+      )
+        .bind(surveyId)
+        .all();
+      return Response.json((rows.results ?? []).map(mapSurveyComment));
+    }
+
+    if (request.method === "POST") {
+      let payload: any;
+      try {
+        payload = await request.json();
+      } catch {
+        return new Response("無効なJSONです。", { status: 400 });
+      }
+
+      const body = typeof payload?.body === "string" ? payload.body.trim() : "";
+      const authorName =
+        typeof payload?.authorName === "string" ? payload.authorName.trim() : "";
+      const parentId = typeof payload?.parentId === "string" ? payload.parentId.trim() : "";
+
+      if (!body) {
+        return new Response("コメント本文が必要です。", { status: 400 });
+      }
+      if (body.length > 1000) {
+        return new Response("コメントは1000文字以内で入力してください。", { status: 400 });
+      }
+      if (authorName.length > 40) {
+        return new Response("ハンドルネームは40文字以内で入力してください。", { status: 400 });
+      }
+
+      const surveyRow = await env.DB.prepare("SELECT id FROM surveys WHERE id = ?")
+        .bind(surveyId)
+        .first();
+      if (!surveyRow) {
+        return new Response("アンケートが見つかりません。", { status: 404 });
+      }
+
+      if (parentId) {
+        const parentRow = await env.DB.prepare(
+          "SELECT id, parent_id FROM survey_comments WHERE id = ? AND survey_id = ? AND deleted_at IS NULL",
+        )
+          .bind(parentId, surveyId)
+          .first();
+        if (!parentRow) {
+          return new Response("返信先のコメントが見つかりません。", { status: 400 });
+        }
+        if (parentRow.parent_id) {
+          return new Response("返信は1段階までに制限されています。", { status: 400 });
+        }
+      }
+
+      const voterHash = await buildVoterHash(request);
+      if (!voterHash) {
+        return new Response("クライアント情報が取得できません。", { status: 400 });
+      }
+
+      const id = crypto.randomUUID();
+      const nowIso = new Date().toISOString();
+      await env.DB.prepare(
+        `INSERT INTO survey_comments (id, survey_id, parent_id, author_name, body, voter_hash, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      )
+        .bind(
+          id,
+          surveyId,
+          parentId || null,
+          authorName || null,
+          body,
+          voterHash,
+          nowIso,
+        )
+        .run();
+
+      return Response.json(
+        mapSurveyComment({
+          id,
+          survey_id: surveyId,
+          parent_id: parentId || null,
+          author_name: authorName || null,
+          body,
+          good_count: 0,
+          bad_count: 0,
+          created_at: nowIso,
+          deleted_at: null,
+        } as SurveyCommentRow),
+      );
+    }
+  }
+
+  // POST /api/comments/:id/vote（コメントのグッド/バッド）
+  const commentVoteMatch = pathname.match(/^\/api\/comments\/([^/]+)\/vote$/);
+  if (commentVoteMatch && request.method === "POST") {
+    let payload: any;
+    try {
+      payload = await request.json();
+    } catch {
+      return new Response("無効なJSONです。", { status: 400 });
+    }
+
+    const commentId = commentVoteMatch[1];
+    const voteType = payload?.voteType === "good" || payload?.voteType === "bad" ? payload.voteType : "";
+    if (!voteType) {
+      return new Response("投票種別が不正です。", { status: 400 });
+    }
+
+    const commentRow = await env.DB.prepare(
+      "SELECT id FROM survey_comments WHERE id = ? AND deleted_at IS NULL",
+    )
+      .bind(commentId)
+      .first();
+    if (!commentRow) {
+      return new Response("コメントが見つかりません。", { status: 404 });
+    }
+
+    const voterHash = await buildVoterHash(request);
+    if (!voterHash) {
+      return new Response("クライアント情報が取得できません。", { status: 400 });
+    }
+
+    const nowIso = new Date().toISOString();
+    const insertRes = await env.DB.prepare(
+      `INSERT INTO survey_comment_votes (comment_id, voter_hash, vote_type, created_at)
+       VALUES (?, ?, ?, ?)
+       ON CONFLICT(comment_id, voter_hash) DO NOTHING`,
+    )
+      .bind(commentId, voterHash, voteType, nowIso)
+      .run();
+
+    const didInsert = (insertRes.meta?.changes ?? 0) > 0;
+    if (didInsert) {
+      const column = voteType === "good" ? "good_count" : "bad_count";
+      await env.DB.prepare(
+        `UPDATE survey_comments
+         SET ${column} = COALESCE(${column}, 0) + 1
+         WHERE id = ?`,
+      )
+        .bind(commentId)
+        .run();
+    }
+
+    const countRow = await env.DB.prepare(
+      "SELECT good_count, bad_count FROM survey_comments WHERE id = ?",
+    )
+      .bind(commentId)
+      .first();
+
+    return Response.json({
+      goodCount: countRow?.good_count ?? 0,
+      badCount: countRow?.bad_count ?? 0,
       already: !didInsert,
     });
   }

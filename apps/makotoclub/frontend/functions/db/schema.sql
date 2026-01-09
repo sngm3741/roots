@@ -8,6 +8,7 @@ DROP TABLE IF EXISTS access_logs;
 DROP TABLE IF EXISTS page_view_counts;
 DROP TABLE IF EXISTS page_view_counts_daily;
 DROP TABLE IF EXISTS survey_helpful_votes;
+DROP TABLE IF EXISTS survey_comments;
 
 CREATE TABLE stores (
   id TEXT PRIMARY KEY,
@@ -142,3 +143,30 @@ CREATE TABLE survey_helpful_votes (
 );
 
 CREATE INDEX idx_survey_helpful_votes_created_at ON survey_helpful_votes(created_at);
+
+CREATE TABLE survey_comments (
+  id TEXT PRIMARY KEY,
+  survey_id TEXT NOT NULL,
+  parent_id TEXT,
+  author_name TEXT,
+  body TEXT NOT NULL,
+  good_count INTEGER DEFAULT 0,
+  bad_count INTEGER DEFAULT 0,
+  voter_hash TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  deleted_at TEXT
+);
+
+CREATE INDEX idx_survey_comments_survey_id ON survey_comments(survey_id);
+CREATE INDEX idx_survey_comments_parent_id ON survey_comments(parent_id);
+CREATE INDEX idx_survey_comments_created_at ON survey_comments(created_at);
+
+CREATE TABLE survey_comment_votes (
+  comment_id TEXT NOT NULL,
+  voter_hash TEXT NOT NULL,
+  vote_type TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  PRIMARY KEY (comment_id, voter_hash)
+);
+
+CREATE INDEX idx_survey_comment_votes_created_at ON survey_comment_votes(created_at);
