@@ -24,6 +24,8 @@ type LoaderData = {
   stores: StoreSummary[];
   surveys: SurveySummary[];
   surveysTotal: number;
+  pageViews: number;
+  pageViewsToday: number;
 };
 
 const PREFS = [
@@ -103,6 +105,8 @@ export async function loader({ context, request }: LoaderFunctionArgs) {
   let surveys: SurveySummary[] = [];
   let total = 0;
   let surveysTotal = 0;
+  let pageViews = 0;
+  let pageViewsToday = 0;
 
   try {
     const surveysCountRes = await fetchSurveys({ API_BASE_URL: apiBaseUrl }, { sort: "newest", limit: 1 });
@@ -144,11 +148,28 @@ export async function loader({ context, request }: LoaderFunctionArgs) {
       total = storesRes.total;
     }
   } catch (error) {
-    console.error("Failed to fetch data for index loader", error);
+    console.error("トップページのデータ取得に失敗しました", error);
     stores = [];
     surveys = [];
     surveysTotal = 0;
     total = 0;
+  }
+
+  try {
+    const pvUrl = new URL("/api/metrics/pv", apiBaseUrl);
+    pvUrl.searchParams.set("path", "/");
+    const pvRes = await fetch(pvUrl);
+    if (pvRes.ok) {
+      const data = (await pvRes.json()) as { count?: number; todayCount?: number };
+      if (typeof data.count === "number") {
+        pageViews = data.count;
+      }
+      if (typeof data.todayCount === "number") {
+        pageViewsToday = data.todayCount;
+      }
+    }
+  } catch (error) {
+    console.error("PV情報の取得に失敗しました", error);
   }
 
   return Response.json({
@@ -163,16 +184,30 @@ export async function loader({ context, request }: LoaderFunctionArgs) {
     stores,
     surveys,
     surveysTotal,
+    pageViews,
+    pageViewsToday,
   });
 }
 
 export default function Index() {
-  const { stores, surveys, surveysTotal, target, filters, hasFilters, sort, page, limit, total } =
-    useLoaderData() as LoaderData;
+  const {
+    stores,
+    surveys,
+    surveysTotal,
+    pageViews,
+    pageViewsToday,
+    target,
+    filters,
+    hasFilters,
+    sort,
+    page,
+    limit,
+    total,
+  } = useLoaderData() as LoaderData;
 
   return (
     <main className="space-y-2">
-      <Hero surveysTotal={surveysTotal} />
+      <Hero surveysTotal={surveysTotal} pageViews={pageViews} pageViewsToday={pageViewsToday} />
       <div className="mx-auto max-w-5xl space-y-12 px-4">
         <div className="relative">
           <SearchGuide className="absolute left-1/2 top-0 -translate-x-1/2 translate-y-12 md:translate-y-15" />
@@ -196,10 +231,18 @@ export default function Index() {
   );
 }
 
-function Hero({ surveysTotal }: { surveysTotal: number }) {
+function Hero({
+  surveysTotal,
+  pageViews: initialPageViews,
+  pageViewsToday: initialPageViewsToday,
+}: {
+  surveysTotal: number;
+  pageViews: number;
+  pageViewsToday: number;
+}) {
   const [displayCount, setDisplayCount] = useState(0);
-  const [pageViews, setPageViews] = useState<number | null>(null);
-  const [pageViewsToday, setPageViewsToday] = useState<number | null>(null);
+  const [pageViews, setPageViews] = useState<number>(initialPageViews);
+  const [pageViewsToday, setPageViewsToday] = useState<number>(initialPageViewsToday);
   const [pvMode, setPvMode] = useState<"total" | "today">("today");
   const [displayPageViews, setDisplayPageViews] = useState(0);
 
@@ -226,10 +269,9 @@ function Hero({ surveysTotal }: { surveysTotal: number }) {
   }, [surveysTotal]);
 
   const pvTarget = pvMode === "total" ? pageViews : pageViewsToday;
-  const canTogglePv = pageViewsToday !== null;
+  const canTogglePv = true;
 
   useEffect(() => {
-    if (pvTarget === null) return;
     let rafId = 0;
     const durationMs = 900;
     const target = Math.max(0, pvTarget);
@@ -302,8 +344,7 @@ function Hero({ surveysTotal }: { surveysTotal: number }) {
       <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
         <CounterBadge
           label="掲載数"
-          value={displayCount * 5}
-          suffix="+"
+          value={displayCount}
           tone="emerald"
           icon={
             <svg

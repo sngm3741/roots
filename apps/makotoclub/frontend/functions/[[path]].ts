@@ -569,6 +569,35 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
     return new Response(body, { headers });
   }
 
+  // GET /api/metrics/pv（累計PVの取得）
+  if (pathname === "/api/metrics/pv" && request.method === "GET") {
+    const pathParam = url.searchParams.get("path");
+    const path = pathParam && pathParam.startsWith("/") ? pathParam : "/";
+    const now = new Date();
+    const today = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Tokyo",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(now);
+
+    const row = await env.DB.prepare("SELECT count FROM page_view_counts WHERE path = ?")
+      .bind(path)
+      .first();
+    const dailyRow = await env.DB.prepare(
+      "SELECT count FROM page_view_counts_daily WHERE path = ? AND date = ?",
+    )
+      .bind(path, today)
+      .first();
+
+    return Response.json({
+      path,
+      count: row?.count ?? 0,
+      todayCount: dailyRow?.count ?? 0,
+      date: today,
+    });
+  }
+
   // POST /api/metrics/pv（累計PVの記録）
   if (pathname === "/api/metrics/pv" && request.method === "POST") {
     const userAgent = request.headers.get("user-agent");
