@@ -258,6 +258,25 @@ const parseNumberParam = (value: string | null) => {
   return Number.isFinite(num) ? num : null;
 };
 
+const hashText = async (value: string) => {
+  const data = new TextEncoder().encode(value);
+  const digest = await crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(digest))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+};
+
+const buildVoterHash = async (request: Request) => {
+  const ip =
+    request.headers.get("CF-Connecting-IP") ??
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    "";
+  const ua = request.headers.get("user-agent") ?? "";
+  const raw = `${ip}|${ua}`.trim();
+  if (!raw) return null;
+  return await hashText(raw);
+};
+
 const isBotUserAgent = (userAgent: string | null) => {
   if (!userAgent) return false;
   const ua = userAgent.toLowerCase();
@@ -595,6 +614,59 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
       count: row?.count ?? 0,
       todayCount: dailyRow?.count ?? 0,
       date: today,
+    });
+  }
+
+  // POST /api/surveys/:id/helpful（役に立ったを加算）
+  const helpfulMatch = pathname.match(/^\/api\/surveys\/([^/]+)\/helpful$/);
+  if (helpfulMatch && request.method === "POST") {
+    const surveyId = helpfulMatch[1];
+    const surveyRow = await env.DB.prepare("SELECT id FROM surveys WHERE id = ?")
+      .bind(surveyId)
+      .first();
+    if (!surveyRow) {
+      return new Response("アンケートが見つかりません。", { status: 404 });
+    }
+
+    const voterHash = await buildVoterHash(request);
+    if (!voterHash) {
+      return new Response("クライアント情報が取得できません。", { status: 400 });
+    }
+
+    const nowIso = new Date().toISOString();
+    const insertRes = await env.DB.prepare(
+      `INSERT INTO survey_helpful_votes (survey_id, voter_hash, created_at)
+       VALUES (?, ?, ?)
+       ON CONFLICT(survey_id, voter_hash) DO NOTHING`,
+    )
+      .bind(surveyId, voterHash, nowIso)
+      .run();
+
+    const didInsert = (insertRes.meta?.changes ?? 0) > 0;
+    if (didInsert) {
+      await env.DB.prepare(
+        `UPDATE surveys
+         SET helpful_count = COALESCE(helpful_count, 0) + 1, updated_at = ?
+         WHERE id = ?`,
+      )
+        .bind(nowIso, surveyId)
+        .run();
+      await env.DB.prepare(
+        `UPDATE store_stats
+         SET helpful_count = COALESCE(helpful_count, 0) + 1, updated_at = ?
+         WHERE store_id = (SELECT store_id FROM surveys WHERE id = ?)`,
+      )
+        .bind(nowIso, surveyId)
+        .run();
+    }
+
+    const countRow = await env.DB.prepare("SELECT helpful_count FROM surveys WHERE id = ?")
+      .bind(surveyId)
+      .first();
+
+    return Response.json({
+      count: countRow?.helpful_count ?? 0,
+      already: !didInsert,
     });
   }
 

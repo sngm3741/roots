@@ -1,4 +1,5 @@
 import { type LoaderFunctionArgs, useLoaderData } from "react-router";
+import { useEffect, useState } from "react";
 import { getApiBaseUrl } from "../config.server";
 import { fetchSurveyDetail } from "../lib/surveys.server";
 import type { SurveyDetail } from "../types/survey";
@@ -16,6 +17,7 @@ import {
   MapPin,
   Share2,
   User,
+  ThumbsUp,
 } from "lucide-react";
 
 type LoaderData = {
@@ -99,6 +101,21 @@ export default function SurveyDetailPage() {
   }));
   const visitedPeriodLabel = formatVisitedPeriod(survey.visitedPeriod);
   const shareTitle = `${survey.storeName}${survey.storeBranch ? ` ${survey.storeBranch}` : ""}`;
+  const [isHelpful, setIsHelpful] = useState(false);
+  const [helpfulCount, setHelpfulCount] = useState(survey.helpfulCount ?? 0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const helpfulKey = `survey-helpful:${survey.id}`;
+
+  useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem(helpfulKey);
+      if (stored === "1") {
+        setIsHelpful(true);
+      }
+    } catch {
+      // localStorage が使えない環境では無視
+    }
+  }, [helpfulKey]);
 
   const handleShare = async () => {
     const url = window.location.href;
@@ -124,6 +141,32 @@ export default function SurveyDetailPage() {
       window.alert("リンクをコピーしました。");
     } catch {
       window.alert("共有に失敗しました。");
+    }
+  };
+
+  const handleHelpfulClick = async () => {
+    if (isHelpful || isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      const res = await fetch(`/api/surveys/${survey.id}/helpful`, { method: "POST" });
+      if (!res.ok) {
+        setIsSubmitting(false);
+        return;
+      }
+      const data = (await res.json()) as { count?: number };
+      if (typeof data.count === "number") {
+        setHelpfulCount(data.count);
+      }
+      setIsHelpful(true);
+      try {
+        window.localStorage.setItem(helpfulKey, "1");
+      } catch {
+        // localStorage が使えない環境では無視
+      }
+    } catch {
+      // 表示用なので失敗は無視
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -158,10 +201,13 @@ export default function SurveyDetailPage() {
             <span className="text-xs font-medium text-gray-600">{visitedPeriodLabel}</span>
           </div>
 
-          <h1 className="mb-1.5 text-xl font-bold leading-tight text-gray-900">
+          <a
+            href={`/stores/${survey.storeId}`}
+            className="mb-1.5 block text-xl font-bold leading-tight text-gray-900 transition hover:text-pink-600"
+          >
             {survey.storeName}
             {survey.storeBranch ? ` ${survey.storeBranch}` : ""}
-          </h1>
+          </a>
 
           <div className="mb-4 flex items-center gap-1 text-xs text-gray-600">
             <MapPin className="h-3.5 w-3.5" />
@@ -221,7 +267,20 @@ export default function SurveyDetailPage() {
             </div>
           </div>
 
-          <div className="mt-3 flex justify-end">
+          <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
+            <button
+              type="button"
+              onClick={handleHelpfulClick}
+              disabled={isHelpful || isSubmitting}
+              className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold shadow-sm transition ${
+                isHelpful
+                  ? "border-pink-100 bg-pink-100 text-pink-600"
+                  : "border-pink-100 bg-white/70 text-pink-700 hover:bg-white"
+              }`}
+            >
+              <ThumbsUp className="h-4 w-4" />
+              役に立った ({helpfulCount})
+            </button>
             <button
               type="button"
               onClick={handleShare}
@@ -252,11 +311,6 @@ export default function SurveyDetailPage() {
         </section>
       )}
 
-        <div className="flex justify-end">
-          <Button variant="secondary" asChild className="shadow-sm shadow-pink-200">
-            <a href={`/stores/${survey.storeId}`}>店舗詳細へ戻る</a>
-          </Button>
-        </div>
       </div>
     </main>
   );

@@ -31,7 +31,7 @@ export function SurveyCard({
   const visitedPeriodLabel = formatVisitedPeriod(survey.visitedPeriod);
   const rating = typeof survey.rating === "number" ? survey.rating : 0;
   const helpfulCount = survey.helpfulCount ?? 0;
-  const fadeChars = 20;
+  const fadeChars = 10;
   const shouldFade = commentData.hasMore;
   const fadeHead = shouldFade
     ? commentText.slice(0, Math.max(0, commentText.length - fadeChars))
@@ -41,12 +41,15 @@ export function SurveyCard({
     : "";
 
   return (
-    <a
-      href={href}
+    <div
       className={`w-full rounded-2xl border border-pink-100/50 bg-gradient-to-br from-pink-50 to-rose-50 p-4 text-left shadow-sm transition-shadow hover:shadow-md ${className ?? ""}`}
-      aria-label={showStoreInfo ? `${survey.storeName}のアンケート詳細へ` : "アンケート詳細へ"}
     >
-      <div className="mb-3">
+      <a
+        href={href}
+        className="block"
+        aria-label={showStoreInfo ? `${survey.storeName}のアンケート詳細へ` : "アンケート詳細へ"}
+      >
+        <div className="mb-3">
         <div className="mb-3 flex items-center justify-between">
           <div className="flex items-center gap-1.5">
             <div className="rounded-lg bg-pink-500 p-1.5 text-white">
@@ -66,8 +69,8 @@ export function SurveyCard({
             </div>
             <span className="text-xs font-bold text-pink-700">アンケート</span>
           </div>
-          <span className="text-xs font-medium text-gray-600">{visitedPeriodLabel}</span>
-        </div>
+            <span className="text-xs font-medium text-gray-600">{visitedPeriodLabel}</span>
+          </div>
 
         {showStoreInfo ? (
           <>
@@ -86,77 +89,80 @@ export function SurveyCard({
           </>
         ) : null}
 
-        <div className="rounded-xl bg-white/70 p-3">
-          <div className="flex items-center justify-between pr-2">
-            <div className="flex items-center gap-2">
-              <RatingStars value={rating} size="lg" />
+          <div className="rounded-xl bg-white/70 p-3">
+            <div className="flex items-center justify-between pr-2">
+              <div className="flex items-center gap-2">
+                <RatingStars value={rating} size="lg" />
+              </div>
+              <span className="text-2xl font-bold text-pink-500">{rating.toFixed(1)}</span>
             </div>
-            <span className="text-2xl font-bold text-pink-500">{rating.toFixed(1)}</span>
           </div>
         </div>
-      </div>
+      </a>
 
-      <div className="mb-3 grid grid-cols-2 gap-2.5">
-        <div className="flex flex-col items-start rounded-xl bg-white/70 p-3">
-          <div className="mb-1.5 flex items-center gap-1.5">
-            <CircleDollarSign className="h-4 w-4 -translate-y-px text-pink-500" />
-            <span className="text-xs text-gray-600">平均稼ぎ</span>
+      <a href={href} className="block" aria-hidden="true">
+        <div className="mb-3 grid grid-cols-2 gap-2.5">
+          <div className="flex flex-col items-start rounded-xl bg-white/70 p-3">
+            <div className="mb-1.5 flex items-center gap-1.5">
+              <CircleDollarSign className="h-4 w-4 -translate-y-px text-pink-500" />
+              <span className="text-xs text-gray-600">平均稼ぎ</span>
+            </div>
+            <div className="text-lg font-bold text-gray-900">
+              {Number.isFinite(survey.averageEarning) ? `${survey.averageEarning}万円` : "-"}
+            </div>
           </div>
-          <div className="text-lg font-bold text-gray-900">
-            {Number.isFinite(survey.averageEarning) ? `${survey.averageEarning}万円` : "-"}
+          <div className="flex flex-col items-start rounded-xl bg-white/70 p-3">
+            <div className="mb-1.5 flex items-center gap-1.5">
+              <Clock className="h-4 w-4 -translate-y-px text-pink-500" />
+              <span className="text-xs text-gray-600">平均待機</span>
+            </div>
+            <div className="text-lg font-bold text-gray-900">
+              {formatDecimal1(survey.waitTimeHours)}時間
+            </div>
           </div>
         </div>
-        <div className="flex flex-col items-start rounded-xl bg-white/70 p-3">
-          <div className="mb-1.5 flex items-center gap-1.5">
-            <Clock className="h-4 w-4 -translate-y-px text-pink-500" />
-            <span className="text-xs text-gray-600">平均待機</span>
-          </div>
-          <div className="text-lg font-bold text-gray-900">
-            {formatDecimal1(survey.waitTimeHours)}時間
-          </div>
-        </div>
-      </div>
 
-      <div className="mb-3 grid grid-cols-2 gap-2.5">
-        <div className="rounded-xl bg-white/70 p-3">
-          <div className="mb-1.5 flex items-center gap-1.5">
-            <User className="h-4 w-4 text-pink-500" />
-            <span className="text-xs text-gray-600">年齢</span>
+        <div className="mb-3 grid grid-cols-2 gap-2.5">
+          <div className="rounded-xl bg-white/70 p-3">
+            <div className="mb-1.5 flex items-center gap-1.5">
+              <User className="h-4 w-4 text-pink-500" />
+              <span className="text-xs text-gray-600">年齢</span>
+            </div>
+            <div className="text-lg font-bold text-gray-900">{survey.age}歳</div>
           </div>
-          <div className="text-lg font-bold text-gray-900">{survey.age}歳</div>
-        </div>
-        <div className="rounded-xl bg-white/70 p-3">
-          <div className="mb-1.5 flex items-center gap-1.5">
-            <BarChart3 className="h-4 w-4 text-pink-500" />
-            <span className="text-xs text-gray-600">スペック</span>
+          <div className="rounded-xl bg-white/70 p-3">
+            <div className="mb-1.5 flex items-center gap-1.5">
+              <BarChart3 className="h-4 w-4 text-pink-500" />
+              <span className="text-xs text-gray-600">スペック</span>
+            </div>
+            <div className="text-lg font-bold text-gray-900">{survey.specScore}</div>
           </div>
-          <div className="text-lg font-bold text-gray-900">{survey.specScore}</div>
         </div>
-      </div>
 
-      <div className="mb-3 rounded-xl bg-white/70 p-3">
-        <p className="text-sm leading-relaxed text-gray-700 whitespace-pre-line">
-          {shouldFade ? (
-            <>
-              <span>{fadeHead}</span>
-              <span className="bg-gradient-to-r from-slate-700 to-slate-700/20 text-transparent bg-clip-text">
-                {fadeTail}
-              </span>
-            </>
-          ) : (
-            commentText
-          )}
-          {commentData.hasMore ? (
-            <span className="ml-1 text-xs font-semibold text-pink-500">（もっと読む）</span>
-          ) : null}
-        </p>
-      </div>
+        <div className="mb-3 rounded-xl bg-white/70 p-3">
+          <p className="text-sm leading-relaxed text-gray-700 whitespace-pre-line">
+            {shouldFade ? (
+              <>
+                <span>{fadeHead}</span>
+                <span className="bg-gradient-to-r from-slate-700 to-slate-700/10 text-transparent bg-clip-text">
+                  {fadeTail}
+                </span>
+              </>
+            ) : (
+              commentText
+            )}
+            {commentData.hasMore ? (
+              <span className="ml-1 text-xs font-semibold text-pink-500">（もっと読む）</span>
+            ) : null}
+          </p>
+        </div>
+      </a>
 
       <div className="flex w-full items-center justify-center gap-2 rounded-xl bg-white/70 px-4 py-2.5 text-sm font-medium text-gray-700">
         <ThumbsUp className="h-4 w-4" />
         <span>役に立った ({helpfulCount})</span>
       </div>
-    </a>
+    </div>
   );
 }
 

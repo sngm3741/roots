@@ -7,6 +7,7 @@ DROP TABLE IF EXISTS stores;
 DROP TABLE IF EXISTS access_logs;
 DROP TABLE IF EXISTS page_view_counts;
 DROP TABLE IF EXISTS page_view_counts_daily;
+DROP TABLE IF EXISTS survey_helpful_votes;
 
 CREATE TABLE stores (
   id TEXT PRIMARY KEY,
@@ -132,3 +133,12 @@ CREATE TABLE page_view_counts_daily (
   updated_at TEXT NOT NULL,
   PRIMARY KEY (path, date)
 );
+
+CREATE TABLE survey_helpful_votes (
+  survey_id TEXT NOT NULL,
+  voter_hash TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  PRIMARY KEY (survey_id, voter_hash)
+);
+
+CREATE INDEX idx_survey_helpful_votes_created_at ON survey_helpful_votes(created_at);
