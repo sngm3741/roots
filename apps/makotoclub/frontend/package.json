@@ -16,6 +16,7 @@
     "@react-router/node": "7.10.1",
     "@resvg/resvg-wasm": "^2.4.2",
     "isbot": "^5.1.31",
+    "lucide-react": "^0.515.0",
     "react": "^19.2.1",
     "react-dom": "^19.2.1",
     "react-hook-form": "^7.56.2",

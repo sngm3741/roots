@@ -8,13 +8,15 @@ import { BreadcrumbLabelSetter } from "../components/common/breadcrumb-label-set
 import { Button } from "../components/ui/button";
 import { ImageGallery } from "../components/ui/image-gallery";
 import type { ImageGalleryItem } from "../components/ui/image-gallery";
-import {
-  AgeIcon,
-  AverageEarningIcon,
-  SpecIcon,
-  WaitTimeIcon,
-} from "../components/ui/survey-metric-icons";
 import { formatDecimal1 } from "../lib/number-format";
+import {
+  BarChart3,
+  CircleDollarSign,
+  Clock,
+  MapPin,
+  Share2,
+  User,
+} from "lucide-react";
 
 type LoaderData = {
   survey: SurveyDetail | null;
@@ -132,127 +134,112 @@ export default function SurveyDetailPage() {
         branchName={survey.storeBranch}
         storeId={survey.storeId}
       />
-      <div className="rounded-[24px] border border-pink-100 bg-white/90 p-6 shadow-[0_24px_60px_rgba(15,23,42,0.08)] space-y-6">
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <div className="flex items-start justify-between gap-4">
-              <p className="text-sm text-slate-500">
-                {survey.storePrefecture}
-                {survey.storeIndustry ? ` / ${survey.storeIndustry}` : ""}
-              </p>
-              <p className="text-xs text-slate-400">{visitedPeriodLabel}</p>
-            </div>
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <h1 className="text-3xl font-bold text-slate-900">
-                {survey.storeName}
-                {survey.storeBranch ? ` ${survey.storeBranch}` : ""}
-              </h1>
-              <button
-                type="button"
-                onClick={handleShare}
-                className="inline-flex items-center gap-2 rounded-full border border-pink-100 bg-pink-50 px-3 py-1 text-xs font-semibold text-pink-700 shadow-sm transition hover:bg-pink-100"
-              >
+      <div className="space-y-6">
+        <section className="rounded-2xl border border-pink-100/50 bg-gradient-to-br from-pink-50 to-rose-50 p-4 shadow-sm">
+          <div className="mb-3 flex items-center justify-between">
+            <div className="flex items-center gap-1.5">
+              <div className="rounded-lg bg-pink-500 p-1.5 text-white">
                 <svg
-                  aria-hidden="true"
-                  viewBox="0 0 24 24"
                   className="h-4 w-4"
                   fill="none"
                   stroke="currentColor"
-                  strokeWidth="1.8"
+                  strokeWidth={2.5}
+                  viewBox="0 0 24 24"
                 >
-                  <path d="M15 8a3 3 0 1 0-2.83-4H12a3 3 0 0 0 0 6h.17A3 3 0 0 0 15 8Z" />
-                  <path d="M6 14a3 3 0 1 0 2.83 4H9a3 3 0 0 0 0-6h-.17A3 3 0 0 0 6 14Z" />
-                  <path d="M18 18a3 3 0 1 0-2.83-4H15a3 3 0 0 0 0 6h.17A3 3 0 0 0 18 18Z" />
-                  <path d="M13.2 8.8 8.8 13.2" />
-                  <path d="M15.2 15.2 10.8 10.8" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
                 </svg>
-                共有
-              </button>
+              </div>
+              <span className="text-xs font-bold text-pink-700">アンケート</span>
             </div>
-            <div className="rounded-2xl border border-pink-100 bg-white/95 p-4 shadow-sm">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-sm font-semibold text-slate-700">満足度</p>
-                  <p className="text-3xl font-bold text-pink-700">
-                    {(survey.rating ?? 0).toFixed(1)}
-                  </p>
-                </div>
+            <span className="text-xs font-medium text-gray-600">{visitedPeriodLabel}</span>
+          </div>
+
+          <h1 className="mb-1.5 text-xl font-bold leading-tight text-gray-900">
+            {survey.storeName}
+            {survey.storeBranch ? ` ${survey.storeBranch}` : ""}
+          </h1>
+
+          <div className="mb-4 flex items-center gap-1 text-xs text-gray-600">
+            <MapPin className="h-3.5 w-3.5" />
+            <span>{survey.storePrefecture}</span>
+          </div>
+
+          <div className="rounded-xl bg-white/70 p-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
                 <RatingStars value={survey.rating ?? 0} size="lg" />
               </div>
+              <span className="text-2xl font-bold text-pink-500">
+                {(survey.rating ?? 0).toFixed(1)}
+              </span>
             </div>
-            <div className="rounded-2xl border border-pink-100 bg-white/95 p-4 shadow-sm grid grid-cols-2 gap-3">
-              <div className="relative rounded-xl border border-pink-100 bg-pink-50 px-3 py-2">
-                <HelpIcon
-                  containerClassName="absolute right-2 top-2"
-                  label={`「アベレージ」の略。\n1日の稼ぎの平均を指す業界用語です。\n\n例)\nアベ10 → 平均で1日10万円の稼ぎ`}
-                />
-                <div className="space-y-1">
-                  <div className="flex items-center gap-1 text-sm text-slate-600">
-                    <AverageEarningIcon className="h-5 w-5 text-white" />
-                    <span className="font-semibold">アベ</span>
-                  </div>
-                  <div className="text-lg font-semibold text-slate-900 md:text-2xl">
-                    {survey.averageEarning}
-                    <span className="ml-1 text-sm font-semibold text-slate-500">万円</span>
-                  </div>
-                </div>
+          </div>
+
+          <div className="mt-3 grid grid-cols-2 gap-2.5">
+            <div className="flex flex-col items-start rounded-xl bg-white/70 p-3">
+              <div className="mb-1.5 flex items-center gap-1.5">
+                <CircleDollarSign className="h-4 w-4 -translate-y-px text-pink-500" />
+                <span className="text-xs text-gray-600">平均稼ぎ</span>
               </div>
-              <div className="relative rounded-xl border border-pink-100 bg-pink-50 px-3 py-2">
-                <HelpIcon
-                  containerClassName="absolute right-2 top-2"
-                  label="このアンケート記入者の1日の仕事で待機した平均時間。"
-                />
-                <div className="space-y-1">
-                  <div className="flex items-center gap-1 text-sm text-slate-600">
-                    <WaitTimeIcon className="h-5 w-5 text-pink-600" />
-                    <span className="font-semibold">待機</span>
-                  </div>
-                  <div className="text-lg font-semibold text-slate-900 md:text-2xl">
-                    {formatDecimal1(survey.waitTimeHours)}
-                    <span className="ml-1 text-sm font-semibold text-slate-500">時間</span>
-                  </div>
-                </div>
+              <div className="text-lg font-bold text-gray-900">
+                {Number.isFinite(survey.averageEarning) ? `${survey.averageEarning}万円` : "-"}
               </div>
-              <div className="relative rounded-xl border border-slate-100 bg-white px-3 py-2">
-                <HelpIcon
-                  containerClassName="absolute right-2 top-2"
-                  label="このアンケート記入者の年齢。"
-                />
-                <div className="space-y-1">
-                  <div className="flex items-center gap-1 text-sm text-slate-600">
-                    <AgeIcon className="h-5 w-5 text-pink-600" />
-                    <span className="font-semibold">年齢</span>
-                  </div>
-                  <div className="text-lg font-semibold text-slate-800 md:text-2xl">
-                    {survey.age}
-                    <span className="ml-1 text-sm font-semibold text-slate-500">歳</span>
-                  </div>
-                </div>
+            </div>
+            <div className="flex flex-col items-start rounded-xl bg-white/70 p-3">
+              <div className="mb-1.5 flex items-center gap-1.5">
+                <Clock className="h-4 w-4 -translate-y-px text-pink-500" />
+                <span className="text-xs text-gray-600">平均待機</span>
               </div>
-              <div className="relative rounded-xl border border-slate-100 bg-white px-3 py-2">
-                <HelpIcon
-                  containerClassName="absolute right-2 top-2"
-                  label={`「スペック」の略。\n身長cm - 体重kg の数値を指す業界用語。\n\n例)\n155cm / 49kg の場合\n155 - 49 = スペ106`}
-                />
-                <div className="space-y-1">
-                  <div className="flex items-center gap-1 text-sm text-slate-600">
-                    <SpecIcon className="h-5 w-5 text-pink-600" />
-                    <span className="font-semibold">スペ</span>
-                  </div>
-                  <div className="text-lg font-semibold text-slate-800 md:text-2xl">
-                    {survey.specScore}
-                  </div>
-                </div>
+              <div className="text-lg font-bold text-gray-900">
+                {formatDecimal1(survey.waitTimeHours)}時間
               </div>
             </div>
           </div>
-        </div>
+
+          <div className="mt-3 grid grid-cols-2 gap-2.5">
+            <div className="flex flex-col items-start rounded-xl bg-white/70 p-3">
+              <div className="mb-1.5 flex items-center gap-1.5">
+                <User className="h-4 w-4 text-pink-500" />
+                <span className="text-xs text-gray-600">年齢</span>
+              </div>
+              <div className="text-lg font-bold text-gray-900">{survey.age}歳</div>
+            </div>
+            <div className="relative flex flex-col items-start rounded-xl bg-white/70 p-3">
+              <HelpIcon
+                containerClassName="absolute right-2 top-2"
+                label={`「スペック」の略。\n身長cm - 体重kg の数値を指す業界用語。\n\n例)\n155cm / 49kg の場合\n155 - 49 = スペ106`}
+              />
+              <div className="mb-1.5 flex items-center gap-1.5">
+                <BarChart3 className="h-4 w-4 text-pink-500" />
+                <span className="text-xs text-gray-600">スペック</span>
+              </div>
+              <div className="text-lg font-bold text-gray-900">{survey.specScore}</div>
+            </div>
+          </div>
+
+          <div className="mt-3 flex justify-end">
+            <button
+              type="button"
+              onClick={handleShare}
+              className="inline-flex items-center gap-2 rounded-full border border-pink-100 bg-white/70 px-3 py-1 text-xs font-semibold text-pink-700 shadow-sm transition hover:bg-white"
+            >
+              <Share2 className="h-4 w-4" />
+              共有
+            </button>
+          </div>
+        </section>
 
         <section className="grid gap-4 md:grid-cols-2">
-          <CommentCard title="客層について" body={survey.customerComment} />
-          <CommentCard title="スタッフについて" body={survey.staffComment} />
-          <CommentCard title="環境について" body={survey.workEnvironmentComment} />
-          <CommentCard title="その他" body={survey.etcComment} />
+          {renderCommentCards({
+            customer: survey.customerComment,
+            staff: survey.staffComment,
+            environment: survey.workEnvironmentComment,
+            etc: survey.etcComment,
+          })}
         </section>
 
         {galleryItems.length > 0 && (
@@ -298,6 +285,32 @@ function buildLimitedComment(parts: Array<string | null | undefined>, limit: num
   return combined;
 }
 
+function isCommentAvailable(text?: string | null) {
+  return Boolean(text && text.trim().length > 0);
+}
+
+function renderCommentCards(comments: {
+  customer?: string | null;
+  staff?: string | null;
+  environment?: string | null;
+  etc?: string | null;
+}) {
+  const entries = [
+    { key: "customer", title: "客層について", body: comments.customer },
+    { key: "staff", title: "スタッフについて", body: comments.staff },
+    { key: "environment", title: "環境について", body: comments.environment },
+    { key: "etc", title: "その他", body: comments.etc },
+  ].filter((entry) => isCommentAvailable(entry.body));
+
+  if (entries.length === 1) {
+    return <CommentCard body={entries[0].body} hideTitle />;
+  }
+
+  return entries.map((entry) => (
+    <CommentCard key={entry.key} title={entry.title} body={entry.body} />
+  ));
+}
+
 function InfoPill({ label, value }: { label: string; value: string }) {
   return (
     <span className="rounded-full bg-pink-50 px-3 py-1 font-semibold text-slate-800 border border-pink-100">
@@ -306,10 +319,18 @@ function InfoPill({ label, value }: { label: string; value: string }) {
   );
 }
 
-function CommentCard({ title, body }: { title: string; body?: string | null }) {
+function CommentCard({
+  title,
+  body,
+  hideTitle = false,
+}: {
+  title?: string;
+  body?: string | null;
+  hideTitle?: boolean;
+}) {
   return (
     <div className="rounded-2xl border border-pink-100 bg-white/95 p-5 shadow-sm space-y-2">
-      <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
+      {hideTitle ? null : <h2 className="text-lg font-semibold text-slate-900">{title}</h2>}
       <p className="text-sm text-slate-700 whitespace-pre-wrap break-words">{body || "コメントなし"}</p>
     </div>
   );
