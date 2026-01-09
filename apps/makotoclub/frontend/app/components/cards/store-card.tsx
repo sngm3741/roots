@@ -1,8 +1,6 @@
 import type { StoreSummary } from "../../types/store";
+import { CircleDollarSign, Clock, FileText, MapPin, Store } from "lucide-react";
 import { RatingStars } from "../ui/rating-stars";
-import { AverageEarningIcon, WaitTimeIcon } from "../ui/survey-metric-icons";
-import { CardTypeChip } from "../ui/card-type-chip";
-import { SurveyCount } from "../ui/survey-count";
 import { formatDecimal1 } from "../../lib/number-format";
 
 type Props = {
@@ -10,25 +8,9 @@ type Props = {
   className?: string;
 };
 
-function MapPinIcon() {
-  return (
-    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M12 21s-6-5.686-6-10a6 6 0 1 1 12 0c0 4.314-6 10-6 10Z" />
-      <circle cx="12" cy="11" r="2" />
-    </svg>
-  );
-}
-
-function Badge({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="inline-flex items-center justify-center rounded-md border px-2 py-1 text-xs font-semibold bg-sky-500/50 text-slate-100 border-slate-100">
-      {children}
-    </span>
-  );
-}
-
 export function StoreCard({ store, className }: Props) {
   const href = `/stores/${store.id}`;
+  const rating = typeof store.averageRating === "number" ? store.averageRating : 0;
   const earningLabel =
     store.averageEarningLabel ||
     (Number.isFinite(store.averageEarning) ? `${(store.averageEarning / 10000).toFixed(0)}万円` : "-");
@@ -39,53 +21,65 @@ export function StoreCard({ store, className }: Props) {
   return (
     <a
       href={href}
-      className={`w-full bg-sky-50/60 rounded-2xl p-6 border border-sky-100 hover:shadow-lg hover:border-sky-200 transition-all duration-200 text-left ${className ?? ""}`}
+      className={`w-full rounded-2xl border border-pink-100/60 bg-gradient-to-br from-pink-50 to-rose-50 p-4 text-left shadow-sm transition-shadow hover:shadow-md ${className ?? ""}`}
       aria-label={`${store.storeName}${store.branchName ? ` ${store.branchName}` : ""} の詳細へ`}
     >
       <div className="mb-3">
-        <div className="flex items-start justify-between gap-3 mb-2">
-          <CardTypeChip label="店舗" variant="store" />
-          <Badge>{store.category}</Badge>
-        </div>
-        <div className="flex items-start gap-2 text-sm text-gray-600 mb-1 pt-2">
-          <span className="mt-[1px]">
-            <MapPinIcon />
+        <div className="mb-3 flex items-center justify-between">
+          <div className="flex items-center gap-1.5">
+            <div className="rounded-lg bg-pink-500 p-1.5 text-white">
+              <Store className="h-4 w-4" strokeWidth={2.5} />
+            </div>
+            <span className="text-xs font-bold text-pink-700">店舗</span>
+          </div>
+          <span className="rounded-full bg-pink-500 px-2.5 py-1 text-xs font-bold text-white">
+            {store.category}
           </span>
-          <span>{store.prefecture}</span>
-          {store.area && <span className="text-gray-400">・</span>}
-          {store.area && <span>{store.area}</span>}
         </div>
-        <h3 className="text-gray-900 mb-1 font-bold text-2xl">
+
+        <h3 className="mb-1.5 text-xl font-bold leading-tight text-gray-900">
           {store.storeName}
-          {store.branchName && <span className="text-gray-600 ml-1 text-xl">{store.branchName}</span>}
+          {store.branchName && (
+            <span className="ml-1 text-base font-semibold text-gray-500">{store.branchName}</span>
+          )}
         </h3>
-        <div className="flex items-center gap-2 text-sm text-gray-600">
-          <RatingStars value={store.averageRating ?? 0} size="lg" />
-          <span className="text-2xl font-bold text-red-500">
-            {(store.averageRating ?? 0).toFixed(1)}
-          </span>
+
+        <div className="mb-4 flex items-center gap-1 text-xs text-gray-600">
+          <MapPin className="h-3.5 w-3.5" />
+          <span>{store.prefecture}</span>
+        </div>
+
+        <div className="rounded-xl bg-white/70 p-3">
+          <div className="flex items-center justify-between pr-2">
+            <div className="flex items-center gap-2">
+              <RatingStars value={rating} size="lg" />
+            </div>
+            <span className="text-2xl font-bold text-pink-500">{rating.toFixed(1)}</span>
+          </div>
         </div>
       </div>
 
-      <div className="space-y-2 mb-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5 text-sm text-gray-600">
-            <AverageEarningIcon className="h-4 w-4 text-white" />
-            <span>平均稼ぎ</span>
+      <div className="mb-3 grid grid-cols-2 gap-2.5">
+        <div className="flex flex-col items-start rounded-xl bg-white/70 p-3">
+          <div className="mb-1.5 flex items-center gap-1.5">
+            <CircleDollarSign className="h-4 w-4 -translate-y-px text-pink-500" />
+            <span className="text-xs text-gray-600">平均稼ぎ</span>
           </div>
-          <span className="text-sm text-gray-900">{earningLabel}</span>
+          <div className="text-lg font-bold text-gray-900">{earningLabel}</div>
         </div>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5 text-sm text-gray-600">
-            <WaitTimeIcon className="h-4 w-4 text-pink-600" />
-            <span>平均待機時間</span>
+        <div className="flex flex-col items-start rounded-xl bg-white/70 p-3">
+          <div className="mb-1.5 flex items-center gap-1.5">
+            <Clock className="h-4 w-4 -translate-y-px text-pink-500" />
+            <span className="text-xs text-gray-600">平均待機</span>
           </div>
-          <span className="text-sm text-gray-900">{waitLabel}</span>
+          <div className="text-lg font-bold text-gray-900">{waitLabel}</div>
         </div>
       </div>
 
-      <div className="pt-3 border-t border-gray-100">
-        <SurveyCount count={store.surveyCount} />
+      <div className="flex items-center justify-center gap-1.5 border-t border-pink-200/60 pt-2.5">
+        <FileText className="h-4 w-4 text-pink-500" />
+        <span className="text-xs text-gray-700">アンケート</span>
+        <span className="text-sm font-bold text-pink-600">{store.surveyCount}件</span>
       </div>
     </a>
   );

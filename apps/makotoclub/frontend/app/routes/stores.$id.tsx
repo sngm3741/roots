@@ -1,4 +1,5 @@
 import { type LoaderFunctionArgs, useLoaderData } from "react-router";
+import { useMemo, useState } from "react";
 import { Button } from "../components/ui/button";
 import { fetchStoreDetail } from "../lib/stores.server";
 import { getApiBaseUrl } from "../config.server";
@@ -10,35 +11,33 @@ import type { ImageGalleryItem } from "../components/ui/image-gallery";
 import { SurveyCount } from "../components/ui/survey-count";
 import { PostIcon } from "../components/ui/post-icon";
 import { formatDecimal1 } from "../lib/number-format";
+import {
+  Briefcase,
+  Building2,
+  CircleDollarSign,
+  Clock,
+  MapPin,
+  Mail,
+  MessageCircle,
+  Phone,
+  Store,
+  Globe,
+  Tag,
+  Timer,
+} from "lucide-react";
+import { SurveyCard } from "../components/cards/survey-card";
 
 type LoaderData = {
   store: StoreDetail | null;
 };
 
-function formatVisitedPeriod(value: string | null | undefined) {
-  if (!value) {
-    return "-";
-  }
-  const matched = /^(\d{4})-(\d{1,2})$/.exec(value);
-  if (!matched) {
-    return value;
-  }
-  const year = matched[1];
-  const month = Number(matched[2]);
-  if (!Number.isFinite(month) || month <= 0) {
-    return value;
-  }
-  return `${year}年${month}月`;
-}
+const SORT_OPTIONS = [
+  { value: "newest", label: "新着順" },
+  { value: "earning", label: "稼ぎ順" },
+  { value: "rating", label: "満足度順" },
+] as const;
 
-function MapPinIcon() {
-  return (
-    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M12 21s-6-5.686-6-10a6 6 0 1 1 12 0c0 4.314-6 10-6 10Z" />
-      <circle cx="12" cy="11" r="2" />
-    </svg>
-  );
-}
+type SortKey = (typeof SORT_OPTIONS)[number]["value"];
 
 export async function loader({ params, context, request }: LoaderFunctionArgs) {
   const apiBaseUrl = getApiBaseUrl(context.cloudflare?.env ?? {}, new URL(request.url).origin);
@@ -56,6 +55,9 @@ export async function loader({ params, context, request }: LoaderFunctionArgs) {
 
 export default function StoreDetailPage() {
   const { store } = useLoaderData() as LoaderData;
+  const [sort, setSort] = useState<SortKey>("newest");
+  const [page, setPage] = useState(1);
+  const pageSize = 5;
 
   if (!store) {
     return (
@@ -86,6 +88,37 @@ export default function StoreDetailPage() {
     }));
   });
 
+  const surveys = store.surveys ?? [];
+  const totalSurveys = surveys.length;
+  const sortedSurveys = useMemo(() => {
+    const copy = [...surveys];
+    if (sort === "earning") {
+      copy.sort((a, b) => (b.averageEarning ?? 0) - (a.averageEarning ?? 0));
+      return copy;
+    }
+    if (sort === "rating") {
+      copy.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
+      return copy;
+    }
+    copy.sort((a, b) => {
+      const aTime = Date.parse(a.visitedPeriod ?? "") || 0;
+      const bTime = Date.parse(b.visitedPeriod ?? "") || 0;
+      return bTime - aTime;
+    });
+    return copy;
+  }, [surveys, sort]);
+  const totalPages = Math.max(1, Math.ceil(totalSurveys / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const pagedSurveys = sortedSurveys.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize,
+  );
+
+  const handleSortChange = (value: SortKey) => {
+    setSort(value);
+    setPage(1);
+  };
+
   return (
     <main className="mx-auto max-w-5xl px-4 pb-12 pt-6 space-y-8">
       <BreadcrumbLabelSetter
@@ -94,24 +127,67 @@ export default function StoreDetailPage() {
         storeId={store.id}
       />
 
-      <div className="rounded-[24px] border border-sky-100 bg-sky-50/60 p-6 shadow-[0_24px_60px_rgba(15,23,42,0.08)]">
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <h1 className="text-3xl font-bold text-slate-900">
-              {store.storeName}
-              {store.branchName ? ` ${store.branchName}` : ""}
-            </h1>
-            <div className="flex items-center gap-2 text-sm text-slate-600">
-              <RatingStars value={store.averageRating ?? 0} size="lg" />
-              <span className="text-3xl font-bold text-red-500">
+      <div className="space-y-6">
+        <section className="rounded-2xl border border-pink-100/60 bg-gradient-to-br from-pink-50 to-rose-50 p-4 shadow-sm">
+          <div className="mb-3 flex items-center justify-between">
+            <div className="flex items-center gap-1.5">
+              <div className="rounded-lg bg-pink-500 p-1.5 text-white">
+                <Store className="h-4 w-4" strokeWidth={2.5} />
+              </div>
+              <span className="text-xs font-bold text-pink-700">店舗</span>
+            </div>
+            {store.category ? (
+              <span className="rounded-full bg-pink-500 px-2.5 py-1 text-xs font-bold text-white">
+                {store.category}
+              </span>
+            ) : null}
+          </div>
+
+          <h1 className="mb-1.5 text-xl font-bold leading-tight text-gray-900">
+            {store.storeName}
+            {store.branchName ? ` ${store.branchName}` : ""}
+          </h1>
+
+          <div className="mb-3 flex items-center gap-1 text-xs text-gray-600">
+            <MapPin className="h-3.5 w-3.5" />
+            <span>{store.prefecture}</span>
+            {store.area ? <span className="text-gray-400">・</span> : null}
+            {store.area ? <span>{store.area}</span> : null}
+          </div>
+
+          <div className="rounded-xl bg-white/70 p-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <RatingStars value={store.averageRating ?? 0} size="lg" />
+              </div>
+              <span className="text-2xl font-bold text-pink-500">
                 {(store.averageRating ?? 0).toFixed(1)}
               </span>
             </div>
-            <SurveyCount count={store.surveys?.length ?? 0} />
           </div>
 
-          <div className="w-full rounded-2xl border border-pink-200 bg-gradient-to-br from-pink-50 to-white p-4 shadow-sm shadow-pink-200">
-            <Button asChild className="w-full rounded-full py-6 text-base font-semibold">
+          <div className="mt-3 grid grid-cols-2 gap-2.5">
+            <div className="flex flex-col items-start rounded-xl bg-white/70 p-3">
+              <div className="mb-1.5 flex items-center gap-1.5">
+                <CircleDollarSign className="h-4 w-4 -translate-y-px text-pink-500" />
+                <span className="text-xs text-gray-600">平均稼ぎ</span>
+              </div>
+              <div className="text-lg font-bold text-gray-900">
+                {store.averageEarningLabel ?? "-"}
+              </div>
+            </div>
+            <div className="flex flex-col items-start rounded-xl bg-white/70 p-3">
+              <div className="mb-1.5 flex items-center gap-1.5">
+                <Clock className="h-4 w-4 -translate-y-px text-pink-500" />
+                <span className="text-xs text-gray-600">平均待機</span>
+              </div>
+              <div className="text-lg font-bold text-gray-900">{waitLabel}</div>
+            </div>
+          </div>
+
+          <div className="mt-3 flex items-center justify-between border-t border-pink-200/60 pt-2.5">
+            <SurveyCount count={store.surveys?.length ?? 0} />
+            <Button asChild size="sm" className="rounded-full px-4">
               <a
                 href={`/new?${new URLSearchParams({
                   storeName: store.storeName,
@@ -120,87 +196,77 @@ export default function StoreDetailPage() {
                   industry: store.category ?? "",
                   genre: store.genre ?? "",
                 }).toString()}`}
-                className="flex items-center justify-center gap-3"
+                className="flex items-center gap-2"
               >
-                <PostIcon className="h-5 w-5" />
-                <span className="flex flex-col items-center leading-tight">
-                  <span className="text-xs font-medium">この店舗のアンケートを</span>
-                  <span className="text-base font-semibold">投稿する</span>
-                </span>
+                <PostIcon className="h-4 w-4" />
+                投稿する
               </a>
             </Button>
-            <div className="mt-2 px-2 text-xs font-semibold text-pink-700">
-              <p>アンケートの投稿で</p>
-              <p>PayPayプレゼントキャンペーン中 🎁</p>
-            </div>
           </div>
+        </section>
 
-          <section className="rounded-2xl border border-pink-100 bg-white/90 p-5 shadow-sm space-y-3">
-            <h2 className="text-lg font-semibold text-slate-900">店舗基本情報</h2>
-            <div className="text-sm text-slate-700 space-y-2">
-              <div className="grid gap-2 md:grid-cols-2">
-                <InfoChip label="都道府県" value={store.prefecture} />
-                {store.area && <InfoChip label="エリア" value={store.area} />}
-                <InfoChip label="業種" value={store.category ?? "-"} />
-                {store.genre && <InfoChip label="ジャンル" value={store.genre} />}
-                <InfoChip label="稼ぎ平均" value={store.averageEarningLabel ?? "-"} />
-                <InfoChip label="待機時間" value={waitLabel} />
-                {store.businessHours && (
-                  <InfoChip
-                    label="営業時間"
-                    value={`${store.businessHours.open} - ${store.businessHours.close}`}
-                  />
-                )}
-              </div>
-            </div>
-          </section>
-        </div>
+        <section className="overflow-hidden rounded-2xl border border-pink-100/70 bg-white shadow-[0_14px_40px_rgba(15,23,42,0.06)]">
+          <div className="bg-gradient-to-r from-pink-200 to-rose-200 px-5 py-4">
+            <h2 className="text-lg font-bold text-pink-600">店舗基本情報</h2>
+          </div>
+          <div className="divide-y divide-gray-100">
+            <InfoRow icon={<Building2 className="h-5 w-5" />} label="都道府県" value={store.prefecture} />
+            {store.area && (
+              <InfoRow icon={<MapPin className="h-5 w-5" />} label="エリア" value={store.area} />
+            )}
+            <InfoRow
+              icon={<Briefcase className="h-5 w-5" />}
+              label="業種"
+              value={store.category ?? "-"}
+            />
+            {store.genre && (
+              <InfoRow icon={<Tag className="h-5 w-5" />} label="ジャンル" value={store.genre} />
+            )}
+            <InfoRow
+              icon={<Timer className="h-5 w-5" />}
+              label="営業時間"
+              value={
+                store.businessHours
+                  ? `${store.businessHours.open} - ${store.businessHours.close}`
+                  : "-"
+              }
+            />
+            <InfoRow icon={<Phone className="h-5 w-5" />} label="TEL" value="-" />
+            <InfoRow icon={<Mail className="h-5 w-5" />} label="Email" value="-" />
+            <InfoRow icon={<Globe className="h-5 w-5" />} label="公式HP" value="-" />
+            <InfoRow icon={<MessageCircle className="h-5 w-5" />} label="お店からのコメント" value="-" />
+          </div>
+        </section>
       </div>
 
       <section className="space-y-4">
-        <h2 className="text-lg font-semibold text-slate-900">アンケート</h2>
-        <div className="grid gap-3 md:grid-cols-2">
-          {store.surveys?.length ? (
-            store.surveys.map((survey) => (
-              <article
-                key={survey.id}
-                className="rounded-2xl border border-pink-100 bg-white/95 p-4 shadow-[0_14px_40px_rgba(15,23,42,0.08)] space-y-2"
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="text-sm font-semibold text-slate-700">
+            {totalSurveys.toLocaleString("ja-JP")} 件
+          </div>
+          <div className="flex flex-wrap items-center gap-2 text-sm text-slate-700">
+            {SORT_OPTIONS.map((opt) => (
+              <Button
+                key={opt.value}
+                type="button"
+                variant={sort === opt.value ? "primary" : "ghost"}
+                size="sm"
+                onClick={() => handleSortChange(opt.value)}
               >
-                <div className="space-y-1 text-sm text-slate-600">
-                  <span className="font-semibold text-slate-700">
-                    {formatVisitedPeriod(survey.visitedPeriod)}
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg font-bold text-pink-700 pt-2">
-                      {(survey.rating ?? 0).toFixed(1)}
-                    </span>
-                    <RatingStars value={survey.rating ?? 0} />
-                  </div>
-                </div>
-                <div className="flex flex-wrap gap-2 text-xs text-slate-600">
-                  <span className="rounded-full bg-pink-50 px-2.5 py-1 border border-pink-100">
-                    {survey.age}歳
-                  </span>
-                  <span className="rounded-full bg-pink-50 px-2.5 py-1 border border-pink-100">
-                    スペ{survey.specScore}
-                  </span>
-                  <span className="rounded-full bg-pink-50 px-2.5 py-1 border border-pink-100">
-                    アベ{survey.averageEarning}万
-                  </span>
-                  <span className="rounded-full bg-pink-50 px-2.5 py-1 border border-pink-100">
-                    {formatDecimal1(survey.waitTimeHours)}時間待機
-                  </span>
-                  <span className="rounded-full bg-pink-50 px-2.5 py-1 border border-pink-100">
-                    {survey.workType}
-                  </span>
-                </div>
-                <p className="text-sm text-slate-700 line-clamp-3">
-                  {survey.customerComment || survey.workEnvironmentComment || "コメントなし"}
-                </p>
-                <Button variant="ghost" size="sm" asChild>
-                  <a href={`/surveys/${survey.id}`}>詳しく読む</a>
-                </Button>
-              </article>
+                {opt.label}
+              </Button>
+            ))}
+          </div>
+        </div>
+        <div className="grid gap-3 md:grid-cols-2">
+          {totalSurveys ? (
+            pagedSurveys.map((survey) => (
+              <SurveyCard
+                key={survey.id}
+                survey={survey}
+                showStoreInfo={false}
+                commentAlwaysEllipsis
+              />
             ))
           ) : (
             <div className="space-y-3 rounded-2xl border border-pink-100 bg-white/95 p-4 shadow-sm">
@@ -210,6 +276,29 @@ export default function StoreDetailPage() {
               </Button>
             </div>
           )}
+        </div>
+        <div className="flex items-center justify-center gap-3 text-sm text-slate-700">
+          <Button
+            variant="ghost"
+            size="sm"
+            type="button"
+            disabled={currentPage <= 1}
+            onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+          >
+            前へ
+          </Button>
+          <span className="rounded-full border border-slate-100 bg-white/80 px-3 py-1 text-slate-800 shadow-sm">
+            {currentPage} / {totalPages}
+          </span>
+          <Button
+            variant="ghost"
+            size="sm"
+            type="button"
+            disabled={currentPage >= totalPages}
+            onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
+          >
+            次へ
+          </Button>
         </div>
       </section>
 
@@ -226,17 +315,23 @@ export default function StoreDetailPage() {
   );
 }
 
-function InfoChip({ label, value }: { label: string; value: string }) {
+function InfoRow({
+  icon,
+  label,
+  value,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+}) {
   return (
-    <div className="rounded-xl border border-slate-100 bg-slate-50 px-3 py-2 text-sm text-slate-800">
-      <div className="flex items-center gap-2">
-        <span
-          className="w-1/3 block font-semibold"
-          style={{ textAlign: "justify", textAlignLast: "justify" }}
-        >
-          {label}:
-        </span>
-        <span className="w-1/2 font-medium text-slate-700">{value}</span>
+    <div className="group flex items-start gap-3 px-5 py-4 transition-all hover:bg-pink-50/60">
+      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-pink-300 to-rose-300 text-white shadow-sm">
+        {icon}
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="mb-1 text-xs font-medium text-gray-500">{label}</div>
+        <div className="text-base font-semibold text-gray-900">{value}</div>
       </div>
     </div>
   );
