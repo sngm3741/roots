@@ -1,9 +1,12 @@
 import { type LoaderFunctionArgs, useLoaderData } from "react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "../components/ui/button";
+import { Pagination } from "../components/ui/pagination";
 import { fetchStoreDetail } from "../lib/stores.server";
+import { fetchStoreComments } from "../lib/comments.server";
 import { getApiBaseUrl } from "../config.server";
 import type { StoreDetail } from "../types/store";
+import type { StoreComment } from "../types/comment";
 import { RatingStars } from "../components/ui/rating-stars";
 import { BreadcrumbLabelSetter } from "../components/common/breadcrumb-label-setter";
 import { ImageGallery } from "../components/ui/image-gallery";
@@ -11,6 +14,9 @@ import type { ImageGalleryItem } from "../components/ui/image-gallery";
 import { SurveyCount } from "../components/ui/survey-count";
 import { PostIcon } from "../components/ui/post-icon";
 import { formatDecimal1 } from "../lib/number-format";
+import { buildLimitedComment } from "../lib/comment-text";
+import { CommentComposer } from "../components/comments/comment-composer";
+import { CommentList } from "../components/comments/comment-list";
 import {
   Briefcase,
   Building2,
@@ -29,6 +35,7 @@ import { SurveyCard } from "../components/cards/survey-card";
 
 type LoaderData = {
   store: StoreDetail | null;
+  comments: StoreComment[];
 };
 
 const SORT_OPTIONS = [
@@ -44,20 +51,36 @@ export async function loader({ params, context, request }: LoaderFunctionArgs) {
   const storeId = params.id!;
 
   let store: StoreDetail | null = null;
+  let comments: StoreComment[] = [];
   try {
     store = await fetchStoreDetail({ API_BASE_URL: apiBaseUrl }, storeId);
+    if (store?.id) {
+      comments = await fetchStoreComments({ API_BASE_URL: apiBaseUrl }, store.id);
+    }
   } catch (error) {
     console.error("Failed to load store detail", error);
   }
 
-  return Response.json({ store });
+  return Response.json({ store, comments });
 }
 
 export default function StoreDetailPage() {
-  const { store } = useLoaderData() as LoaderData;
+  const { store, comments: initialComments } = useLoaderData() as LoaderData;
   const [sort, setSort] = useState<SortKey>("newest");
   const [page, setPage] = useState(1);
   const pageSize = 5;
+  const [comments, setComments] = useState<StoreComment[]>(initialComments);
+  const [commentName, setCommentName] = useState("");
+  const [commentBody, setCommentBody] = useState("");
+  const [replyName, setReplyName] = useState("");
+  const [replyBody, setReplyBody] = useState("");
+  const [replyToId, setReplyToId] = useState<string | null>(null);
+  const [commentError, setCommentError] = useState<string | null>(null);
+  const [isCommentSubmitting, setIsCommentSubmitting] = useState(false);
+  const commentsEndRef = useRef<HTMLDivElement | null>(null);
+  const [commentPage, setCommentPage] = useState(1);
+  const commentPageSize = 5;
+  const commentMaxChars = 1000;
 
   if (!store) {
     return (
@@ -66,6 +89,10 @@ export default function StoreDetailPage() {
       </main>
     );
   }
+
+  useEffect(() => {
+    setComments(initialComments);
+  }, [initialComments]);
 
   const waitLabel =
     store.waitTimeLabel ??
@@ -114,10 +141,162 @@ export default function StoreDetailPage() {
     currentPage * pageSize,
   );
 
+  const orderedComments = useMemo(() => {
+    const list = [...comments];
+    list.sort((a, b) => {
+      const aSeq = typeof a.seq === "number" ? a.seq : null;
+      const bSeq = typeof b.seq === "number" ? b.seq : null;
+      if (aSeq !== null && bSeq !== null) {
+        return aSeq - bSeq;
+      }
+      const aTime = Date.parse(a.createdAt) || 0;
+      const bTime = Date.parse(b.createdAt) || 0;
+      return aTime - bTime;
+    });
+    return list;
+  }, [comments]);
+
+  const totalCommentPages = Math.max(1, Math.ceil(orderedComments.length / commentPageSize));
+  const pagedComments = useMemo(() => {
+    const start = (commentPage - 1) * commentPageSize;
+    return orderedComments.slice(start, start + commentPageSize);
+  }, [orderedComments, commentPage, commentPageSize]);
+
+  const commentsByParent = useMemo(() => {
+    const map = new Map<string | null, StoreComment[]>();
+    for (const comment of comments) {
+      const key = comment.parentId ?? null;
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(comment);
+    }
+    for (const list of map.values()) {
+      list.sort((a, b) => {
+        const aTime = Date.parse(a.createdAt) || 0;
+        const bTime = Date.parse(b.createdAt) || 0;
+        return aTime - bTime;
+      });
+    }
+    return map;
+  }, [comments]);
+
+  const replyCountById = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const [key, list] of commentsByParent.entries()) {
+      if (key) {
+        map.set(key, list.length);
+      }
+    }
+    return map;
+  }, [commentsByParent]);
+
+  const commentNumberById = useMemo(() => {
+    const map = new Map<string, number>();
+    orderedComments.forEach((comment, index) => {
+      if (typeof comment.seq === "number") {
+        map.set(comment.id, comment.seq);
+      } else {
+        map.set(comment.id, index + 1);
+      }
+    });
+    return map;
+  }, [orderedComments]);
+
+  useEffect(() => {
+    if (commentPage > totalCommentPages) {
+      setCommentPage(totalCommentPages);
+    }
+  }, [commentPage, totalCommentPages]);
+
+  const submitComment = async (params: {
+    body: string;
+    authorName: string;
+    parentId?: string | null;
+  }) => {
+    const body = params.body.trim();
+    const authorName = params.authorName.trim();
+    if (!body) {
+      setCommentError("コメント本文が必要です。");
+      return;
+    }
+    if (body.length > 1000) {
+      setCommentError("コメントは1000文字以内で入力してください。");
+      return;
+    }
+    if (authorName.length > 40) {
+      setCommentError("ハンドルネームは40文字以内で入力してください。");
+      return;
+    }
+    setCommentError(null);
+    setIsCommentSubmitting(true);
+    try {
+      const res = await fetch(`/api/stores/${store.id}/comments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          body,
+          authorName: authorName || undefined,
+          parentId: params.parentId ?? undefined,
+        }),
+      });
+      if (!res.ok) {
+        const msg = await res.text();
+        setCommentError(msg || "投稿に失敗しました。");
+        setIsCommentSubmitting(false);
+        return;
+      }
+      const data = (await res.json()) as StoreComment;
+      setComments((prev) => {
+        const next = [...prev, data];
+        const nextPages = Math.max(1, Math.ceil(next.length / commentPageSize));
+        setCommentPage(nextPages);
+        return next;
+      });
+      setCommentBody("");
+      setCommentName("");
+      setReplyBody("");
+      setReplyName("");
+      setReplyToId(null);
+      requestAnimationFrame(() => {
+        commentsEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+        commentsEndRef.current?.focus();
+      });
+    } catch {
+      setCommentError("投稿に失敗しました。");
+    } finally {
+      setIsCommentSubmitting(false);
+    }
+  };
+
   const handleSortChange = (value: SortKey) => {
     setSort(value);
     setPage(1);
   };
+
+  const handleReply = (id: string) => {
+    setReplyToId(id);
+    setReplyName("");
+    setReplyBody("");
+    setCommentError(null);
+  };
+
+  const renderReplyForm = (comment: StoreComment) => (
+    <div className="mt-3 space-y-2">
+      <div className="text-xs font-semibold text-slate-600">返信</div>
+      <CommentComposer
+        variant="reply"
+        name={replyName}
+        body={replyBody}
+        onNameChange={setReplyName}
+        onBodyChange={setReplyBody}
+        onSubmit={() =>
+          submitComment({ body: replyBody, authorName: replyName, parentId: comment.id })
+        }
+        isSubmitting={isCommentSubmitting}
+        bodyMaxLength={commentMaxChars}
+        submitLabel="返信投稿"
+      />
+    </div>
+  );
 
   return (
     <main className="mx-auto max-w-5xl px-4 pb-12 pt-6 space-y-8">
@@ -277,29 +456,12 @@ export default function StoreDetailPage() {
             </div>
           )}
         </div>
-        <div className="flex items-center justify-center gap-3 text-sm text-slate-700">
-          <Button
-            variant="ghost"
-            size="sm"
-            type="button"
-            disabled={currentPage <= 1}
-            onClick={() => setPage((prev) => Math.max(1, prev - 1))}
-          >
-            前へ
-          </Button>
-          <span className="rounded-full border border-slate-100 bg-white/80 px-3 py-1 text-slate-800 shadow-sm">
-            {currentPage} / {totalPages}
-          </span>
-          <Button
-            variant="ghost"
-            size="sm"
-            type="button"
-            disabled={currentPage >= totalPages}
-            onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
-          >
-            次へ
-          </Button>
-        </div>
+        <Pagination
+          variant="simple"
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setPage}
+        />
       </section>
 
       {photoItems.length > 0 && (
@@ -311,6 +473,60 @@ export default function StoreDetailPage() {
           <ImageGallery items={photoItems} />
         </section>
       )}
+
+      <section className="space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-lg font-semibold text-slate-900">コメント</h2>
+          <span className="text-xs text-slate-500">
+            {orderedComments.length.toLocaleString("ja-JP")}件
+          </span>
+        </div>
+
+        {commentError ? (
+          <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
+            {commentError}
+          </div>
+        ) : null}
+
+        <div className="rounded-2xl border border-pink-100 bg-white/95 p-4 shadow-sm">
+          <CommentComposer
+            name={commentName}
+            body={commentBody}
+            onNameChange={setCommentName}
+            onBodyChange={setCommentBody}
+            onSubmit={() =>
+              submitComment({ body: commentBody, authorName: commentName, parentId: null })
+            }
+            isSubmitting={isCommentSubmitting}
+            bodyMaxLength={commentMaxChars}
+            submitLabel="コメント投稿"
+          />
+        </div>
+
+        {orderedComments.length > 0 ? (
+          <>
+            <CommentList
+              comments={pagedComments}
+              commentNumberById={commentNumberById}
+              replyCountById={replyCountById}
+              activeReplyId={replyToId}
+              onReply={handleReply}
+              renderReplyForm={renderReplyForm}
+            />
+            <Pagination
+              currentPage={commentPage}
+              totalPages={totalCommentPages}
+              onPageChange={setCommentPage}
+            />
+          </>
+        ) : (
+          <div className="rounded-2xl border border-pink-100 bg-white/95 p-4 text-sm text-slate-600">
+            まだコメントがありません。
+          </div>
+        )}
+
+        <div ref={commentsEndRef} tabIndex={-1} />
+      </section>
     </main>
   );
 }
@@ -335,20 +551,4 @@ function InfoRow({
       </div>
     </div>
   );
-}
-
-function buildLimitedComment(parts: Array<string | null | undefined>, limit: number) {
-  const cleaned = parts
-    .map((text) => (text ?? "").trim())
-    .filter((text) => text.length > 0);
-  if (cleaned.length === 0) return "";
-  let combined = "";
-  for (const text of cleaned) {
-    const next = combined ? `${combined}\n${text}` : text;
-    if (next.length > limit) {
-      return combined || text;
-    }
-    combined = next;
-  }
-  return combined;
 }

@@ -29,18 +29,6 @@ export interface SurveySummary {
 
 export type SurveyDetail = SurveySummary;
 
-export interface SurveyComment {
-  id: string;
-  surveyId: string;
-  parentId?: string | null;
-  authorName?: string | null;
-  body: string;
-  goodCount?: number;
-  badCount?: number;
-  createdAt: string;
-  deletedAt?: string | null;
-}
-
 export interface SurveyListResponse {
   items: SurveySummary[];
   page: number;

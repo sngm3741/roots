@@ -74,9 +74,10 @@ type SurveyRow = {
   updated_at: string;
 };
 
-type SurveyCommentRow = {
+type StoreCommentRow = {
   id: string;
-  survey_id: string;
+  store_id: string;
+  seq?: number | null;
   parent_id?: string | null;
   author_name?: string | null;
   body: string;
@@ -84,6 +85,18 @@ type SurveyCommentRow = {
   bad_count?: number | null;
   created_at: string;
   deleted_at?: string | null;
+};
+
+type StoreCommentDetailRow = StoreCommentRow & {
+  store_name: string;
+  store_branch?: string | null;
+  store_prefecture: string;
+  store_area?: string | null;
+};
+
+type StoreCommentParentRow = StoreCommentRow;
+type StoreCommentWithCountRow = StoreCommentRow & {
+  reply_count?: number | null;
 };
 
 type StoreStats = {
@@ -169,6 +182,17 @@ const buildOgpComment = (
   return sliced.join("\n");
 };
 
+const buildOgpMessage = (body: string, limit: number, maxLines: number) => {
+  const base = (body ?? "").trim() || "コメントなし";
+  const trimmed = truncateText(base, limit);
+  const lines = trimmed.split("\n");
+  if (lines.length <= maxLines) return trimmed;
+  const sliced = lines.slice(0, maxLines);
+  const last = sliced[sliced.length - 1] ?? "";
+  sliced[sliced.length - 1] = last.endsWith("...") ? last : `${last}...`;
+  return sliced.join("\n");
+};
+
 const mapStore = (row: StoreRow, stats?: StoreStats) => {
   const averageEarning = stats?.averageEarning ?? row.avg_earning ?? 0;
   const averageRating = stats?.averageRating ?? row.avg_rating ?? 0;
@@ -242,9 +266,10 @@ const mapSurvey = (row: SurveyRow) => {
   };
 };
 
-const mapSurveyComment = (row: SurveyCommentRow) => ({
+const mapStoreComment = (row: StoreCommentRow) => ({
   id: row.id,
-  surveyId: row.survey_id,
+  storeId: row.store_id,
+  seq: row.seq ?? undefined,
   parentId: row.parent_id ?? null,
   authorName: row.author_name ?? null,
   body: row.body,
@@ -565,6 +590,162 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
     }
   }
 
+  // GET /api/og/comments/:id -> OGP画像生成
+  if (pathname.startsWith("/api/og/comments/") && request.method === "GET") {
+    try {
+      if (!env.DB) {
+        return new Response("DBが設定されていません。", { status: 500 });
+      }
+      if (!bucket) {
+        return new Response("R2が設定されていません。", { status: 500 });
+      }
+      const id = pathname.replace("/api/og/comments/", "").trim();
+      if (!id) {
+        return new Response("コメントIDが指定されていません。", { status: 400 });
+      }
+
+      const cacheKey = `ogp/comments/${id}.png`;
+      const cached = await bucket.get(cacheKey);
+      if (cached) {
+        const headers = new Headers();
+        headers.set("Content-Type", cached.httpMetadata?.contentType ?? "image/png");
+        headers.set("Cache-Control", "public, max-age=86400");
+        return new Response(cached.body ?? cached, { headers });
+      }
+
+      const row = await env.DB.prepare(
+        `SELECT sc.body, s.name AS store_name, s.branch_name AS store_branch
+           FROM store_comments sc
+           JOIN stores s ON sc.store_id = s.id
+          WHERE sc.id = ? AND sc.deleted_at IS NULL AND s.deleted_at IS NULL`,
+      )
+        .bind(id)
+        .first();
+
+      if (!row) {
+        return new Response("コメントが見つかりませんでした。", { status: 404 });
+      }
+
+      const storeName = row.store_name as string;
+      const storeBranch = row.store_branch as string | null;
+      const commentText = buildOgpMessage(String(row.body ?? ""), 220, 8);
+      const fontData = await loadOgFontData(env, new URL(request.url).origin);
+      await ensureResvg();
+
+      const svg = await satori(
+        createElement(
+          "div",
+          {
+            style: {
+              width: "1200px",
+              height: "630px",
+              display: "flex",
+              background: "#fdf2f8",
+              padding: "32px",
+              fontFamily: "Noto Sans JP",
+            },
+          },
+          createElement(
+            "div",
+            {
+              style: {
+                width: "100%",
+                height: "100%",
+                background: "#ffffff",
+                borderRadius: "28px",
+                border: "2px solid #f9a8d4",
+                padding: "40px",
+                display: "flex",
+                flexDirection: "column",
+                gap: "18px",
+              },
+            },
+            createElement(
+              "div",
+              {
+                style: {
+                  fontSize: "24px",
+                  color: "#db2777",
+                  fontWeight: 700,
+                  letterSpacing: "0.02em",
+                },
+              },
+              "#みんなのコメント",
+            ),
+            createElement(
+              "div",
+              {
+                style: {
+                  fontSize: "22px",
+                  color: "#475569",
+                },
+              },
+              `${storeName}${storeBranch ? ` ${storeBranch}` : ""}`,
+            ),
+            createElement(
+              "div",
+              {
+                style: {
+                  flex: 1,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  textAlign: "center",
+                  color: "#334155",
+                  fontSize: "30px",
+                  lineHeight: 1.6,
+                  whiteSpace: "pre-wrap",
+                },
+              },
+              commentText,
+            ),
+          ),
+        ),
+        {
+          width: 1200,
+          height: 630,
+          fonts: [
+            {
+              name: "Noto Sans JP",
+              data: fontData,
+              weight: 400,
+              style: "normal",
+            },
+          ],
+        },
+      );
+
+      const resvg = new Resvg(svg);
+      const pngData = resvg.render();
+      const pngBuffer = pngData.asPng();
+      const arrayBuffer = new ArrayBuffer(pngBuffer.length);
+      new Uint8Array(arrayBuffer).set(pngBuffer);
+      const pngBlob = new Blob([arrayBuffer], { type: "image/png" });
+
+      await bucket.put(cacheKey, pngBlob, {
+        httpMetadata: { contentType: "image/png" },
+      });
+
+      return new Response(pngBlob, {
+        headers: {
+          "Content-Type": "image/png",
+          "Cache-Control": "public, max-age=86400",
+        },
+      });
+    } catch (error) {
+      console.error("OGP画像の生成に失敗しました", error);
+      const message =
+        error instanceof Error ? error.message : "原因不明のエラーが発生しました。";
+      const debug = new URL(request.url).searchParams.get("debug");
+      if (debug === "1") {
+        return new Response(`OGP画像の生成に失敗しました。詳細: ${message}`, {
+          status: 500,
+        });
+      }
+      return new Response("OGP画像の生成に失敗しました。", { status: 500 });
+    }
+  }
+
   // POST /api/uploads (multipart, single file)
   if (pathname === "/api/uploads" && request.method === "POST") {
     if (!bucket) {
@@ -696,20 +877,20 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
     });
   }
 
-  // GET/POST /api/surveys/:id/comments（SNSコメント）
-  const commentMatch = pathname.match(/^\/api\/surveys\/([^/]+)\/comments$/);
+  // GET/POST /api/stores/:id/comments（SNSコメント）
+  const commentMatch = pathname.match(/^\/api\/stores\/([^/]+)\/comments$/);
   if (commentMatch) {
-    const surveyId = commentMatch[1];
+    const storeId = commentMatch[1];
     if (request.method === "GET") {
       const rows = await env.DB.prepare(
         `SELECT *
-         FROM survey_comments
-         WHERE survey_id = ? AND deleted_at IS NULL
-         ORDER BY created_at DESC`,
+         FROM store_comments
+         WHERE store_id = ? AND deleted_at IS NULL
+         ORDER BY seq ASC`,
       )
-        .bind(surveyId)
+        .bind(storeId)
         .all();
-      return Response.json((rows.results ?? []).map(mapSurveyComment));
+      return Response.json((rows.results ?? []).map(mapStoreComment));
     }
 
     if (request.method === "POST") {
@@ -735,24 +916,21 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
         return new Response("ハンドルネームは40文字以内で入力してください。", { status: 400 });
       }
 
-      const surveyRow = await env.DB.prepare("SELECT id FROM surveys WHERE id = ?")
-        .bind(surveyId)
+      const storeRow = await env.DB.prepare("SELECT id FROM stores WHERE id = ? AND deleted_at IS NULL")
+        .bind(storeId)
         .first();
-      if (!surveyRow) {
-        return new Response("アンケートが見つかりません。", { status: 404 });
+      if (!storeRow) {
+        return new Response("店舗が見つかりません。", { status: 404 });
       }
 
       if (parentId) {
         const parentRow = await env.DB.prepare(
-          "SELECT id, parent_id FROM survey_comments WHERE id = ? AND survey_id = ? AND deleted_at IS NULL",
+          "SELECT id FROM store_comments WHERE id = ? AND store_id = ? AND deleted_at IS NULL",
         )
-          .bind(parentId, surveyId)
+          .bind(parentId, storeId)
           .first();
         if (!parentRow) {
           return new Response("返信先のコメントが見つかりません。", { status: 400 });
-        }
-        if (parentRow.parent_id) {
-          return new Response("返信は1段階までに制限されています。", { status: 400 });
         }
       }
 
@@ -762,14 +940,22 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
       }
 
       const id = crypto.randomUUID();
+      const seqRow = await env.DB.prepare(
+        "SELECT COALESCE(MAX(seq), 0) AS max_seq FROM store_comments WHERE store_id = ?",
+      )
+        .bind(storeId)
+        .first();
+      const maxSeq = typeof seqRow?.max_seq === "number" ? seqRow.max_seq : 0;
+      const nextSeq = maxSeq + 1;
       const nowIso = new Date().toISOString();
       await env.DB.prepare(
-        `INSERT INTO survey_comments (id, survey_id, parent_id, author_name, body, voter_hash, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO store_comments (id, store_id, seq, parent_id, author_name, body, voter_hash, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       )
         .bind(
           id,
-          surveyId,
+          storeId,
+          nextSeq,
           parentId || null,
           authorName || null,
           body,
@@ -779,9 +965,10 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
         .run();
 
       return Response.json(
-        mapSurveyComment({
+        mapStoreComment({
           id,
-          survey_id: surveyId,
+          store_id: storeId,
+          seq: nextSeq,
           parent_id: parentId || null,
           author_name: authorName || null,
           body,
@@ -789,9 +976,77 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
           bad_count: 0,
           created_at: nowIso,
           deleted_at: null,
-        } as SurveyCommentRow),
+        } as StoreCommentRow),
       );
     }
+  }
+
+  // GET /api/comments/:id（コメント詳細）
+  const commentDetailMatch = pathname.match(/^\/api\/comments\/([^/]+)$/);
+  if (commentDetailMatch && request.method === "GET") {
+    if (!env.DB) {
+      return new Response("DBが設定されていません。", { status: 500 });
+    }
+    const id = commentDetailMatch[1] ?? "";
+    if (!id) {
+      return new Response("コメントIDが指定されていません。", { status: 400 });
+    }
+    const row = (await env.DB.prepare(
+      `SELECT sc.id, sc.store_id, sc.seq, sc.parent_id, sc.author_name, sc.body, sc.good_count, sc.bad_count,
+              sc.created_at, sc.deleted_at,
+              s.name AS store_name, s.branch_name AS store_branch, s.prefecture AS store_prefecture, s.area AS store_area
+         FROM store_comments sc
+         JOIN stores s ON sc.store_id = s.id
+        WHERE sc.id = ? AND sc.deleted_at IS NULL AND s.deleted_at IS NULL`,
+    )
+      .bind(id)
+      .first()) as StoreCommentDetailRow | null;
+    if (!row) {
+      return new Response("コメントが見つかりませんでした。", { status: 404 });
+    }
+
+    let parent: StoreCommentParentRow | null = null;
+    if (row.parent_id) {
+      parent = (await env.DB.prepare(
+        `SELECT id, store_id, seq, parent_id, author_name, body, good_count, bad_count, created_at, deleted_at
+           FROM store_comments
+          WHERE id = ? AND deleted_at IS NULL`,
+      )
+        .bind(row.parent_id)
+        .first()) as StoreCommentParentRow | null;
+    }
+
+    const repliesRes = await env.DB.prepare(
+      `SELECT sc.id, sc.store_id, sc.seq, sc.parent_id, sc.author_name, sc.body, sc.good_count, sc.bad_count, sc.created_at, sc.deleted_at,
+              (SELECT COUNT(*) FROM store_comments sc2 WHERE sc2.parent_id = sc.id AND sc2.deleted_at IS NULL) AS reply_count
+         FROM store_comments sc
+        WHERE sc.parent_id = ? AND sc.deleted_at IS NULL
+        ORDER BY sc.created_at ASC`,
+    )
+      .bind(row.id)
+      .all();
+
+    const replyCounts: Record<string, number> = {};
+    const repliesWithCounts = (repliesRes.results ?? []) as StoreCommentWithCountRow[];
+    for (const reply of repliesWithCounts) {
+      if (reply.reply_count) {
+        replyCounts[reply.id] = reply.reply_count;
+      }
+    }
+
+    return Response.json({
+      comment: mapStoreComment(row),
+      parent: parent ? mapStoreComment(parent) : null,
+      replies: repliesWithCounts.map(mapStoreComment),
+      replyCounts,
+      store: {
+        id: row.store_id,
+        storeName: row.store_name,
+        storeBranch: row.store_branch ?? null,
+        storePrefecture: row.store_prefecture,
+        storeArea: row.store_area ?? null,
+      },
+    });
   }
 
   // POST /api/comments/:id/vote（コメントのグッド/バッド）
@@ -811,7 +1066,7 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
     }
 
     const commentRow = await env.DB.prepare(
-      "SELECT id FROM survey_comments WHERE id = ? AND deleted_at IS NULL",
+      "SELECT id FROM store_comments WHERE id = ? AND deleted_at IS NULL",
     )
       .bind(commentId)
       .first();
@@ -826,7 +1081,7 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
 
     const nowIso = new Date().toISOString();
     const insertRes = await env.DB.prepare(
-      `INSERT INTO survey_comment_votes (comment_id, voter_hash, vote_type, created_at)
+      `INSERT INTO store_comment_votes (comment_id, voter_hash, vote_type, created_at)
        VALUES (?, ?, ?, ?)
        ON CONFLICT(comment_id, voter_hash) DO NOTHING`,
     )
@@ -837,7 +1092,7 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
     if (didInsert) {
       const column = voteType === "good" ? "good_count" : "bad_count";
       await env.DB.prepare(
-        `UPDATE survey_comments
+        `UPDATE store_comments
          SET ${column} = COALESCE(${column}, 0) + 1
          WHERE id = ?`,
       )
@@ -846,7 +1101,7 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
     }
 
     const countRow = await env.DB.prepare(
-      "SELECT good_count, bad_count FROM survey_comments WHERE id = ?",
+      "SELECT good_count, bad_count FROM store_comments WHERE id = ?",
     )
       .bind(commentId)
       .first();
@@ -969,7 +1224,7 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
     const rows = await env.DB.prepare(
       `SELECT
         s.*,
-        (SELECT COUNT(*) FROM survey_comments sc WHERE sc.survey_id = s.id AND sc.deleted_at IS NULL) AS comment_count
+        (SELECT COUNT(*) FROM store_comments sc WHERE sc.store_id = s.store_id AND sc.deleted_at IS NULL) AS comment_count
        FROM surveys s
        WHERE ${whereClause}
        ORDER BY ${orderBy}
@@ -992,7 +1247,7 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
     const row = await env.DB.prepare(
       `SELECT
         s.*,
-        (SELECT COUNT(*) FROM survey_comments sc WHERE sc.survey_id = s.id AND sc.deleted_at IS NULL) AS comment_count
+        (SELECT COUNT(*) FROM store_comments sc WHERE sc.store_id = s.store_id AND sc.deleted_at IS NULL) AS comment_count
        FROM surveys s
        WHERE s.id = ? AND s.deleted_at IS NULL`,
     )
@@ -1193,7 +1448,7 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
     const surveys = await env.DB.prepare(
       `SELECT
         s.*,
-        (SELECT COUNT(*) FROM survey_comments sc WHERE sc.survey_id = s.id AND sc.deleted_at IS NULL) AS comment_count
+        (SELECT COUNT(*) FROM store_comments sc WHERE sc.store_id = s.store_id AND sc.deleted_at IS NULL) AS comment_count
        FROM surveys s
        WHERE s.store_id = ? AND s.deleted_at IS NULL
        ORDER BY s.created_at DESC
@@ -1225,7 +1480,7 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
     const rows = await env.DB.prepare(
       `SELECT
         s.*,
-        (SELECT COUNT(*) FROM survey_comments sc WHERE sc.survey_id = s.id AND sc.deleted_at IS NULL) AS comment_count
+        (SELECT COUNT(*) FROM store_comments sc WHERE sc.store_id = s.id AND sc.deleted_at IS NULL) AS comment_count
        FROM surveys s
        WHERE s.store_id = ? AND s.deleted_at IS NULL
        ORDER BY s.created_at DESC

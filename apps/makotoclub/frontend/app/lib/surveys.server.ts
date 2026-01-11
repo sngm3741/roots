@@ -1,5 +1,5 @@
 import { apiClient } from "./api.server";
-import type { SurveyComment, SurveyDetail, SurveyListResponse } from "../types/survey";
+import type { SurveyDetail, SurveyListResponse } from "../types/survey";
 
 type SurveySearchParams = {
   sort?: string;
@@ -29,8 +29,4 @@ export async function fetchSurveys(env: { API_BASE_URL?: string }, params: Surve
 
 export async function fetchSurveyDetail(env: { API_BASE_URL?: string }, id: string) {
   return apiClient.fetchJson<SurveyDetail>(`/api/surveys/${id}`, env);
-}
-
-export async function fetchSurveyComments(env: { API_BASE_URL?: string }, id: string) {
-  return apiClient.fetchJson<SurveyComment[]>(`/api/surveys/${id}/comments`, env);
 }

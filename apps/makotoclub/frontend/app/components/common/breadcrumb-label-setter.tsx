@@ -5,10 +5,11 @@ type Props = {
   label?: string;
   branchName?: string;
   storeId?: string;
+  detailLabel?: string;
 };
 
-export const BreadcrumbLabelSetter = ({ label, branchName, storeId }: Props) => {
-  const { setLastLabel, setLastStoreId } = useBreadcrumbOverride();
+export const BreadcrumbLabelSetter = ({ label, branchName, storeId, detailLabel }: Props) => {
+  const { setLastLabel, setLastStoreId, setLastDetailLabel } = useBreadcrumbOverride();
 
   useLayoutEffect(() => {
     if (label) {
@@ -17,11 +18,15 @@ export const BreadcrumbLabelSetter = ({ label, branchName, storeId }: Props) => 
     if (storeId) {
       setLastStoreId(storeId);
     }
+    if (detailLabel) {
+      setLastDetailLabel(detailLabel);
+    }
     return () => {
       setLastLabel(undefined);
       setLastStoreId(undefined);
+      setLastDetailLabel(undefined);
     };
-  }, [label, branchName, storeId, setLastLabel, setLastStoreId]);
+  }, [label, branchName, storeId, detailLabel, setLastLabel, setLastStoreId, setLastDetailLabel]);
 
   return null;
 };

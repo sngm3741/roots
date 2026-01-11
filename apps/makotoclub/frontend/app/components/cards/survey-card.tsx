@@ -2,6 +2,8 @@ import type { SurveySummary } from "../../types/survey";
 import { BarChart3, CircleDollarSign, Clock, MapPin, MessageCircle, ThumbsUp, User } from "lucide-react";
 import { RatingStars } from "../ui/rating-stars";
 import { formatDecimal1 } from "../../lib/number-format";
+import { buildCommentPreview } from "../../lib/comment-text";
+import { formatVisitedPeriod } from "../../lib/date-format";
 
 type Props = {
   survey: SurveySummary;
@@ -17,7 +19,7 @@ export function SurveyCard({
   commentAlwaysEllipsis = false,
 }: Props) {
   const href = `/surveys/${survey.id}`;
-  const commentData = buildComment(
+  const commentData = buildCommentPreview(
     [
       survey.customerComment,
       survey.staffComment,
@@ -28,7 +30,7 @@ export function SurveyCard({
     commentAlwaysEllipsis,
   );
   const commentText = commentData.text || "コメントなし";
-  const visitedPeriodLabel = formatVisitedPeriod(survey.visitedPeriod);
+  const visitedPeriodLabel = formatVisitedPeriod(survey.visitedPeriod ?? "");
   const rating = typeof survey.rating === "number" ? survey.rating : 0;
   const helpfulCount = survey.helpfulCount ?? 0;
   const commentCount = survey.commentCount ?? 0;
@@ -173,43 +175,4 @@ export function SurveyCard({
       </a>
     </div>
   );
-}
-
-function formatVisitedPeriod(value: string) {
-  if (!value) return "-";
-  const [year, month] = value.split("-");
-  if (!year || !month) return value;
-  const monthNumber = Number(month);
-  if (!Number.isFinite(monthNumber)) return value;
-  return `${year}年${monthNumber}月`;
-}
-
-function buildComment(
-  parts: Array<string | null | undefined>,
-  limit = 120,
-  alwaysEllipsis = false,
-) {
-  const cleaned = parts
-    .map((text) => (text ?? "").trim())
-    .filter((text) => text.length > 0);
-  if (cleaned.length === 0) return { text: "", hasMore: false };
-  let combined = "";
-  let truncated = false;
-  for (const text of cleaned) {
-    const separator = combined ? "\n" : "";
-    const next = `${combined}${separator}${text}`;
-    if (next.length > limit) {
-      const remaining = limit - combined.length - separator.length;
-      if (remaining > 0) {
-        combined = `${combined}${separator}${text.slice(0, remaining)}`;
-      }
-      truncated = true;
-      break;
-    }
-    combined = next;
-  }
-  return {
-    text: combined,
-    hasMore: truncated || (alwaysEllipsis && combined.length > 0),
-  };
 }
