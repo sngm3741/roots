@@ -1,5 +1,5 @@
 import type { SurveySummary } from "../../types/survey";
-import { BarChart3, CircleDollarSign, Clock, MapPin, MessageCircle, ThumbsUp, User } from "lucide-react";
+import { BarChart3, CircleDollarSign, Clock, MapPin, ThumbsUp, User } from "lucide-react";
 import { RatingStars } from "../ui/rating-stars";
 import { formatDecimal1 } from "../../lib/number-format";
 import { buildCommentPreview } from "../../lib/comment-text";
@@ -33,7 +33,6 @@ export function SurveyCard({
   const visitedPeriodLabel = formatVisitedPeriod(survey.visitedPeriod ?? "");
   const rating = typeof survey.rating === "number" ? survey.rating : 0;
   const helpfulCount = survey.helpfulCount ?? 0;
-  const commentCount = survey.commentCount ?? 0;
   const fadeChars = 10;
   const shouldFade = commentData.hasMore;
   const fadeHead = shouldFade
@@ -166,10 +165,6 @@ export function SurveyCard({
           <div className="flex items-center gap-1.5">
             <ThumbsUp className="h-4 w-4" />
             <span>役に立った {helpfulCount}</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <MessageCircle className="h-4 w-4" />
-            <span>コメント {commentCount}</span>
           </div>
         </div>
       </a>
