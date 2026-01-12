@@ -3,6 +3,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { type ActionFunctionArgs, redirect } from "react-router";
 import { getApiBaseUrl } from "../config.server";
 import { Button } from "../components/ui/button";
+import { CheckCircle2, Sparkles, X } from "lucide-react";
+import { BlueskyIcon, XIcon } from "../components/ui/social-icons";
 import { RatingStars } from "../components/ui/rating-stars";
 import { HelpIcon } from "../components/ui/help-icon";
 import { Controller, type FieldErrors, type UseFormRegister, useForm } from "react-hook-form";
@@ -314,6 +316,13 @@ export default function NewSurvey() {
   const [castUi, setCastUi] = useState<number>(0);
   const MAX_IMAGES = 5;
   const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+  const shareUrl =
+    typeof window === "undefined" ? "https://makoto-club.com" : window.location.href;
+  const shareText = "アンケート投稿しました #マコトクラブ";
+  const encodedShareUrl = encodeURIComponent(shareUrl);
+  const encodedShareText = encodeURIComponent(shareText);
+  const xShareUrl = `https://twitter.com/intent/tweet?text=${encodedShareText}&url=${encodedShareUrl}`;
+  const blueskyShareUrl = `https://bsky.app/intent/compose?text=${encodedShareText}%20${encodedShareUrl}`;
 
   const remainingSlots = Math.max(0, MAX_IMAGES - selectedFiles.length);
   const industry = watch("industry");
@@ -1066,36 +1075,92 @@ export default function NewSurvey() {
 
       {successModal.open ? (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 backdrop-blur-sm"
           onClick={() => setSuccessModal({ open: false, hasEmail: false })}
         >
           <div
-            className="w-full max-w-md rounded-2xl bg-white p-5 shadow-2xl"
+            className="relative w-full max-w-lg overflow-hidden rounded-3xl bg-white shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-base font-semibold text-slate-900">
-              アンケートが投稿されました。
-            </h3>
-            {successModal.hasEmail ? (
-              <p className="mt-2 text-sm text-slate-600">
-                報酬のPayPayリンクは内容の審査後に指定のメールアドレスにお送りします。
+            <div className="absolute -top-24 -right-20 h-72 w-72 rounded-full bg-gradient-to-br from-pink-400/30 to-purple-500/30 blur-3xl" />
+            <div className="absolute -bottom-24 -left-16 h-60 w-60 rounded-full bg-gradient-to-tr from-purple-400/30 to-pink-500/30 blur-3xl" />
+
+            <div className="relative z-10 px-8 pb-10 pt-12 text-center">
+              <div className="relative mx-auto mb-6 inline-flex items-center justify-center">
+                <div className="absolute inset-0 rounded-full bg-gradient-to-r from-pink-500 to-purple-600 blur-2xl opacity-30" />
+                <div className="relative rounded-full bg-gradient-to-br from-pink-500 via-pink-600 to-purple-600 p-5 shadow-xl">
+                  <CheckCircle2 className="h-10 w-10 text-white" strokeWidth={2.4} />
+                </div>
+                <div className="pointer-events-none absolute -right-6 -top-5 text-pink-400">
+                  <Sparkles className="h-5 w-5" />
+                </div>
+                <div className="pointer-events-none absolute -left-6 bottom-0 text-purple-400">
+                  <Sparkles className="h-4 w-4" />
+                </div>
+              </div>
+
+              <h3 className="mb-3 text-3xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-pink-600 via-pink-500 to-purple-600">
+                投稿しました！
+              </h3>
+              <p className="text-sm text-slate-600">
+                ご協力いただき誠にありがとうございます。
               </p>
-            ) : null}
-            <div className="mt-4 flex items-center justify-between gap-3">
-              <Link
-                to="/"
-                className="inline-flex items-center justify-center rounded-full border border-pink-200 bg-pink-50 px-4 py-2 text-sm font-semibold text-pink-600 transition hover:border-pink-300 hover:bg-pink-100"
-              >
-                ホームへ戻る
-              </Link>
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => setSuccessModal({ open: false, hasEmail: false })}
-              >
-                閉じる
-              </Button>
+              {successModal.hasEmail ? (
+              <>
+                <p className="mt-3 text-sm text-slate-600">
+                  3営業日以内に <span className="font-semibold">makotoclub.info@gmail.com</span> から
+                </p>
+                <p className="mt-3 text-sm text-slate-600">
+                謝礼のご案内をお送りいたします。
+                </p>
+              </>
+              ) : null}
+
+              <div className="my-5 grid gap-3">
+                {/* <div className="flex flex-wrap items-center justify-center gap-2 text-sm">
+                  <a
+                    href={xShareUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-2 font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+                  >
+                    <XIcon className="mr-2 h-4 w-4" />
+                    共有
+                  </a>
+                  <a
+                    href={blueskyShareUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-2 font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+                  >
+                    <BlueskyIcon className="mr-2 h-4 w-4" />
+                    共有
+                  </a>
+                </div> */}
+                <Link
+                  to="/"
+                  className="inline-flex items-center justify-center rounded-2xl bg-gradient-to-r from-pink-500 via-pink-600 to-purple-600 px-6 py-3 text-sm font-semibold text-white shadow-lg transition hover:from-pink-600 hover:via-pink-700 hover:to-purple-700"
+                >
+                  ホームへ戻る
+                </Link>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setSuccessModal({ open: false, hasEmail: false })}
+                  className="rounded-2xl"
+                >
+                  閉じる
+                </Button>
+              </div>
             </div>
+
+            <button
+              type="button"
+              onClick={() => setSuccessModal({ open: false, hasEmail: false })}
+              className="absolute right-5 top-5 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-slate-600 shadow-md transition hover:bg-white"
+            >
+              <X className="h-4 w-4" />
+            </button>
           </div>
         </div>
       ) : null}
@@ -1110,7 +1175,7 @@ export default function NewSurvey() {
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="text-base font-semibold text-slate-900">
-              アンケートの送信に失敗しました
+              アンケートの送信に失敗しました。
             </h3>
             <p className="mt-2 text-sm text-slate-600">
               アンケートの送信に失敗しました。バグ報告はこちらまでご連絡ください。
