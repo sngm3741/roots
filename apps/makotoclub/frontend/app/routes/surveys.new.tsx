@@ -314,7 +314,7 @@ export default function NewSurvey() {
   const [waitUi, setWaitUi] = useState<number>(0);
   const [earnUi, setEarnUi] = useState<number>(0);
   const [castUi, setCastUi] = useState<number>(0);
-  const MAX_IMAGES = 5;
+  const MAX_IMAGES = 3;
   const MAX_SIZE = 5 * 1024 * 1024; // 5MB
   const shareUrl =
     typeof window === "undefined" ? "https://makoto-club.com" : window.location.href;
@@ -505,10 +505,7 @@ export default function NewSurvey() {
         <div>
           <h1 className="text-2xl font-bold text-slate-900">アンケート投稿</h1>
           <p className="text-sm text-slate-600">
-            🎁 アンケートの回答者にPayPay最大500円分プレゼント 🎁
-          </p>
-          <p className="mt-2 text-xs font-semibold text-pink-600">
-            18歳未満の方はご利用できません
+            🎁 <span className="font-semibold text-pink-600">コメント</span> + <span className="font-semibold text-pink-600">明細写真</span>でPayPay最大500円分プレゼント 🎁
           </p>
         </div>
       </header>
@@ -880,7 +877,12 @@ export default function NewSurvey() {
 
         {/* コメント */}
         <section className="card-surface space-y-4 rounded-3xl border border-pink-100/80 p-6">
-          <h2 className="text-lg font-semibold text-slate-900">コメント</h2>
+          <div className="flex flex-wrap items-baseline gap-2">
+            <h2 className="text-lg font-semibold text-slate-900">コメント</h2>
+            <span className="text-xs font-semibold text-pink-600">
+              コメントのご記入で200円プレゼント！
+            </span>
+          </div>
           <div className="grid gap-4 md:grid-cols-2">
             <TextAreaField id="customerComment" label="客層について" register={register} />
             <TextAreaField id="staffComment" label="スタッフ対応について" register={register} />
@@ -891,9 +893,14 @@ export default function NewSurvey() {
 
         {/* 画像 */}
         <section className="card-surface space-y-4 rounded-3xl border border-pink-100/80 p-6">
-          <h2 className="text-lg font-semibold text-slate-900">画像</h2>
+          <div className="flex flex-wrap items-baseline gap-2">
+            <h2 className="text-lg font-semibold text-slate-900">画像</h2>
+            <span className="text-xs font-semibold text-pink-600">
+              明細1枚ごとに+100円！ (最大300円まで)
+            </span>
+          </div>
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-slate-800">最大5枚・各5MBまで</label>
+            <label className="text-sm font-semibold text-slate-800">最大3枚・各5MBまで</label>
             <div className="space-y-3 rounded-2xl border border-dashed border-slate-200 bg-white p-4">
               <div
                 className={`flex flex-wrap items-center gap-2 text-xs text-slate-600 ${
