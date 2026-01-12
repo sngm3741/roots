@@ -505,7 +505,7 @@ export default function NewSurvey() {
         <div>
           <h1 className="text-2xl font-bold text-slate-900">アンケート投稿</h1>
           <p className="text-sm text-slate-600">
-            🎁 アンケートの回答者にPayPay1000円分プレゼント 🎁
+            🎁 アンケートの回答者にPayPay最大500円分プレゼント 🎁
           </p>
           <p className="mt-2 text-xs font-semibold text-pink-600">
             18歳未満の方はご利用できません
