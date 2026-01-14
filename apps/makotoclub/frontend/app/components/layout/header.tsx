@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "../ui/button";
 import { PostIcon } from "../ui/post-icon";
-import { Heart } from "lucide-react";
+import { Brain, Heart } from "lucide-react";
 import { BlueskyIcon, XIcon } from "../ui/social-icons";
 
 const navItems = [
@@ -67,60 +67,69 @@ export function Header() {
             </button>
 
             {/* Actions */}
-            <div className="flex w-full items-center justify-between">
-              <a
-                href="https://twitter.com/makoto_club3"
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-black bg-black text-white shadow-sm transition hover:bg-black/90"
-                aria-label="X"
-              >
-                <XIcon className="h-5 w-5" />
-              </a>
-              <a
-                href="https://bsky.app/profile/makoto-club.com"
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[#1185fe] bg-[#1185fe] text-white shadow-sm transition hover:bg-[#0f73db]"
-                aria-label="Bluesky"
-              >
-                <BlueskyIcon className="h-5 w-5" />
-              </a>
-              <a
-                href="/"
-                className="inline-flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:border-slate-300"
-                aria-label="ホーム"
-              >
-                <img
-                  src="/logo.jpeg"
-                  alt="MakotoClub"
-                  className="h-full w-full object-cover scale-110"
-                />
-              </a>
-              <a
-                href="/bookmarks"
-                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-pink-200 bg-pink-50 text-pink-600 shadow-sm transition hover:bg-pink-100"
-                aria-label="気になる店舗"
-              >
-                <Heart className="h-5 w-5 fill-current" />
-              </a>
-              <Button
-                asChild
-                variant="secondary"
-                className="h-10 w-10 p-0 border-pink-200 bg-pink-50 text-pink-600 hover:bg-pink-100"
-              >
+            <div className="flex flex-1 items-center overflow-x-auto">
+              <div className="flex w-max items-center gap-6">
                 <a
-                  href="/new"
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                  }}
-                  className="flex items-center justify-center"
+                  href="/"
+                  className="inline-flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:border-slate-300"
+                  aria-label="ホーム"
                 >
-                  <span className="flex items-center justify-center">
-                    <PostIcon className="h-5 w-5" />
-                  </span>
+                  <img
+                    src="/logo.jpeg"
+                    alt="MakotoClub"
+                    className="h-full w-full object-cover scale-110"
+                  />
                 </a>
-              </Button>
+                <a
+                  href="/rag"
+                  className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 shadow-sm transition hover:bg-emerald-100"
+                  aria-label="AI"
+                >
+                  <Brain className="h-5 w-5" />
+                </a>
+                <a
+                  href="/bookmarks"
+                  className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-pink-200 bg-pink-50 text-pink-600 shadow-sm transition hover:bg-pink-100"
+                  aria-label="気になる店舗"
+                >
+                  <Heart className="h-5 w-5 fill-current" />
+                </a>
+                <Button
+                  asChild
+                  variant="secondary"
+                  className="h-10 w-10 shrink-0 p-0 border-pink-200 bg-pink-50 text-pink-600 hover:bg-pink-100"
+                >
+                  <a
+                    href="/new"
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                    }}
+                    className="flex items-center justify-center"
+                  >
+                    <span className="flex items-center justify-center">
+                      <PostIcon className="h-5 w-5" />
+                    </span>
+                  </a>
+                </Button>
+                <a
+                  href="https://twitter.com/makoto_club3"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-black bg-black text-white shadow-sm transition hover:bg-black/90"
+                  aria-label="X"
+                >
+                  <XIcon className="h-5 w-5" />
+                </a>
+                <a
+                  href="https://bsky.app/profile/makoto-club.com"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#1185fe] bg-[#1185fe] text-white shadow-sm transition hover:bg-[#0f73db]"
+                  aria-label="Bluesky"
+                >
+                  <BlueskyIcon className="h-5 w-5" />
+                </a>
+              </div>
             </div>
           </div>
         </div>
