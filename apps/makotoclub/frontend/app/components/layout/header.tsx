@@ -56,53 +56,53 @@ export function Header() {
     <>
       <header className="fixed top-4 left-1/2 z-50 w-[calc(100%-2rem)] max-w-5xl -translate-x-1/2 bg-white/60 backdrop-blur-2xl border border-gray-200/50 rounded-2xl shadow-lg shadow-black/5">
         <div className="px-4">
-          <div className="relative flex items-center justify-between h-14">
+          <div className="relative flex items-center h-14">
             {/* Menu Button - Left */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 text-gray-600 hover:text-gray-900 relative z-[60] -ml-2"
+              className="p-2 text-gray-600 hover:text-gray-900 relative z-[60] -ml-2 mr-3"
               aria-label="メニューを開く"
             >
               {mobileMenuOpen ? <CloseIcon /> : <MenuIcon />}
             </button>
 
             {/* Actions */}
-            <div className="flex items-center gap-2">
+            <div className="flex w-full items-center justify-between">
+              <a
+                href="https://twitter.com/makoto_club3"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-black bg-black text-white shadow-sm transition hover:bg-black/90"
+                aria-label="X"
+              >
+                <XIcon className="h-5 w-5" />
+              </a>
+              <a
+                href="https://bsky.app/profile/makoto-club.com"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[#1185fe] bg-[#1185fe] text-white shadow-sm transition hover:bg-[#0f73db]"
+                aria-label="Bluesky"
+              >
+                <BlueskyIcon className="h-5 w-5" />
+              </a>
+              <a
+                href="/"
+                className="inline-flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:border-slate-300"
+                aria-label="ホーム"
+              >
+                <img
+                  src="/logo.jpeg"
+                  alt="MakotoClub"
+                  className="h-full w-full object-cover scale-110"
+                />
+              </a>
               <a
                 href="/bookmarks"
                 className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-pink-200 bg-pink-50 text-pink-600 shadow-sm transition hover:bg-pink-100"
                 aria-label="気になる店舗"
               >
                 <Heart className="h-5 w-5 fill-current" />
-              </a>
-              <a
-                href="/"
-                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white/80 text-slate-600 shadow-sm transition hover:bg-white"
-                aria-label="ホーム"
-              >
-                <img
-                  src="/logo.jpeg"
-                  alt="MakotoClub"
-                  className="h-6 w-6 rounded-md object-cover"
-                />
-              </a>
-              <a
-                href="https://twitter.com/makotoclub"
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white/80 text-slate-600 shadow-sm transition hover:bg-white"
-                aria-label="X"
-              >
-                <XIcon className="h-5 w-5" />
-              </a>
-              <a
-                href="https://bsky.app/profile/makotoclub.bsky.social"
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white/80 text-slate-600 shadow-sm transition hover:bg-white"
-                aria-label="Bluesky"
-              >
-                <BlueskyIcon className="h-5 w-5" />
               </a>
               <Button
                 asChild
