@@ -17,6 +17,8 @@ type Env = {
   DB: D1Database;
   makotoclub_assets?: R2Bucket;
   ASSETS?: { fetch: (input: Request | string | URL) => Promise<Response> };
+  AI?: { run: (model: string, input: any) => Promise<any> };
+  AI_MODEL?: string;
 };
 
 type StoreRow = {
@@ -307,6 +309,147 @@ const parseNumberParam = (value: string | null) => {
   if (!trimmed) return null;
   const num = Number(trimmed);
   return Number.isFinite(num) ? num : null;
+};
+
+const normalizeValue = (value: number, min: number, max: number) => {
+  if (max === min) return 1;
+  return (value - min) / (max - min);
+};
+
+const extractRagInputs = (messages: { role?: string; content?: string }[]) => {
+  let age: number | null = null;
+  let height: number | null = null;
+  let weight: number | null = null;
+  let spec: number | null = null;
+  let wantsList = false;
+
+  for (const message of messages) {
+    if (message.role !== "user") continue;
+    const text = (message.content ?? "").trim();
+    if (!text) continue;
+
+    if (/(一覧|トップ|店舗一覧)/.test(text)) {
+      wantsList = true;
+    }
+
+    const ageMatch = text.match(/(\d{1,2})\s*歳/);
+    if (ageMatch) age = Number(ageMatch[1]);
+    const ageLabelMatch = text.match(/年齢\s*[:=]?\s*(\d{1,2})/);
+    if (ageLabelMatch) age = Number(ageLabelMatch[1]);
+
+    const heightMatch = text.match(/身長\s*[:=]?\s*(\d{2,3})/);
+    if (heightMatch) height = Number(heightMatch[1]);
+    const heightUnitMatch = text.match(/(\d{2,3})\s*cm/);
+    if (heightUnitMatch && /身長/.test(text)) height = Number(heightUnitMatch[1]);
+
+    const weightMatch = text.match(/体重\s*[:=]?\s*(\d{2,3})/);
+    if (weightMatch) weight = Number(weightMatch[1]);
+    const weightUnitMatch = text.match(/(\d{2,3})\s*kg/);
+    if (weightUnitMatch && /体重/.test(text)) weight = Number(weightUnitMatch[1]);
+
+    const specMatch = text.match(/スペ(?:ック)?\s*[:=]?\s*(\d{2,3})/);
+    if (specMatch) spec = Number(specMatch[1]);
+  }
+
+  return { age, height, weight, spec, wantsList };
+};
+
+const fetchRagCandidates = async (env: Env, age: number, spec: number) => {
+  const specRange = 5;
+  const ageRanges = [3, 5];
+  let ageRangeUsed = ageRanges[ageRanges.length - 1] ?? 5;
+  let rows: any[] = [];
+
+  for (const range of ageRanges) {
+    const result = await env.DB.prepare(
+      `SELECT
+        s.store_id AS id,
+        st.name AS name,
+        st.branch_name AS branch_name,
+        st.prefecture AS prefecture,
+        st.area AS area,
+        st.industry AS industry,
+        st.genre AS genre,
+        AVG(s.average_earning) AS avg_earning,
+        AVG(s.rating) AS avg_rating,
+        AVG(s.wait_time_hours) AS avg_wait,
+        COUNT(*) AS survey_count
+       FROM surveys s
+       JOIN stores st ON st.id = s.store_id
+       WHERE s.deleted_at IS NULL
+         AND st.deleted_at IS NULL
+         AND s.age BETWEEN ? AND ?
+         AND s.spec_score BETWEEN ? AND ?
+       GROUP BY s.store_id`,
+    )
+      .bind(age - range, age + range, spec - specRange, spec + specRange)
+      .all();
+    const candidates = result.results ?? [];
+    if (candidates.length > 0) {
+      rows = candidates;
+      ageRangeUsed = range;
+      break;
+    }
+  }
+
+    if (rows.length === 0) {
+      return {
+        age,
+        spec,
+        ageRange: ageRangeUsed,
+        specRange,
+        totalCandidates: 0,
+        picks: [],
+      };
+    }
+
+  const earningValues = rows.map((row) => Number(row.avg_earning ?? 0));
+  const ratingValues = rows.map((row) => Number(row.avg_rating ?? 0));
+  const minEarning = Math.min(...earningValues);
+  const maxEarning = Math.max(...earningValues);
+  const minRating = Math.min(...ratingValues);
+  const maxRating = Math.max(...ratingValues);
+
+  const scored = rows.map((row) => {
+    const earning = Number(row.avg_earning ?? 0);
+    const rating = Number(row.avg_rating ?? 0);
+    const earningNorm = normalizeValue(earning, minEarning, maxEarning);
+    const ratingNorm = normalizeValue(rating, minRating, maxRating);
+    return {
+      row,
+      score: earningNorm * 0.7 + ratingNorm * 0.3,
+    };
+  });
+
+  const toStoreSummary = (row: any) =>
+      mapStore({
+        id: row.id,
+        name: row.name,
+        branch_name: row.branch_name ?? null,
+        prefecture: row.prefecture,
+        area: row.area ?? null,
+        industry: row.industry,
+        genre: row.genre ?? null,
+        avg_earning: Number(row.avg_earning ?? 0),
+        avg_rating: Number(row.avg_rating ?? 0),
+        avg_wait: Number(row.avg_wait ?? 0),
+        survey_count: Number(row.survey_count ?? 0),
+      });
+
+  const picks = scored
+    .slice()
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 3)
+    .map((item) => toStoreSummary(item.row));
+
+  return {
+    age,
+    spec,
+    ageRange: ageRangeUsed,
+    specRange,
+    totalCandidates: rows.length,
+    picks,
+  };
 };
 
 const hashText = async (value: string) => {
@@ -821,6 +964,106 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
       count: row?.count ?? 0,
       todayCount: dailyRow?.count ?? 0,
       date: today,
+    });
+  }
+
+  // GET /api/rag
+  if (pathname === "/api/rag" && request.method === "GET") {
+    const age = parseNumberParam(url.searchParams.get("age"));
+    const spec = parseNumberParam(url.searchParams.get("spec"));
+    if (age === null || spec === null) {
+      return await respondWithLog(new Response("年齢とスペックを指定してください。", { status: 400 }));
+    }
+    const result = await fetchRagCandidates(env, age, spec);
+    return Response.json(result);
+  }
+
+  // POST /api/ai/chat
+  if (pathname === "/api/ai/chat" && request.method === "POST") {
+    if (!env.AI) {
+      return await respondWithLog(new Response("AIが設定されていません。", { status: 500 }));
+    }
+
+    let payload: any;
+    try {
+      payload = await request.json();
+    } catch {
+      return await respondWithLog(new Response("JSONが不正です。", { status: 400 }));
+    }
+
+    const rawMessages = Array.isArray(payload?.messages) ? payload.messages : [];
+    if (rawMessages.length === 0) {
+      return await respondWithLog(new Response("メッセージが空です。", { status: 400 }));
+    }
+
+    const messages = rawMessages
+      .map((message: any) => ({
+        role: typeof message?.role === "string" ? message.role : "user",
+        content: typeof message?.content === "string" ? message.content : "",
+      }))
+      .filter((message: any) => message.content.trim().length > 0)
+      .slice(-12);
+
+    const extracted = extractRagInputs(messages);
+    const age = Number.isFinite(extracted.age ?? NaN) ? Number(extracted.age) : null;
+    const height = Number.isFinite(extracted.height ?? NaN) ? Number(extracted.height) : null;
+    const weight = Number.isFinite(extracted.weight ?? NaN) ? Number(extracted.weight) : null;
+    const specDirect = Number.isFinite(extracted.spec ?? NaN) ? Number(extracted.spec) : null;
+    const computedSpec =
+      specDirect ?? (height !== null && weight !== null ? height - weight : null);
+
+    const missing: string[] = [];
+    if (age === null) missing.push("年齢");
+    if (computedSpec === null) {
+      if (height === null) missing.push("身長");
+      if (weight === null) missing.push("体重");
+    }
+
+    let result: Awaited<ReturnType<typeof fetchRagCandidates>> | null = null;
+    if (age !== null && computedSpec !== null) {
+      result = await fetchRagCandidates(env, age, computedSpec);
+    }
+
+    const model = env.AI_MODEL ?? "@cf/meta/llama-3.1-8b-instruct";
+    const systemPrompt = [
+      "あなたはMakotoClubの相談AIです。丁寧で簡潔な日本語で1〜3文で回答してください。",
+      `不足項目: ${missing.length ? missing.join("・") : "なし"}`,
+      `候補数: ${result?.totalCandidates ?? 0}`,
+      extracted.wantsList ? "ユーザーは一覧の表示を希望しています。" : "一覧希望の指示はありません。",
+      "不足項目がある場合は、それらを質問してください。",
+      "候補がある場合は、上位のおすすめがあることを伝えてください。",
+      "候補が0件の場合は該当がない旨を伝え、条件変更を促してください。",
+    ].join("\n");
+
+    let reply = "";
+    try {
+      const aiResponse = await env.AI.run(model, { messages: [{ role: "system", content: systemPrompt }, ...messages] });
+      if (typeof aiResponse?.response === "string") {
+        reply = aiResponse.response.trim();
+      }
+    } catch (error) {
+      console.error("AI応答の取得に失敗しました", error);
+    }
+
+    if (!reply) {
+      if (missing.length > 0) {
+        reply = `${missing.join("と")}を教えてください。`;
+      } else if ((result?.totalCandidates ?? 0) > 0) {
+        reply = "おすすめの店舗を表示します。";
+      } else {
+        reply = "該当する店舗がありませんでした。条件を変えて探してみてください。";
+      }
+    }
+
+    if (extracted.wantsList && !/一覧/.test(reply)) {
+      reply = `${reply} 店舗一覧もご案内できます。`;
+    }
+
+    return Response.json({
+      reply,
+      filters: age !== null && computedSpec !== null ? { age, spec: computedSpec } : null,
+      results: result ? { picks: result.picks } : null,
+      showTopLink: extracted.wantsList,
     });
   }
 
