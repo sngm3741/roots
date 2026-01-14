@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Button } from "../ui/button";
 import { PostIcon } from "../ui/post-icon";
 import { Heart } from "lucide-react";
+import { BlueskyIcon, XIcon } from "../ui/social-icons";
 
 const navItems = [
   { label: "よくある質問", href: "/faq" },
@@ -65,22 +66,7 @@ export function Header() {
               {mobileMenuOpen ? <CloseIcon /> : <MenuIcon />}
             </button>
 
-            {/* Logo - Center */}
-            <a
-              href="/"
-              className="absolute left-1/2 -translate-x-1/2 flex hover:opacity-80 transition-opacity"
-            >
-              <img
-                src="/logo.jpeg"
-                alt="MakotoClub"
-                className="w-10 h-10 md:w-8 md:h-8 rounded-lg object-cover"
-              />
-            </a>
-
-            {/* Spacer to keep logo centered */}
-            <div className="w-10" />
-
-            {/* CTA Button */}
+            {/* Actions */}
             <div className="flex items-center gap-2">
               <a
                 href="/bookmarks"
@@ -88,6 +74,35 @@ export function Header() {
                 aria-label="気になる店舗"
               >
                 <Heart className="h-5 w-5 fill-current" />
+              </a>
+              <a
+                href="/"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white/80 text-slate-600 shadow-sm transition hover:bg-white"
+                aria-label="ホーム"
+              >
+                <img
+                  src="/logo.jpeg"
+                  alt="MakotoClub"
+                  className="h-6 w-6 rounded-md object-cover"
+                />
+              </a>
+              <a
+                href="https://twitter.com/makotoclub"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white/80 text-slate-600 shadow-sm transition hover:bg-white"
+                aria-label="X"
+              >
+                <XIcon className="h-5 w-5" />
+              </a>
+              <a
+                href="https://bsky.app/profile/makotoclub.bsky.social"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white/80 text-slate-600 shadow-sm transition hover:bg-white"
+                aria-label="Bluesky"
+              >
+                <BlueskyIcon className="h-5 w-5" />
               </a>
               <Button
                 asChild
