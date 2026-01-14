@@ -98,7 +98,7 @@ export default function RagPage() {
         </p>
       </header>
 
-      <section className="flex min-h-[520px] flex-col overflow-hidden rounded-3xl border border-slate-200 bg-slate-50 shadow-sm">
+      <section className="flex min-h-[320px] flex-col overflow-hidden rounded-3xl border border-slate-200 bg-slate-50 shadow-sm">
         <div className="flex-1 overflow-y-auto">
           {messages.map((message, index) => (
             <div
