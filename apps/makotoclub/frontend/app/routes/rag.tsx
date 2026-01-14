@@ -1,4 +1,4 @@
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useEffect, useState } from "react";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { StoreCard } from "../components/cards/store-card";
@@ -23,6 +23,15 @@ export default function RagPage() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [initialThinking, setInitialThinking] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setMessages([{ role: "assistant", content: "年齢とスペ教えて？" }]);
+      setInitialThinking(false);
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, []);
 
   const sendMessage = async (text: string) => {
     if (loading) return;
@@ -75,113 +84,65 @@ export default function RagPage() {
     await sendMessage(text);
   };
 
-  const handleSuggestion = async (text: string) => {
-    if (loading) return;
-    setInput("");
-    await sendMessage(text);
-  };
-
-  const isInitial = messages.length === 0;
-
   return (
     <main className="mx-auto flex min-h-[calc(100vh-6rem)] w-full max-w-5xl flex-col gap-6 px-4 pb-12 pt-6">
-      {!isInitial && (
-        <header className="space-y-2">
-          <p className="text-xs font-semibold uppercase text-slate-500">AI</p>
-          <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-2xl font-bold text-slate-900">アンケートRAG</h1>
-            <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
-              条件マッチ試作
-            </span>
-          </div>
-          <p className="text-sm text-slate-600">
-            会話しながら条件を聞き取り、あなたに合う店舗を提案します。
-          </p>
-        </header>
-      )}
+      <header className="space-y-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <h1 className="text-2xl font-bold text-slate-900">マコトGPT</h1>
+          <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
+           開発中
+          </span>
+        </div>
+        <p className="text-sm text-slate-600">
+          スペックと年齢からAIがおすすめの店舗情報を絞り込みます。
+        </p>
+      </header>
 
       <section className="flex min-h-[620px] flex-col overflow-hidden rounded-3xl border border-slate-200 bg-slate-50 shadow-sm">
-        {!isInitial && (
-          <div className="flex items-center justify-between border-b border-slate-200 bg-white px-6 py-4">
-            <div className="space-y-1">
-              <p className="text-xs font-semibold text-slate-500">会話</p>
-              <p className="text-sm font-semibold text-slate-900">条件ヒアリング</p>
-            </div>
-            <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-semibold text-slate-600">
-              マコトGPT
-            </span>
-          </div>
-        )}
-
         <div className="flex-1 overflow-y-auto">
-          {isInitial ? (
-            <div className="flex h-full flex-col justify-center gap-6 px-6 py-10">
-              <div className="mx-auto w-full max-w-3xl space-y-4">
-                <h2 className="text-3xl font-semibold text-slate-900">何から始めますか？</h2>
-                <div className="flex flex-wrap gap-3 pt-2">
-                  {[
-                    "年齢とスペで探す",
-                    "地域から探す",
-                    "店舗情報をすべて見る",
-                    "アンケートをすべて見る",
-                  ].map((label) => (
-                    <button
-                      key={label}
-                      type="button"
-                      onClick={() =>
-                        label === "店舗一覧を見る"
-                          ? handleSuggestion("店舗一覧を見せて")
-                          : handleSuggestion(label)
-                      }
-                      className="rounded-full border border-white bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-200"
-                      disabled={loading}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
+          {messages.map((message, index) => (
+            <div
+              key={`${message.role}-${index}`}
+              className={`border-b border-slate-200/70 px-6 py-5 ${
+                message.role === "user" ? "bg-white" : "bg-slate-50"
+              }`}
+            >
+              <div className="mx-auto w-full max-w-3xl space-y-3 text-sm text-slate-700">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                  {message.role === "user" ? "あなた" : "AI"}
+                </p>
+                <div className="whitespace-pre-wrap leading-relaxed">{message.content}</div>
+                {message.role === "assistant" && message.results && (
+                  <div className="space-y-3 pt-2">
+                    {message.results.picks.length > 0 ? (
+                      <div className="grid gap-6 sm:grid-cols-2">
+                        {message.results.picks.map((store) => (
+                          <StoreCard key={`pick-${store.id}`} store={store} className="overflow-hidden" />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-xs text-slate-500">該当する店舗がありません。</div>
+                    )}
+                  </div>
+                )}
+                {message.role === "assistant" && message.showTopLink && (
+                  <a
+                    href="/"
+                    className="text-xs font-semibold text-slate-600 underline decoration-slate-300 underline-offset-4 transition hover:text-slate-900"
+                  >
+                    こちらからすべてのユーザーはすべての店舗情報・アンケートのデータを検索できます。
+                  </a>
+                )}
               </div>
             </div>
-          ) : (
-            messages.map((message, index) => (
-              <div
-                key={`${message.role}-${index}`}
-                className={`border-b border-slate-200/70 px-6 py-5 ${
-                  message.role === "user" ? "bg-white" : "bg-slate-50"
-                }`}
-              >
-                <div className="mx-auto w-full max-w-3xl space-y-3 text-sm text-slate-700">
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-                    {message.role === "user" ? "あなた" : "AI"}
-                  </p>
-                  <div className="whitespace-pre-wrap leading-relaxed">{message.content}</div>
-                  {message.role === "assistant" && message.results && (
-                    <div className="space-y-3 pt-2">
-                      {message.results.picks.length > 0 ? (
-                        <div className="grid gap-6 sm:grid-cols-2">
-                          {message.results.picks.map((store) => (
-                            <StoreCard key={`pick-${store.id}`} store={store} className="overflow-hidden" />
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="text-xs text-slate-500">該当する店舗がありません。</div>
-                      )}
-                    </div>
-                  )}
-                  {message.role === "assistant" && message.showTopLink && (
-                    <a
-                      href="/stores"
-                      className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:border-slate-300"
-                    >
-                      店舗一覧を見る
-                    </a>
-                  )}
-                </div>
+          ))}
+          {(loading || initialThinking) && (
+            <div className="border-b border-slate-200/70 bg-slate-50 px-6 py-5">
+              <div className="mx-auto w-full max-w-3xl space-y-3 text-sm text-slate-700">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">AI</p>
+                <div className="text-xs text-slate-500">...</div>
               </div>
-            ))
-          )}
-          {loading && (
-            <div className="px-6 py-4 text-xs text-slate-500">考え中...</div>
+            </div>
           )}
         </div>
 

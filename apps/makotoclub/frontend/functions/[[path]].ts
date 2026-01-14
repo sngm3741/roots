@@ -340,14 +340,18 @@ const extractRagInputs = (messages: { role?: string; content?: string }[]) => {
     const heightMatch = text.match(/身長\s*[:=]?\s*(\d{2,3})/);
     if (heightMatch) height = Number(heightMatch[1]);
     const heightUnitMatch = text.match(/(\d{2,3})\s*cm/);
-    if (heightUnitMatch && /身長/.test(text)) height = Number(heightUnitMatch[1]);
+    if (heightUnitMatch) {
+      if (/身長/.test(text) || !height) height = Number(heightUnitMatch[1]);
+    }
 
     const weightMatch = text.match(/体重\s*[:=]?\s*(\d{2,3})/);
     if (weightMatch) weight = Number(weightMatch[1]);
     const weightUnitMatch = text.match(/(\d{2,3})\s*kg/);
-    if (weightUnitMatch && /体重/.test(text)) weight = Number(weightUnitMatch[1]);
+    if (weightUnitMatch) {
+      if (/体重/.test(text) || !weight) weight = Number(weightUnitMatch[1]);
+    }
 
-    const specMatch = text.match(/スペ(?:ック)?\s*[:=]?\s*(\d{2,3})/);
+    const specMatch = text.match(/(?:スペ|スペック)\s*[:=]?\s*(\d{2,3})/);
     if (specMatch) spec = Number(specMatch[1]);
   }
 
@@ -1027,6 +1031,7 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
     const model = env.AI_MODEL ?? "@cf/meta/llama-3.1-8b-instruct";
     const systemPrompt = [
       "あなたはMakotoClubの相談AIです。丁寧で簡潔な日本語で1〜3文で回答してください。",
+      "会話の目的は店舗候補の提示のみです。健康・運動・体型改善などの話題には触れないでください。",
       `不足項目: ${missing.length ? missing.join("・") : "なし"}`,
       `候補数: ${result?.totalCandidates ?? 0}`,
       extracted.wantsList ? "ユーザーは一覧の表示を希望しています。" : "一覧希望の指示はありません。",
@@ -1037,7 +1042,9 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
 
     let reply = "";
     try {
-      const aiResponse = await env.AI.run(model, { messages: [{ role: "system", content: systemPrompt }, ...messages] });
+      const aiResponse = await env.AI.run(model, {
+        messages: [{ role: "system", content: systemPrompt }, ...messages],
+      });
       if (typeof aiResponse?.response === "string") {
         reply = aiResponse.response.trim();
       }
@@ -1045,25 +1052,29 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
       console.error("AI応答の取得に失敗しました", error);
     }
 
-    if (!reply) {
-      if (missing.length > 0) {
-        reply = `${missing.join("と")}を教えてください。`;
-      } else if ((result?.totalCandidates ?? 0) > 0) {
-        reply = "おすすめの店舗を表示します。";
+    if (missing.length > 0) {
+      reply = `${missing.join("と")}を教えてください。`;
+    } else if (result) {
+      if (result.totalCandidates > 0) {
+        reply = `年齢${age}歳 スペ${computedSpec}の方におすすめの店舗はこちらです。`;
       } else {
-        reply = "該当する店舗がありませんでした。条件を変えて探してみてください。";
+        reply = `年齢${age}歳 スペ${computedSpec}の条件では該当店舗がありませんでした。条件を変えて探してみてください。`;
       }
+    } else if (!reply) {
+      reply = "年齢とスペックを教えてください。";
     }
 
-    if (extracted.wantsList && !/一覧/.test(reply)) {
-      reply = `${reply} 店舗一覧もご案内できます。`;
+    if (/(健康|運動|目標|体型|ダイエット|トレーニング)/.test(reply)) {
+      reply = missing.length > 0 ? `${missing.join("と")}を教えてください。` : "候補をお出しします。";
     }
+
+    const shouldShowTopLink = Boolean(result && result.totalCandidates > 0);
 
     return Response.json({
       reply,
       filters: age !== null && computedSpec !== null ? { age, spec: computedSpec } : null,
       results: result ? { picks: result.picks } : null,
-      showTopLink: extracted.wantsList,
+      showTopLink: shouldShowTopLink,
     });
   }
 
