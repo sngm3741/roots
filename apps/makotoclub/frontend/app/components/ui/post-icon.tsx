@@ -10,7 +10,9 @@ export function PostIcon({ className }: Props) {
       className={className ?? "h-5 w-5"}
       fill="none"
       stroke="currentColor"
-      strokeWidth="2"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
     >
       <path d="M12.0002 2.75012C5.06324 2.75012 2.75024 5.06312 2.75024 12.0001C2.75024 18.9371 5.06324 21.2501 12.0002 21.2501C18.9372 21.2501 21.2502 18.9371 21.2502 12.0001" />
       <path

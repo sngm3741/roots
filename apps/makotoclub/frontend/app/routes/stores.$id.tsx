@@ -22,6 +22,7 @@ import {
   Building2,
   CircleDollarSign,
   Clock,
+  Heart,
   MapPin,
   Mail,
   MessageCircle,
@@ -32,6 +33,7 @@ import {
   Timer,
 } from "lucide-react";
 import { SurveyCard } from "../components/cards/survey-card";
+import { useStoreBookmark } from "../lib/store-bookmarks";
 
 type LoaderData = {
   store: StoreDetail | null;
@@ -81,6 +83,7 @@ export default function StoreDetailPage() {
   const [commentPage, setCommentPage] = useState(1);
   const commentPageSize = 5;
   const commentMaxChars = 1000;
+  const { isBookmarked, toggle } = useStoreBookmark(store?.id ?? "");
 
   if (!store) {
     return (
@@ -310,31 +313,43 @@ export default function StoreDetailPage() {
         <section className="rounded-2xl border border-pink-100/60 bg-gradient-to-br from-pink-50 to-rose-50 p-4 shadow-sm">
           <div className="mb-3 flex items-center justify-between">
             <div className="flex items-center gap-1.5">
-              <div className="rounded-lg bg-pink-500 p-1.5 text-white">
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-pink-500 text-white">
                 <Store className="h-4 w-4" strokeWidth={2.5} />
               </div>
-              <span className="text-xs font-bold text-pink-700">店舗</span>
+              <span className="text-xs font-bold text-pink-700 leading-none">店舗</span>
             </div>
-            {store.category ? (
-              <span className="rounded-full bg-pink-500 px-2.5 py-1 text-xs font-bold text-white">
-                {store.category}
-              </span>
-            ) : null}
+            <button
+              type="button"
+              onClick={toggle}
+              className={`inline-flex h-9 w-9 items-center justify-center rounded-full border transition ${
+                isBookmarked
+                  ? "border-pink-200 bg-pink-100 text-pink-600"
+                  : "border-slate-200 bg-white/80 text-slate-500 hover:border-slate-300"
+              }`}
+              aria-label="店舗をブックマーク"
+              aria-pressed={isBookmarked}
+            >
+              <Heart className={`h-4 w-4 ${isBookmarked ? "fill-current" : ""}`} />
+            </button>
           </div>
 
           <h1 className="mb-1.5 text-xl font-bold leading-tight text-gray-900">
             {store.storeName}
             {store.branchName ? ` ${store.branchName}` : ""}
           </h1>
-
-          <div className="mb-3 flex items-center gap-1 text-xs text-gray-600">
+          <div className="flex items-center gap-1 text-xs text-gray-600">
             <MapPin className="h-3.5 w-3.5" />
             <span>{store.prefecture}</span>
             {store.area ? <span className="text-gray-400">・</span> : null}
             {store.area ? <span>{store.area}</span> : null}
           </div>
+          {store.category ? (
+            <span className="mt-2 inline-flex rounded-full bg-pink-500/10 px-2.5 py-1 text-xs font-semibold text-pink-700">
+              {store.category}
+            </span>
+          ) : null}
 
-          <div className="rounded-xl bg-white/70 p-3">
+          <div className="mt-4 rounded-xl bg-white/70 p-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <RatingStars value={store.averageRating ?? 0} size="lg" />

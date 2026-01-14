@@ -11,10 +11,12 @@ import type { ImageGalleryItem } from "../components/ui/image-gallery";
 import { formatDecimal1 } from "../lib/number-format";
 import { buildLimitedComment } from "../lib/comment-text";
 import { formatVisitedPeriod } from "../lib/date-format";
+import { useSurveyBookmark } from "../lib/survey-bookmarks";
 import {
   BarChart3,
   CircleDollarSign,
   Clock,
+  Heart,
   MapPin,
   Share2,
   ThumbsUp,
@@ -105,6 +107,7 @@ export default function SurveyDetailPage() {
   const [isHelpful, setIsHelpful] = useState(false);
   const [helpfulCount, setHelpfulCount] = useState(survey.helpfulCount ?? 0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { isBookmarked, toggle } = useSurveyBookmark(survey.id);
   const helpfulKey = `survey-helpful:${survey.id}`;
 
   useEffect(() => {
@@ -182,7 +185,7 @@ export default function SurveyDetailPage() {
         <section className="rounded-2xl border border-pink-100/50 bg-gradient-to-br from-pink-50 to-rose-50 p-4 shadow-sm">
           <div className="mb-3 flex items-center justify-between">
             <div className="flex items-center gap-1.5">
-              <div className="rounded-lg bg-pink-500 p-1.5 text-white">
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-pink-500 text-white">
                 <svg
                   className="h-4 w-4"
                   fill="none"
@@ -197,9 +200,21 @@ export default function SurveyDetailPage() {
                   />
                 </svg>
               </div>
-              <span className="text-xs font-bold text-pink-700">アンケート</span>
+              <span className="text-xs font-bold text-pink-700 leading-none">アンケート</span>
             </div>
-            <span className="text-xs font-medium text-gray-600">{visitedPeriodLabel}</span>
+            <button
+              type="button"
+              onClick={toggle}
+              className={`inline-flex h-9 w-9 items-center justify-center rounded-full border transition ${
+                isBookmarked
+                  ? "border-pink-200 bg-pink-100 text-pink-600"
+                  : "border-slate-200 bg-white/80 text-slate-500 hover:border-slate-300"
+              }`}
+              aria-label="アンケートをお気に入り"
+              aria-pressed={isBookmarked}
+            >
+              <Heart className={`h-4 w-4 ${isBookmarked ? "fill-current" : ""}`} />
+            </button>
           </div>
 
           <a
@@ -268,28 +283,33 @@ export default function SurveyDetailPage() {
             </div>
           </div>
 
-          <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
-            <button
-              type="button"
-              onClick={handleHelpfulClick}
-              disabled={isHelpful || isSubmitting}
-              className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold shadow-sm transition ${
-                isHelpful
-                  ? "border-pink-100 bg-pink-100 text-pink-600"
-                  : "border-pink-100 bg-white/70 text-pink-700 hover:bg-white"
-              }`}
-            >
-              <ThumbsUp className="h-4 w-4" />
-              役に立った ({helpfulCount})
-            </button>
-            <button
-              type="button"
-              onClick={handleShare}
-              className="inline-flex items-center gap-2 rounded-full border border-pink-100 bg-white/70 px-3 py-1 text-xs font-semibold text-pink-700 shadow-sm transition hover:bg-white"
-            >
-              <Share2 className="h-4 w-4" />
-              共有
-            </button>
+          <div className="mt-3 space-y-2">
+            <div className="flex items-center justify-end text-xs text-gray-500">
+              {visitedPeriodLabel}
+            </div>
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={handleHelpfulClick}
+                disabled={isHelpful || isSubmitting}
+                className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold shadow-sm transition ${
+                  isHelpful
+                    ? "border-pink-100 bg-pink-100 text-pink-600"
+                    : "border-pink-100 bg-white/70 text-pink-700 hover:bg-white"
+                }`}
+              >
+                <ThumbsUp className="h-4 w-4" />
+                役に立った ({helpfulCount})
+              </button>
+              <button
+                type="button"
+                onClick={handleShare}
+                className="inline-flex items-center gap-2 rounded-full border border-pink-100 bg-white/70 px-3 py-1 text-xs font-semibold text-pink-700 shadow-sm transition hover:bg-white"
+              >
+                <Share2 className="h-4 w-4" />
+                
+              </button>
+            </div>
           </div>
         </section>
 

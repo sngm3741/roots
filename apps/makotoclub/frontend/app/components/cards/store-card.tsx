@@ -1,7 +1,8 @@
 import type { StoreSummary } from "../../types/store";
-import { CircleDollarSign, Clock, FileText, MapPin, Store } from "lucide-react";
+import { CircleDollarSign, Clock, FileText, Heart, MapPin, Store } from "lucide-react";
 import { RatingStars } from "../ui/rating-stars";
 import { formatDecimal1 } from "../../lib/number-format";
+import { useStoreBookmark } from "../../lib/store-bookmarks";
 
 type Props = {
   store: StoreSummary;
@@ -10,6 +11,7 @@ type Props = {
 
 export function StoreCard({ store, className }: Props) {
   const href = `/stores/${store.id}`;
+  const { isBookmarked, toggle } = useStoreBookmark(store.id);
   const rating = typeof store.averageRating === "number" ? store.averageRating : 0;
   const earningLabel =
     store.averageEarningLabel ||
@@ -27,14 +29,27 @@ export function StoreCard({ store, className }: Props) {
       <div className="mb-3">
         <div className="mb-3 flex items-center justify-between">
           <div className="flex items-center gap-1.5">
-            <div className="rounded-lg bg-pink-500 p-1.5 text-white">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-pink-500 text-white">
               <Store className="h-4 w-4" strokeWidth={2.5} />
             </div>
-            <span className="text-xs font-bold text-pink-700">店舗</span>
+            <span className="text-xs font-bold text-pink-700 leading-none">店舗</span>
           </div>
-          <span className="rounded-full bg-pink-500 px-2.5 py-1 text-xs font-bold text-white">
-            {store.category}
-          </span>
+          <button
+            type="button"
+            onClick={(event) => {
+              event.preventDefault();
+              toggle();
+            }}
+            className={`inline-flex h-9 w-9 items-center justify-center rounded-full border transition ${
+              isBookmarked
+                ? "border-pink-200 bg-pink-100 text-pink-600"
+                : "border-slate-200 bg-white/80 text-slate-500 hover:border-slate-300"
+            }`}
+            aria-label="店舗をブックマーク"
+            aria-pressed={isBookmarked}
+          >
+            <Heart className={`h-4 w-4 ${isBookmarked ? "fill-current" : ""}`} />
+          </button>
         </div>
 
         <h3 className="mb-1.5 text-xl font-bold leading-tight text-gray-900">
@@ -44,12 +59,15 @@ export function StoreCard({ store, className }: Props) {
           )}
         </h3>
 
-        <div className="mb-4 flex items-center gap-1 text-xs text-gray-600">
+        <div className="flex items-center gap-1 text-xs text-gray-600">
           <MapPin className="h-3.5 w-3.5" />
           <span>{store.prefecture}</span>
         </div>
+        <span className="mt-2 inline-flex rounded-full bg-pink-500/10 px-2.5 py-1 text-xs font-semibold text-pink-700">
+          {store.category}
+        </span>
 
-        <div className="rounded-xl bg-white/70 p-3">
+        <div className="mt-4 rounded-xl bg-white/70 p-3">
           <div className="flex items-center justify-between pr-2">
             <div className="flex items-center gap-2">
               <RatingStars value={rating} size="lg" />
@@ -78,7 +96,6 @@ export function StoreCard({ store, className }: Props) {
 
       <div className="flex items-center justify-center gap-1.5 border-t border-pink-200/60 pt-2.5">
         <FileText className="h-4 w-4 text-pink-500" />
-        <span className="text-xs text-gray-700">アンケート</span>
         <span className="text-sm font-bold text-pink-600">{store.surveyCount}件</span>
       </div>
     </a>

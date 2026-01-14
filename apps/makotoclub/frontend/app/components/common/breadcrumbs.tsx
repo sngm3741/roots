@@ -16,6 +16,7 @@ const LABEL_MAP: Record<string, string> = {
   contact: "お問い合わせ",
   privacy: "プライバシーポリシー",
   terms: "利用規約",
+  bookmarks: "お気に入り",
 };
 
 export const Breadcrumbs = () => {

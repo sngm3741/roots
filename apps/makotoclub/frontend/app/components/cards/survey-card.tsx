@@ -1,9 +1,10 @@
 import type { SurveySummary } from "../../types/survey";
-import { BarChart3, CircleDollarSign, Clock, MapPin, ThumbsUp, User } from "lucide-react";
+import { BarChart3, CircleDollarSign, Clock, Heart, MapPin, ThumbsUp, User } from "lucide-react";
 import { RatingStars } from "../ui/rating-stars";
 import { formatDecimal1 } from "../../lib/number-format";
 import { buildCommentPreview } from "../../lib/comment-text";
 import { formatVisitedPeriod } from "../../lib/date-format";
+import { useSurveyBookmark } from "../../lib/survey-bookmarks";
 
 type Props = {
   survey: SurveySummary;
@@ -33,6 +34,7 @@ export function SurveyCard({
   const visitedPeriodLabel = formatVisitedPeriod(survey.visitedPeriod ?? "");
   const rating = typeof survey.rating === "number" ? survey.rating : 0;
   const helpfulCount = survey.helpfulCount ?? 0;
+  const { isBookmarked, toggle } = useSurveyBookmark(survey.id);
   const fadeChars = 10;
   const shouldFade = commentData.hasMore;
   const fadeHead = shouldFade
@@ -54,7 +56,7 @@ export function SurveyCard({
         <div className="mb-3">
         <div className="mb-3 flex items-center justify-between">
           <div className="flex items-center gap-1.5">
-            <div className="rounded-lg bg-pink-500 p-1.5 text-white">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-pink-500 text-white">
               <svg
                 className="h-4 w-4"
                 fill="none"
@@ -69,10 +71,25 @@ export function SurveyCard({
                 />
               </svg>
             </div>
-            <span className="text-xs font-bold text-pink-700">アンケート</span>
+            <span className="text-xs font-bold text-pink-700 leading-none">アンケート</span>
           </div>
-            <span className="text-xs font-medium text-gray-600">{visitedPeriodLabel}</span>
-          </div>
+          <button
+            type="button"
+            onClick={(event) => {
+              event.preventDefault();
+              toggle();
+            }}
+            className={`inline-flex h-9 w-9 items-center justify-center rounded-full border transition ${
+              isBookmarked
+                ? "border-pink-200 bg-pink-100 text-pink-600"
+                : "border-slate-200 bg-white/80 text-slate-500 hover:border-slate-300"
+            }`}
+            aria-label="アンケートをお気に入り"
+            aria-pressed={isBookmarked}
+          >
+            <Heart className={`h-4 w-4 ${isBookmarked ? "fill-current" : ""}`} />
+          </button>
+        </div>
 
         {showStoreInfo ? (
           <>
@@ -166,6 +183,7 @@ export function SurveyCard({
             <ThumbsUp className="h-4 w-4" />
             <span>役に立った {helpfulCount}</span>
           </div>
+          <span className="text-xs text-gray-500">{visitedPeriodLabel}</span>
         </div>
       </a>
     </div>

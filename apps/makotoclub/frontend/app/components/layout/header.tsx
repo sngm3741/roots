@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "../ui/button";
 import { PostIcon } from "../ui/post-icon";
+import { Heart } from "lucide-react";
 
 const navItems = [
   { label: "よくある質問", href: "/faq" },
@@ -80,21 +81,32 @@ export function Header() {
             <div className="w-10" />
 
             {/* CTA Button */}
-            <Button
-                  asChild
-                  className="bg-gradient-to-r from-pink-400 to-purple-500 text-white rounded-xl text-center shadow-lg hover:shadow-xl transition-all duration-200"
+            <div className="flex items-center gap-2">
+              <a
+                href="/bookmarks"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-pink-200 bg-pink-50 text-pink-600 shadow-sm transition hover:bg-pink-100"
+                aria-label="気になる店舗"
+              >
+                <Heart className="h-5 w-5 fill-current" />
+              </a>
+              <Button
+                asChild
+                variant="secondary"
+                className="h-10 w-10 p-0 border-pink-200 bg-pink-50 text-pink-600 hover:bg-pink-100"
+              >
+                <a
+                  href="/new"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                  }}
+                  className="flex items-center justify-center"
                 >
-                  <a
-                    href="/new"
-                    onClick={() => {
-                      setMobileMenuOpen(false);
-                    }}
-                    className="flex items-center justify-center gap-2"
-                  >
-                    投稿する
+                  <span className="flex items-center justify-center">
                     <PostIcon className="h-5 w-5" />
-                  </a>
-                </Button>
+                  </span>
+                </a>
+              </Button>
+            </div>
           </div>
         </div>
       </header>
