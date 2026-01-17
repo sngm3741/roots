@@ -1,25 +1,31 @@
 import { isRouteErrorResponse } from "react-router";
-import type { Route } from "./+types/$slug";
+import type { Route } from "./+types/index";
 import { ProfilePage } from "~/components/profile/ProfilePage";
 import { NotFoundView } from "~/components/profile/NotFoundView";
 import { getProfileBySlug } from "~/data/profiles";
 
-export const meta: Route.MetaFunction = ({ data }) => {
-  if (!data?.profile) {
-    return [{ title: "lilink" }];
+const DOMAIN_SUFFIX = ".lilink.link";
+
+const getSlugFromHost = (hostname: string) => {
+  if (hostname.endsWith(DOMAIN_SUFFIX)) {
+    const slug = hostname.slice(0, -DOMAIN_SUFFIX.length);
+    return slug.length > 0 ? slug : null;
   }
-
-  const title = `${data.profile.name} | lilink`;
-  const description = data.profile.subtitle ?? "リンク集プロフィールページ";
-
-  return [
-    { title },
-    { name: "description", content: description },
-  ];
+  return null;
 };
 
-export const loader: Route.LoaderFunction = ({ params }) => {
-  const slug = params.slug;
+const getHostnameFromRequest = (request: Request) => {
+  return (
+    request.headers.get("x-forwarded-host") ??
+    request.headers.get("cf-connecting-host") ??
+    new URL(request.url).hostname
+  );
+};
+
+export const loader: Route.LoaderFunction = ({ request }) => {
+  const hostname = getHostnameFromRequest(request);
+  const slug = getSlugFromHost(hostname);
+
   if (!slug) {
     throw new Response("プロフィールが見つかりません。", { status: 404 });
   }
@@ -32,9 +38,8 @@ export const loader: Route.LoaderFunction = ({ params }) => {
   return { profile };
 };
 
-export default function ProfileRoute({ loaderData }: Route.ComponentProps) {
+export default function IndexRoute({ loaderData }: Route.ComponentProps) {
   const { profile } = loaderData;
-
   return <ProfilePage profile={profile} />;
 }
 

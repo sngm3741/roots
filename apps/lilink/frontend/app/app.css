@@ -32,6 +32,14 @@ body {
   box-shadow: var(--shadow-lilink-soft);
 }
 
+.lilink-glass {
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  border-radius: var(--radius-lilink);
+  box-shadow: 0 18px 40px rgba(31, 42, 51, 0.12);
+  backdrop-filter: blur(14px);
+}
+
 .lilink-card:hover {
   box-shadow: var(--shadow-lilink);
   border-color: rgba(47, 125, 106, 0.4);
@@ -41,4 +49,12 @@ body {
   border-radius: 999px;
   border: 1px solid rgba(47, 125, 106, 0.18);
   background: rgba(47, 125, 106, 0.08);
+}
+
+.lilink-zebra {
+  background-image: url("https://aizulab.com/static/f3c147db603b2579c01252ad4bbf2885/d96a9/css-zebra.png");
+  background-color: var(--color-lilink-bg);
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
 }

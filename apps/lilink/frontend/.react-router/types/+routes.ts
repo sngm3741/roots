@@ -31,6 +31,10 @@ type RouteFiles = {
     id: "root";
     page: "/" | "/:slug" | "/*";
   };
+  "routes/index.tsx": {
+    id: "routes/index";
+    page: "/";
+  };
   "routes/$slug.tsx": {
     id: "routes/$slug";
     page: "/:slug";
@@ -43,6 +47,7 @@ type RouteFiles = {
 
 type RouteModules = {
   "root": typeof import("./app/root.tsx");
+  "routes/index": typeof import("./app/routes/index.tsx");
   "routes/$slug": typeof import("./app/routes/$slug.tsx");
   "routes/not-found": typeof import("./app/routes/not-found.tsx");
 };

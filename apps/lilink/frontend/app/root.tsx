@@ -60,13 +60,23 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
     : "予期しないエラーが発生しました。";
 
   return (
-    <main className="grid min-h-screen place-items-center px-6 py-16">
-      <div className="grid w-full max-w-md gap-4 text-center">
-        <p className="text-sm tracking-[0.3em] text-lilink-muted">エラー</p>
-        <h1 className="text-2xl font-semibold">{message}</h1>
-        <p className="text-sm text-lilink-muted">
-          お手数ですが、時間をおいてもう一度お試しください。
-        </p>
+    <main className="min-h-screen px-6 py-16">
+      <div className="mx-auto w-full max-w-5xl">
+        <div className="grid grid-cols-12 gap-6 text-center">
+          <div className="col-span-12 md:col-start-3 md:col-span-8">
+            <div className="grid grid-cols-12 gap-4">
+              <p className="col-span-12 text-sm tracking-[0.3em] text-lilink-muted">
+                エラー
+              </p>
+              <h1 className="col-span-12 text-2xl font-semibold">
+                {message}
+              </h1>
+              <p className="col-span-12 text-sm text-lilink-muted">
+                お手数ですが、時間をおいてもう一度お試しください。
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
     </main>
   );

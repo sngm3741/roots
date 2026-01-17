@@ -2,100 +2,67 @@ import type { Profile } from "../types/profile";
 
 const profiles: Profile[] = [
   {
-    slug: "mika",
-    name: "森下 美香",
-    subtitle: "フリーランスUIデザイナー",
+    slug: "kiriko",
+    name: "きりこ",
+    subtitle: "日本一のスパンカー❤️",
     avatarUrl:
-      "https://images.unsplash.com/photo-1544723795-3fb6469f5b39?w=400&auto=format&fit=crop",
+      "https://cdn.bsky.app/img/avatar/plain/did:plc:4myhksrgvt52kg4yeop34oic/bafkreiha4yvmkiyvhx6q5u35lal7tshf2loms6gov64sy5gonqvcetnywy@jpeg",
+    backgroundImageUrl:
+      "https://as2.ftcdn.net/jpg/06/51/57/53/1000_F_651575394_at1v8IC3iPwdaiVIlUgt6JDqQMPOyl1W.jpg",
+    chatbotEnabled: true,
     socialLinks: [
-      { kind: "x", url: "https://x.com/example" },
-      { kind: "instagram", url: "https://instagram.com/example" },
-      { kind: "website", url: "https://example.com" },
+      {
+        id: "x-kirikoallin",
+        kind: "x",
+        url: "https://x.com/Kirikoallin",
+        handle: "@Kirikoallin",
+        description: "メイン",
+      },
+      {
+        id: "x-kirikomovie",
+        kind: "x",
+        url: "https://x.com/kirikomovie",
+        handle: "@kirikomovie",
+        description: "動画紹介",
+      },
+      {
+        id: "x-osioki_bar",
+        kind: "x",
+        url: "https://x.com/osioki_bar",
+        handle: "@osioki_bar",
+        description: "お仕置きBAR",
+      },
+      {
+        id: "bsky-kiriko.studio-allin.com",
+        kind: "bluesky",
+        url: "https://bsky.app/profile/kiriko.studio-allin.com",
+        handle: "@kiriko.studio-allin.com",
+        description: "メイン",
+      },
+      {
+        id: "bsky-kirikomovie",
+        kind: "bluesky",
+        url: "https://bsky.app/profile/kirikomovie.bsky.social",
+        handle: "@kirikomovie.bsky.social",
+        description: "動画紹介",
+      },
     ],
     links: [
       {
-        id: "mika-1",
-        title: "ポートフォリオ",
-        url: "https://example.com/portfolio",
+        id: "kiriko-1",
+        title: "ブログ",
+        description: "日々のプレイ日記とイベント情報はこちら",
+        url: "https://kiriko07.blog.fc2.com/",
         iconUrl:
-          "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=120&auto=format&fit=crop",
+        // https://kiriko07.blog.fc2.com/favicon.ico  
+        "https://blog-imgs-113.fc2.com/o/o/p/oops0011/2019-09-14-fc2-logo386-comp.png",
       },
       {
-        id: "mika-2",
-        title: "デザイン相談フォーム",
-        url: "https://example.com/contact",
-      },
-      {
-        id: "mika-3",
-        title: "最近の制作ログ",
-        url: "https://example.com/blog",
-      },
-    ],
-  },
-  {
-    slug: "taichi",
-    name: "高橋 太一",
-    subtitle: "プロダクトマネージャー / 週末クリエイター",
-    avatarUrl:
-      "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=400&auto=format&fit=crop",
-    socialLinks: [
-      { kind: "x", url: "https://x.com/example" },
-      { kind: "line", url: "https://line.me/R/ti/p/@example" },
-      { kind: "youtube", url: "https://youtube.com/@example" },
-      { kind: "website", url: "https://example.com" },
-    ],
-    links: [
-      {
-        id: "taichi-1",
-        title: "プロフィールと実績",
-        url: "https://example.com/about",
-        iconUrl:
-          "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=120&auto=format&fit=crop",
-      },
-      {
-        id: "taichi-2",
-        title: "プロジェクトの進捗",
-        url: "https://example.com/projects",
-      },
-      {
-        id: "taichi-3",
-        title: "イベント登壇資料",
-        url: "https://example.com/speaking",
-      },
-      {
-        id: "taichi-4",
-        title: "コミュニティ参加フォーム",
-        url: "https://example.com/community",
-      },
-      {
-        id: "taichi-5",
-        title: "週末ニュースレター",
-        url: "https://example.com/newsletter",
-      },
-      {
-        id: "taichi-6",
-        title: "おすすめツール一覧",
-        url: "https://example.com/tools",
-      },
-      {
-        id: "taichi-7",
-        title: "読書メモ",
-        url: "https://example.com/reading",
-      },
-      {
-        id: "taichi-8",
-        title: "チーム募集",
-        url: "https://example.com/recruit",
-      },
-      {
-        id: "taichi-9",
-        title: "配信アーカイブ",
-        url: "https://example.com/archive",
-      },
-      {
-        id: "taichi-10",
-        title: "お問い合わせ",
-        url: "https://example.com/contact",
+        id: "spanking-library",
+        title: "スパンキング動画",
+        description: "最新動画の一覧はこちら",
+        url: "https://spankinglibrary.com/store.php?id=738",
+        iconUrl: "https://spankinglibrary.com/favicon.ico",
       },
     ],
   },

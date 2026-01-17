@@ -3,3 +3,6 @@ compatibility_date = "2025-02-07"
 compatibility_flags = ["nodejs_compat"]
 
 pages_build_output_dir = "build/client"
+
+[ai]
+binding = "AI"
