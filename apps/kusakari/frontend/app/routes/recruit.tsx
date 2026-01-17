@@ -58,7 +58,11 @@ export default function RecruitRoute() {
 
   return (
     <PageLayout>
-      <PageHeader title="採用情報" subtitle="Recruit" description="一緒に働く仲間を募集しています" />
+      <PageHeader
+        title="採用情報"
+        subtitle="Recruit"
+        backgroundImage="/page-headers/recruit.png"
+      />
       <Breadcrumb
         items={[
           { label: "TOP", path: "/" },
@@ -79,7 +83,7 @@ export default function RecruitRoute() {
         </div>
       </section>
 
-      <section className="py-16 lg:py-24 bg-white">
+      <section className="py-16 lg:py-4 bg-white">
         <div className="container mx-auto px-4 sm:px-6">
           <h2 className="text-3xl font-bold text-gray-900 mb-12 text-center">募集職種</h2>
           <div className="max-w-5xl mx-auto space-y-8">
@@ -137,7 +141,7 @@ export default function RecruitRoute() {
         </div>
       </section>
 
-      <section className="py-16 lg:py-24 bg-gray-50">
+      <section className="py-2 lg:py-4 bg-gray-50">
         <div className="container mx-auto px-4 sm:px-6">
           <h2 className="text-3xl font-bold text-gray-900 mb-12 text-center">働く魅力</h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
@@ -152,7 +156,7 @@ export default function RecruitRoute() {
         </div>
       </section>
 
-      <section className="py-16 lg:py-24 bg-white">
+      <section className="py-16 lg:py-4 bg-white">
         <div className="container mx-auto px-4 sm:px-6">
           <h2 className="text-3xl font-bold text-gray-900 mb-12 text-center">応募から入社まで</h2>
           <div className="max-w-3xl mx-auto">
@@ -181,7 +185,7 @@ export default function RecruitRoute() {
 
       <section className="py-16 bg-gradient-to-br from-emerald-50 to-white">
         <div className="container mx-auto px-4 sm:px-6">
-          <div className="max-w-2xl mx-auto text-center bg-white border-2 border-emerald-200 p-10 rounded-xl">
+          <div className="max-w-2xl mx-auto text-center bg-white border-2 border-emerald-200 p-6 sm:p-10 rounded-xl">
             <h3 className="text-2xl font-bold text-gray-900 mb-4">ご応募・お問い合わせ</h3>
             <p className="text-gray-700 mb-6">
               少しでも興味をお持ちいただけましたら、お気軽にお問い合わせください。<br />
@@ -190,13 +194,14 @@ export default function RecruitRoute() {
             <div className="space-y-4">
               <Link
                 to="/contact"
-                className="bg-emerald-600 text-white px-8 py-4 rounded-lg hover:bg-emerald-700 transition-colors font-bold text-lg w-full sm:w-auto"
+                className="inline-flex w-full items-center justify-center rounded-lg bg-emerald-600 px-6 py-4 text-lg font-bold text-white transition-colors hover:bg-emerald-700 sm:w-auto sm:px-8"
               >
                 応募・お問い合わせはこちら
               </Link>
               <div className="text-gray-600 text-sm">
-                または お電話でも受け付けております<br />
-                <span className="font-bold text-lg text-gray-900">TEL: 052-XXX-XXXX</span>
+                <span className="block">またはお電話でも受け付けております</span>
+                <span className="block">代表者: 岡田憲幸</span>
+                <span className="block font-bold text-lg text-gray-900">TEL: 080-6955-6096</span>
               </div>
             </div>
           </div>

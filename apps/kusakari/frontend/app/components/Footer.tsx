@@ -28,7 +28,7 @@ export function Footer() {
           <div>
             <h3 className="text-lg font-bold mb-4">サイトマップ</h3>
             <nav className="grid grid-cols-2 gap-x-4 gap-y-2">
-              {footerLinks.slice(0, 10).map((link) => (
+              {footerLinks.map((link) => (
                 <Link
                   key={link.path}
                   to={link.path}

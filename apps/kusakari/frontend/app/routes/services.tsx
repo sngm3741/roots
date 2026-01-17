@@ -11,35 +11,35 @@ export default function ServicesRoute() {
       icon: <Leaf className="text-emerald-600" size={48} />,
       title: "草刈り・除草",
       description:
-        "雑草の刈り取り、除草作業を丁寧に実施します。作業後の刈草処分も対応可能です。",
+        "法人・行政の管理地や公共施設の草刈りを中心に、報告まで一貫して対応します。",
       features: [
-        "手作業・機械作業の両方に対応",
+        "定期・スポット対応",
         "刈草の回収・処分込み",
-        "単発・スポット対応可能",
-        "緊急対応も承ります",
-      ],
-    },
-    {
-      icon: <Calendar className="text-emerald-600" size={48} />,
-      title: "定期管理サービス",
-      description:
-        "年間契約で定期的な草刈りを実施。管理物件の美観維持をサポートします。",
-      features: [
-        "年間契約で割引価格",
-        "定期訪問スケジュール調整",
-        "作業報告書提出対応",
-        "年間計画の立案サポート",
+        "報告書提出対応",
+        "近隣配慮・安全管理",
       ],
     },
     {
       icon: <TreeDeciduous className="text-emerald-600" size={48} />,
-      title: "伐採・防草対応",
-      description: "樹木の伐採や防草シート施工など、総合的な緑地管理にも対応します。",
+      title: "剪定・伐採",
+      description:
+        "高木や危険木の剪定・伐採にも対応。安全と近隣配慮を徹底します。",
       features: [
-        "小規模伐採対応",
-        "防草シート施工",
-        "砂利敷き対応",
-        "雑草対策のご提案",
+        "高木・危険木も対応",
+        "剪定・伐採後の処分込み",
+        "現地調査無料",
+        "行政案件の基準にも対応",
+      ],
+    },
+    {
+      icon: <Calendar className="text-emerald-600" size={48} />,
+      title: "道路の舗装工事",
+      description: "小規模な舗装補修や通路整備など、草刈りと合わせた対応が可能です。",
+      features: [
+        "小規模補修に対応",
+        "草刈りと同時施工OK",
+        "現地調査無料",
+        "条件により対応可否を判断",
       ],
     },
   ];
@@ -49,7 +49,7 @@ export default function ServicesRoute() {
       <PageHeader
         title="サービス内容"
         subtitle="Services"
-        description="知多半島エリアに特化した草刈り・除草サービスを提供しています"
+        backgroundImage="/page-headers/services.png"
       />
       <Breadcrumb
         items={[
@@ -89,7 +89,9 @@ export default function ServicesRoute() {
 
           <div className="mt-16 text-center bg-emerald-50 p-10 rounded-xl">
             <h3 className="text-2xl font-bold text-gray-900 mb-4">まずはお気軽にご相談ください</h3>
-            <p className="text-gray-700 mb-6">現場の状況に応じて最適なプランをご提案いたします</p>
+            <p className="text-gray-700 mb-6">
+              価格保証（他社見積提示で調整）・現場条件に合わせて最適にご提案します
+            </p>
             <Link
               to="/contact"
               className="bg-emerald-600 text-white px-8 py-4 rounded-lg hover:bg-emerald-700 transition-colors font-bold text-lg"

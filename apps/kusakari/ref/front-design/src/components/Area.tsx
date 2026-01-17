@@ -1,4 +1,5 @@
 import { MapPin, CheckCircle, XCircle } from 'lucide-react';
+import React from "react";
 
 export function Area() {
   const areas = [
@@ -15,7 +16,7 @@ export function Area() {
   ];
 
   return (
-    <section id="area" className="py-16 lg:py-24 bg-white">
+    <section id="area" className="py-2 lg:py-4 bg-white">
       <div className="container mx-auto px-4 sm:px-6">
         <div className="text-center mb-12 lg:mb-16">
           <h2 className="text-gray-900 mb-4">
@@ -23,7 +24,7 @@ export function Area() {
             <span className="text-3xl lg:text-4xl">対応エリア</span>
           </h2>
           <p className="text-lg text-gray-700 mt-4">
-            知多半島全域に対応しています
+            愛知県の知多半島をメインで活動
           </p>
         </div>
 

@@ -101,7 +101,11 @@ export default function FaqRoute() {
 
   return (
     <PageLayout>
-      <PageHeader title="よくある質問" subtitle="FAQ" description="お客様からよくいただくご質問にお答えします" />
+      <PageHeader
+        title="よくある質問"
+        subtitle="FAQ"
+        backgroundImage="/page-headers/faq.png"
+      />
       <Breadcrumb
         items={[
           { label: "TOP", path: "/" },
@@ -109,7 +113,7 @@ export default function FaqRoute() {
         ]}
       />
 
-      <section className="py-16 lg:py-24 bg-gray-50">
+      <section className="py-2 lg:py-4 bg-gray-50">
         <div className="container mx-auto px-4 sm:px-6">
           <div className="max-w-4xl mx-auto space-y-12">
             {faqs.map((category, categoryIndex) => (
@@ -156,7 +160,7 @@ export default function FaqRoute() {
             ))}
           </div>
 
-          <div className="mt-16 text-center bg-white border-2 border-emerald-200 p-10 rounded-xl max-w-3xl mx-auto">
+          <div className="my-16 text-center bg-white border-2 border-emerald-200 p-10 rounded-xl max-w-3xl mx-auto">
             <h3 className="text-2xl font-bold text-gray-900 mb-4">その他のご質問はお気軽にお問い合わせください</h3>
             <p className="text-gray-700 mb-6">専門スタッフが丁寧にお答えいたします</p>
             <Link

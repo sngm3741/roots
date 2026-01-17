@@ -1,11 +1,16 @@
 import { Breadcrumb } from "../components/Breadcrumb";
+import { ContactCtaCard } from "../components/ContactCtaCard";
 import { PageHeader } from "../components/PageHeader";
 import { PageLayout } from "../components/PageLayout";
 
 export default function PrivacyRoute() {
   return (
     <PageLayout>
-      <PageHeader title="プライバシーポリシー" subtitle="Privacy Policy" description="個人情報の取り扱いについて" />
+      <PageHeader
+        title="プライバシーポリシー"
+        subtitle="Privacy Policy"
+        backgroundImage="/page-headers/privacy.png"
+      />
       <Breadcrumb
         items={[
           { label: "TOP", path: "/" },
@@ -13,7 +18,7 @@ export default function PrivacyRoute() {
         ]}
       />
 
-      <section className="py-16 lg:py-24 bg-white">
+      <section className="py-16 lg:py-4 bg-white">
         <div className="container mx-auto px-4 sm:px-6">
           <div className="max-w-4xl mx-auto prose prose-emerald">
             <div className="space-y-8 text-gray-700">
@@ -52,13 +57,17 @@ export default function PrivacyRoute() {
               <div>
                 <h3 className="text-xl font-bold text-gray-900 mb-3">4. お問い合わせ窓口</h3>
                 <p className="leading-relaxed">本ポリシーに関するお問い合わせは、下記の窓口までお願いいたします。</p>
-                <div className="mt-4 p-4 bg-gray-50 rounded">
-                  <p>知多草刈りサービス</p>
-                  <p>電話：052-XXX-XXXX</p>
-                  <p>メール：info@example.com</p>
-                </div>
               </div>
             </div>
+          </div>
+
+          <div className="mt-12">
+            <ContactCtaCard
+              title="お問い合わせはこちら"
+              description="プライバシーポリシーに関するご質問は、お問い合わせフォームよりご連絡ください。"
+              ctaLabel="お問い合わせフォームへ"
+              ctaLink="/contact"
+            />
           </div>
         </div>
       </section>

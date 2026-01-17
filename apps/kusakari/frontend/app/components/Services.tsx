@@ -6,23 +6,23 @@ export function Services() {
     {
       icon: <Leaf className="text-emerald-600" size={40} />,
       title: "草刈り・除草",
-      description: "雑草の刈り取り、除草作業を丁寧に実施します。作業後の刈草処分も対応可能です。",
-      price: "300円〜 / ㎡",
-      features: ["手作業・機械作業対応", "刈草処分込み", "単発・スポット対応"],
-    },
-    {
-      icon: <Calendar className="text-emerald-600" size={40} />,
-      title: "定期管理",
-      description: "年間契約で定期的な草刈りを実施。管理物件の美観維持をサポートします。",
+      description: "法人・行政の管理地や公共施設の草刈りを中心に対応。報告まで一貫して行います。",
       price: "お見積もり",
-      features: ["年間契約割引あり", "定期訪問スケジュール調整", "報告書提出対応"],
+      features: ["定期・スポット対応", "刈草の回収・処分込み", "報告書提出対応"],
     },
     {
       icon: <TreeDeciduous className="text-emerald-600" size={40} />,
-      title: "伐採・防草対応",
-      description: "樹木の伐採や防草シート施工など、総合的な緑地管理にも対応します。",
+      title: "剪定・伐採",
+      description: "高木や危険木の剪定・伐採にも対応。近隣配慮と安全管理を徹底します。",
+      price: "お見積もり",
+      features: ["高木・危険木も対応", "剪定・伐採後の処分込み", "現地調査無料"],
+    },
+    {
+      icon: <Calendar className="text-emerald-600" size={40} />,
+      title: "道路の舗装工事",
+      description: "小規模な舗装補修や通路整備など、草刈りと合わせた対応が可能です。",
       price: "別途お見積もり",
-      features: ["小規模伐採対応", "防草シート施工", "砂利敷き対応"],
+      features: ["小規模補修に対応", "草刈りと同時施工OK", "現地調査無料"],
     },
   ];
 
@@ -37,7 +37,7 @@ export function Services() {
             <span className="text-3xl lg:text-4xl">サービス・料金</span>
           </h2>
           <p className="text-lg text-gray-700 mt-4">
-            お客様のニーズに合わせた柔軟なサービスを提供
+            個人・法人・行政を問わず草刈り・剪定・伐採を主軸に、道路の舗装工事なども柔軟に対応
           </p>
         </div>
 
@@ -81,7 +81,7 @@ export function Services() {
           <p className="text-gray-700 mb-4">
             <span className="font-bold text-lg">まずはお気軽にご相談ください</span>
             <br />
-            写真があれば概算見積も可能です
+            価格保証（他社見積提示で調整）・写真があれば概算見積も可能です
           </p>
           <Link
             to="/contact"

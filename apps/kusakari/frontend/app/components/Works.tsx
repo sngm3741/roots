@@ -1,48 +1,82 @@
+import { useEffect, useState } from "react";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 
-export function Works() {
+interface WorksProps {
+  showHeading?: boolean;
+}
+
+export function Works({ showHeading = true }: WorksProps) {
+  const [modalImage, setModalImage] = useState<{ src: string; alt: string } | null>(null);
   const works = [
     {
-      beforeImage:
-        "https://images.unsplash.com/photo-1766990194564-d597b23d1de3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxvdmVyZ3Jvd24lMjBncmFzcyUyMGJlZm9yZXxlbnwxfHx8fDE3Njc2ODQyMzl8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-      afterImage:
-        "https://images.unsplash.com/photo-1766010203610-86665f86acb4?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxncmFzcyUyMGN1dHRpbmclMjBsYW5kc2NhcGV8ZW58MXx8fHwxNzY3Njg0MjM4fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
+      beforeImage: "/ba/01_before.jpg",
+      afterImage: "/ba/01_after.jpg",
       area: "知多市",
-      type: "駐車場管理",
+      type: "草刈り",
+      size: "約20㎡",
+    },
+    {
+      beforeImage: "/ba/02_before.jpg",
+      afterImage: "/ba/02_after.jpg",
+      area: "東海市",
+      type: "草刈り",
+      size: "約2,000㎡",
+    },
+    {
+      beforeImage: "/ba/03_before.jpg",
+      afterImage: "/ba/03_after.jpg",
+      area: "半田市",
+      type: "道路舗装",
+      size: "約2㎡",
+    },
+    {
+      beforeImage: "/ba/04_before.jpg",
+      afterImage: "/ba/04_after.jpg",
+      area: "大府市",
+      type: "草刈り",
+      size: "約150㎡",
+    },
+    {
+      beforeImage: "/ba/05_before.jpg",
+      afterImage: "/ba/05_after.jpg",
+      area: "大府市",
+      type: "草刈り",
       size: "約200㎡",
     },
     {
-      beforeImage:
-        "https://images.unsplash.com/photo-1758524051476-cf120cb3f1e3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjBnYXJkZW5pbmclMjB3b3JrfGVufDF8fHx8MTc2NzY4NDIzOXww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-      afterImage:
-        "https://images.unsplash.com/photo-1738193830098-2d92352a1856?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxsYXduJTIwbW93aW5nJTIwc2VydmljZXxlbnwxfHx8fDE3Njc2MjE0OTl8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-      area: "半田市",
-      type: "空き地管理",
-      size: "約350㎡",
-    },
-    {
-      beforeImage:
-        "https://images.unsplash.com/photo-1752945490118-5b1518f98d77?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxpbmR1c3RyaWFsJTIwbGFuZCUyMG1haW50ZW5hbmNlfGVufDF8fHx8MTc2NzY4NDI0MHww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-      afterImage:
-        "https://images.unsplash.com/photo-1497435334941-8c899ee9e8e9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzb2xhciUyMHBhbmVsJTIwZmllbGR8ZW58MXx8fHwxNzY3Njg0MjQwfDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-      area: "東海市",
-      type: "太陽光発電所",
-      size: "約500㎡",
+      beforeImage: "/ba/06_before.jpg",
+      afterImage: "/ba/06_after.jpg",
+      area: "豊明市",
+      type: "草刈り",
+      size: "約50㎡",
     },
   ];
+
+  useEffect(() => {
+    if (!modalImage) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setModalImage(null);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [modalImage]);
 
   return (
     <section id="works" className="py-16 lg:py-24 bg-gray-50">
       <div className="container mx-auto px-4 sm:px-6">
-        <div className="text-center mb-12 lg:mb-16">
-          <h2 className="text-gray-900 mb-4">
-            <span className="block text-lg text-emerald-600 font-bold mb-2">WORKS</span>
-            <span className="text-3xl lg:text-4xl">施工実績</span>
-          </h2>
-          <p className="text-lg text-gray-700 mt-4">
-            確かな技術で、確実な結果をお届けします
-          </p>
-        </div>
+        {showHeading ? (
+          <div className="text-center mb-12 lg:mb-16">
+            <h2 className="text-gray-900 mb-4">
+              <span className="block text-lg text-emerald-600 font-bold mb-2">WORKS</span>
+              <span className="text-3xl lg:text-4xl">施工実績</span>
+            </h2>
+            <p className="text-lg text-gray-700 mt-4">
+              庭木の剪定から公共事業まで、確実な品質で対応します
+            </p>
+          </div>
+        ) : null}
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {works.map((work, index) => (
@@ -54,21 +88,35 @@ export function Works() {
                 <div>
                   <div className="text-xs text-gray-500 mb-1 font-bold">BEFORE</div>
                   <div className="aspect-square rounded overflow-hidden">
-                    <ImageWithFallback
-                      src={work.beforeImage}
-                      alt="施工前"
-                      className="w-full h-full object-cover"
-                    />
+                    <button
+                      type="button"
+                      className="h-full w-full"
+                      onClick={() => setModalImage({ src: work.beforeImage, alt: "施工前" })}
+                      aria-label="施工前の写真を拡大表示"
+                    >
+                      <ImageWithFallback
+                        src={work.beforeImage}
+                        alt="施工前"
+                        className="w-full h-full object-cover"
+                      />
+                    </button>
                   </div>
                 </div>
                 <div>
                   <div className="text-xs text-emerald-600 mb-1 font-bold">AFTER</div>
                   <div className="aspect-square rounded overflow-hidden">
-                    <ImageWithFallback
-                      src={work.afterImage}
-                      alt="施工後"
-                      className="w-full h-full object-cover"
-                    />
+                    <button
+                      type="button"
+                      className="h-full w-full"
+                      onClick={() => setModalImage({ src: work.afterImage, alt: "施工後" })}
+                      aria-label="施工後の写真を拡大表示"
+                    >
+                      <ImageWithFallback
+                        src={work.afterImage}
+                        alt="施工後"
+                        className="w-full h-full object-cover"
+                      />
+                    </button>
                   </div>
                 </div>
               </div>
@@ -93,11 +141,34 @@ export function Works() {
             </div>
           ))}
         </div>
-
-        <div className="mt-12 text-center text-gray-600">
-          <p>その他多数の実績がございます。詳しくはお問い合わせください。</p>
-        </div>
       </div>
+
+      {modalImage ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setModalImage(null)}
+        >
+          <div
+            className="relative max-h-[90vh] w-full max-w-4xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              className="absolute -top-10 right-0 text-white text-sm"
+              onClick={() => setModalImage(null)}
+            >
+              閉じる
+            </button>
+            <img
+              src={modalImage.src}
+              alt={modalImage.alt}
+              className="max-h-[90vh] w-full rounded-lg object-contain"
+            />
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }

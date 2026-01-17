@@ -8,6 +8,7 @@ import {
 } from "react-router";
 import { Toaster } from "sonner";
 
+import type { ReactNode } from "react";
 import type { Route } from "./+types/root";
 import "./app.css";
 
@@ -26,7 +27,7 @@ export const meta: Route.MetaFunction = () => {
 
 export const links: Route.LinksFunction = () => [];
 
-export function Layout({ children }: { children: React.ReactNode }) {
+export function Layout({ children }: { children: ReactNode }) {
   return (
     <html lang="ja">
       <head>

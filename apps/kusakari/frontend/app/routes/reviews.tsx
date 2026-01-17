@@ -1,7 +1,7 @@
-import { Link } from "react-router";
 import { Quote, Star } from "lucide-react";
 
 import { Breadcrumb } from "../components/Breadcrumb";
+import { ContactCtaCard } from "../components/ContactCtaCard";
 import { PageHeader } from "../components/PageHeader";
 import { PageLayout } from "../components/PageLayout";
 
@@ -9,7 +9,6 @@ export default function ReviewsRoute() {
   const reviews = [
     {
       id: 1,
-      company: "株式会社○○不動産管理",
       type: "法人",
       category: "不動産管理",
       rating: 5,
@@ -20,7 +19,6 @@ export default function ReviewsRoute() {
     },
     {
       id: 2,
-      company: "○○太陽光発電所",
       type: "法人",
       category: "太陽光発電",
       rating: 5,
@@ -31,7 +29,6 @@ export default function ReviewsRoute() {
     },
     {
       id: 3,
-      company: "○○様",
       type: "個人",
       category: "空き地管理",
       rating: 5,
@@ -42,7 +39,6 @@ export default function ReviewsRoute() {
     },
     {
       id: 4,
-      company: "○○商事株式会社",
       type: "法人",
       category: "駐車場管理",
       rating: 5,
@@ -53,7 +49,6 @@ export default function ReviewsRoute() {
     },
     {
       id: 5,
-      company: "○○ビル管理",
       type: "法人",
       category: "施設管理",
       rating: 4,
@@ -64,7 +59,6 @@ export default function ReviewsRoute() {
     },
     {
       id: 6,
-      company: "○○様",
       type: "個人",
       category: "一般住宅",
       rating: 5,
@@ -75,7 +69,6 @@ export default function ReviewsRoute() {
     },
     {
       id: 7,
-      company: "株式会社○○開発",
       type: "法人",
       category: "不動産開発",
       rating: 5,
@@ -86,7 +79,6 @@ export default function ReviewsRoute() {
     },
     {
       id: 8,
-      company: "○○工場",
       type: "法人",
       category: "工場管理",
       rating: 5,
@@ -97,7 +89,6 @@ export default function ReviewsRoute() {
     },
     {
       id: 9,
-      company: "○○様",
       type: "個人",
       category: "駐車場",
       rating: 4,
@@ -116,7 +107,11 @@ export default function ReviewsRoute() {
 
   return (
     <PageLayout>
-      <PageHeader title="お客様の声" subtitle="Reviews" description="お客様からいただいた声をご紹介します" />
+      <PageHeader
+        title="お客様の声"
+        subtitle="Reviews"
+        backgroundImage="/page-headers/reviews.png"
+      />
       <Breadcrumb
         items={[
           { label: "TOP", path: "/" },
@@ -137,7 +132,7 @@ export default function ReviewsRoute() {
         </div>
       </section>
 
-      <section className="py-16 lg:py-24 bg-gray-50">
+      <section className="py-2 lg:py-4 bg-gray-50">
         <div className="container mx-auto px-4 sm:px-6">
           <div className="max-w-5xl mx-auto space-y-6">
             {reviews.map((review) => (
@@ -145,10 +140,12 @@ export default function ReviewsRoute() {
                 key={review.id}
                 className="bg-white border-2 border-gray-200 rounded-xl p-6 lg:p-8 hover:border-emerald-300 transition-colors"
               >
-                <div className="flex items-start justify-between mb-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between mb-4">
                   <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="font-bold text-gray-900 text-lg">{review.company}</h3>
+                    <h3 className="font-bold text-gray-900 text-lg mb-2">
+                      {review.type === "法人" ? "法人のお客様" : "個人のお客様"}
+                    </h3>
+                    <div className="flex flex-wrap items-center gap-2 mb-2">
                       <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs font-medium">
                         {review.type}
                       </span>
@@ -160,7 +157,7 @@ export default function ReviewsRoute() {
                       <span>{review.date}</span>
                     </div>
                   </div>
-                  <div className="flex gap-1">
+                  <div className="flex gap-1 sm:mt-1">
                     {Array.from({ length: review.rating }).map((_, i) => (
                       <Star key={i} className="text-yellow-400 fill-yellow-400" size={20} />
                     ))}
@@ -183,15 +180,13 @@ export default function ReviewsRoute() {
             ))}
           </div>
 
-          <div className="mt-16 text-center bg-white border-2 border-emerald-200 p-10 rounded-xl max-w-3xl mx-auto">
-            <h3 className="text-2xl font-bold text-gray-900 mb-4">あなたも安心のサービスを体験してみませんか？</h3>
-            <p className="text-gray-700 mb-6">多くのお客様にご満足いただいているサービスをぜひお試しください</p>
-            <Link
-              to="/contact"
-              className="bg-emerald-600 text-white px-8 py-4 rounded-lg hover:bg-emerald-700 transition-colors font-bold text-lg"
-            >
-              無料見積もりを依頼する
-            </Link>
+          <div className="my-16">
+            <ContactCtaCard
+              title="あなたも安心のサービスを体験してみませんか？"
+              description="多くのお客様にご満足いただいているサービスをぜひお試しください"
+              ctaLabel="無料見積もりを依頼する"
+              ctaLink="/contact"
+            />
           </div>
         </div>
       </section>

@@ -18,7 +18,7 @@ export function StrengthsPage() {
     },
     {
       icon: <Award className="text-emerald-600" size={56} />,
-      title: '公共事業請負実績あり',
+      title: '公共事業請負実績',
       description: '市町村の公共事業を請け負った実績があり、品質と信頼性が証明されています。',
       details: [
         '厳しい基準をクリアした確かな技術力',
@@ -84,7 +84,7 @@ export function StrengthsPage() {
           ]}
         />
 
-        <section className="py-16 lg:py-24 bg-gray-50">
+        <section className="py-2 lg:py-4 bg-gray-50">
           <div className="container mx-auto px-4 sm:px-6">
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
               {strengths.map((strength, index) => (

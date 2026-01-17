@@ -6,14 +6,18 @@ import { PageLayout } from "../components/PageLayout";
 export default function ContactRoute() {
   return (
     <PageLayout>
-      <PageHeader title="お問い合わせ" subtitle="Contact" description="お気軽にお問い合わせください" />
+      <PageHeader
+        title="お問い合わせ"
+        subtitle="Contact"
+        backgroundImage="/page-headers/contact.png"
+      />
       <Breadcrumb
         items={[
           { label: "TOP", path: "/" },
           { label: "お問い合わせ", path: "/contact" },
         ]}
       />
-      <Contact />
+      <Contact showHeading={false} />
     </PageLayout>
   );
 }

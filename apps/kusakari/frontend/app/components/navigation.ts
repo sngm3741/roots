@@ -27,23 +27,11 @@ export const mobileNavItems: MobileNavItem[] = [
   { label: "当社の強み", path: "/strengths" },
   { label: "料金プラン", path: "/pricing" },
   { label: "よくある質問", path: "/faq" },
-  {
-    label: "施工事例",
-    path: "/works",
-    hasSubmenu: true,
-    submenu: [
-      { label: "法人向け", path: "/works/corporate" },
-      { label: "駐車場管理", path: "/works/parking" },
-      { label: "太陽光発電所", path: "/works/solar" },
-      { label: "空き地管理", path: "/works/vacant" },
-      { label: "定期管理", path: "/works/regular" },
-    ],
-  },
+  { label: "施工事例", path: "/works" },
   { label: "対応エリア", path: "/area" },
   { label: "お客様の声", path: "/reviews" },
   { label: "ブログ", path: "/blog" },
   { label: "コラム", path: "/column" },
-  { label: "メディア掲載", path: "/media" },
   { label: "採用情報", path: "/recruit" },
   { label: "お問い合わせ", path: "/contact" },
   { label: "会社概要", path: "/company" },
@@ -62,7 +50,6 @@ export const footerLinks: NavItem[] = [
   { label: "お客様の声", path: "/reviews" },
   { label: "ブログ", path: "/blog" },
   { label: "コラム", path: "/column" },
-  { label: "メディア掲載", path: "/media" },
   { label: "採用情報", path: "/recruit" },
   { label: "お問い合わせ", path: "/contact" },
   { label: "会社概要", path: "/company" },
@@ -99,13 +86,7 @@ export const sitemapItems: SitemapItem[] = [
   {
     label: "施工事例",
     path: "/works",
-    children: [
-      { label: "法人向け", path: "/works/corporate" },
-      { label: "駐車場管理", path: "/works/parking" },
-      { label: "太陽光発電所", path: "/works/solar" },
-      { label: "空き地管理", path: "/works/vacant" },
-      { label: "定期管理", path: "/works/regular" },
-    ],
+    children: [],
   },
   {
     label: "対応エリア",
@@ -125,11 +106,6 @@ export const sitemapItems: SitemapItem[] = [
   {
     label: "コラム",
     path: "/column",
-    children: [],
-  },
-  {
-    label: "メディア掲載",
-    path: "/media",
     children: [],
   },
   {

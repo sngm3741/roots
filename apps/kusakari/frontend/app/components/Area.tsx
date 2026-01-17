@@ -27,7 +27,7 @@ export function Area({ showHeading = true }: AreaProps) {
               <span className="block text-lg text-emerald-600 font-bold mb-2">SERVICE AREA</span>
               <span className="text-3xl lg:text-4xl">対応エリア</span>
             </h2>
-            <p className="text-lg text-gray-700 mt-4">知多半島全域に対応しています</p>
+            <p className="text-lg text-gray-700 mt-4">知多半島全域をメインに地域密着で対応</p>
           </div>
         ) : null}
 
@@ -54,10 +54,10 @@ export function Area({ showHeading = true }: AreaProps) {
               <div className="flex items-start gap-3">
                 <XCircle className="text-blue-600 flex-shrink-0 mt-1" size={24} />
                 <div>
-                  <h4 className="font-bold text-gray-900 mb-2">エリア外のお客様へ</h4>
+                  <h4 className="font-bold text-gray-900 mb-2">エリア外のご相談</h4>
                   <p className="text-gray-700 leading-relaxed">
-                    上記エリア外のご依頼につきましては、原則として対応しておりません。<br />
-                    ただし、規模や条件によっては対応可能な場合もございますので、まずはお気軽にご相談ください。
+                    基本は知多半島エリア中心ですが、名古屋・県外の出張も条件により対応可能です。<br />
+                    規模や日程に応じて調整しますので、まずはご相談ください。
                   </p>
                 </div>
               </div>
@@ -66,8 +66,8 @@ export function Area({ showHeading = true }: AreaProps) {
 
           <div className="mt-8 text-center">
             <p className="text-gray-600 mb-4">
-              知多半島エリアに特化することで、移動コストを削減し、<br className="hidden sm:block" />
-              迅速な対応と低価格を実現しています。
+              地域密着と自社施工で移動コストを削減し、<br className="hidden sm:block" />
+              迅速対応と価格保証（他社見積提示で調整）を実現しています。
             </p>
           </div>
         </div>

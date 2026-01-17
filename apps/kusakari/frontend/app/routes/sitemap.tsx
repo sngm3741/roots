@@ -8,7 +8,7 @@ import { sitemapItems } from "../components/navigation";
 export default function SitemapRoute() {
   return (
     <PageLayout>
-      <PageHeader title="サイトマップ" subtitle="Sitemap" />
+      <PageHeader title="サイトマップ" subtitle="Sitemap" backgroundImage="/page-headers/sitemap.png" />
       <Breadcrumb
         items={[
           { label: "TOP", path: "/" },
@@ -16,7 +16,7 @@ export default function SitemapRoute() {
         ]}
       />
 
-      <section className="py-16 lg:py-24 bg-white">
+      <section className="py-16 lg:py-4 bg-white">
         <div className="container mx-auto px-4 sm:px-6">
           <div className="max-w-4xl mx-auto">
             <div className="bg-white border-2 border-gray-200 rounded-xl p-8 lg:p-12">

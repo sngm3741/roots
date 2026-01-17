@@ -108,7 +108,7 @@ export function FaqPage() {
           ]}
         />
 
-        <section className="py-16 lg:py-24 bg-gray-50">
+        <section className="py-2 lg:py-4 bg-gray-50">
           <div className="container mx-auto px-4 sm:px-6">
             <div className="max-w-4xl mx-auto space-y-12">
               {faqs.map((category, categoryIndex) => (
@@ -155,7 +155,7 @@ export function FaqPage() {
               ))}
             </div>
 
-            <div className="mt-16 text-center bg-white border-2 border-emerald-200 p-10 rounded-xl max-w-3xl mx-auto">
+            <div className="my-16 text-center bg-white border-2 border-emerald-200 p-10 rounded-xl max-w-3xl mx-auto">
               <h3 className="text-2xl font-bold text-gray-900 mb-4">
                 その他のご質問はお気軽にお問い合わせください
               </h3>

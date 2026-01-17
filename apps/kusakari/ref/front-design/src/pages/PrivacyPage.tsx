@@ -20,7 +20,7 @@ export function PrivacyPage() {
           ]}
         />
 
-        <section className="py-16 lg:py-24 bg-white">
+        <section className="py-16 lg:py-4 bg-white">
           <div className="container mx-auto px-4 sm:px-6">
             <div className="max-w-4xl mx-auto prose prose-emerald">
               <div className="space-y-8 text-gray-700">

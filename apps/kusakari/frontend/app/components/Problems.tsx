@@ -5,22 +5,22 @@ export function Problems() {
     {
       icon: <Clock className="text-emerald-600" size={32} />,
       title: "管理物件が多く手が回らない",
-      description: "複数の物件を抱えていて、草刈り対応が追いつかない",
+      description: "複数の施設・用地の草刈りや剪定が追いつかない",
     },
     {
       icon: <AlertCircle className="text-emerald-600" size={32} />,
-      title: "毎年業者選定が面倒",
-      description: "毎回業者を探すのに時間がかかり、品質もバラバラ",
+      title: "業者選定と品質管理が大変",
+      description: "年度ごとに業者が変わり、品質や報告が安定しない",
     },
     {
       icon: <MapPin className="text-emerald-600" size={32} />,
       title: "遠方の土地管理ができない",
-      description: "本社から離れた物件の管理が難しく、現地確認も困難",
+      description: "現地確認が難しく、報告の精度も不安",
     },
     {
       icon: <ThumbsDown className="text-emerald-600" size={32} />,
-      title: "品質や近隣クレームが不安",
-      description: "作業品質が低いと近隣からクレームが来る可能性がある",
+      title: "近隣配慮・安全管理が不安",
+      description: "作業品質や安全対応のばらつきが気になる",
     },
   ];
 

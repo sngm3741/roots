@@ -10,7 +10,7 @@ export function Strengths() {
     },
     {
       icon: <Award className="text-white" size={48} />,
-      title: '公共事業請負実績あり',
+      title: '公共事業請負実績',
       description: '市町村の公共事業を請け負った実績があり、品質と信頼性が証明されています。',
       color: 'bg-blue-600'
     },
@@ -23,7 +23,7 @@ export function Strengths() {
   ];
 
   return (
-    <section id="strengths" className="py-16 lg:py-24 bg-gradient-to-br from-gray-50 to-emerald-50">
+    <section id="strengths" className="py-2 lg:py-4 bg-gradient-to-br from-gray-50 to-emerald-50">
       <div className="container mx-auto px-4 sm:px-6">
         <div className="text-center mb-12 lg:mb-16">
           <h2 className="text-gray-900 mb-4">

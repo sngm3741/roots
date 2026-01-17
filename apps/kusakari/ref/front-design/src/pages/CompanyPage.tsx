@@ -31,7 +31,7 @@ export function CompanyPage() {
           ]}
         />
 
-        <section className="py-16 lg:py-24 bg-gray-50">
+        <section className="py-2 lg:py-4 bg-gray-50">
           <div className="container mx-auto px-4 sm:px-6">
             <div className="max-w-4xl mx-auto bg-white border-2 border-gray-200 rounded-xl overflow-hidden">
               <table className="w-full">

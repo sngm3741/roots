@@ -138,7 +138,7 @@ export function WorksCategoryPage() {
           ]}
         />
 
-        <section className="py-16 lg:py-24 bg-gray-50">
+        <section className="py-2 lg:py-4 bg-gray-50">
           <div className="container mx-auto px-4 sm:px-6">
             <div className="space-y-12">
               {category.works.map((work, index) => (
@@ -207,7 +207,7 @@ export function WorksCategoryPage() {
               ))}
             </div>
 
-            <div className="mt-16 text-center bg-white border-2 border-emerald-200 p-10 rounded-xl max-w-3xl mx-auto">
+            <div className="my-16 text-center bg-white border-2 border-emerald-200 p-10 rounded-xl max-w-3xl mx-auto">
               <h3 className="text-2xl font-bold text-gray-900 mb-4">
                 同様のお悩みはございませんか？
               </h3>

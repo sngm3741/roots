@@ -8,27 +8,27 @@ import { PageLayout } from "../components/PageLayout";
 export default function PricingRoute() {
   const pricingPlans = [
     {
-      name: "スポット対応",
-      price: "300円〜",
-      unit: "/ ㎡",
-      description: "単発での草刈り作業に最適なプランです",
-      features: ["手作業・機械作業対応", "刈草処分込み", "見積もり無料", "最短3営業日で対応"],
+      name: "草刈り・剪定・伐採",
+      price: "お見積もり",
+      unit: "",
+      description: "法人・行政の現場に合わせた標準プランです",
+      features: ["定期・スポット対応", "報告書提出対応", "刈草・剪定枝の処分込み", "現地調査無料"],
       highlight: false,
     },
     {
       name: "定期管理プラン",
       price: "お見積もり",
       unit: "",
-      description: "年間契約で割引価格にて対応いたします",
-      features: ["年3回〜のご訪問", "年間契約割引あり", "作業スケジュール調整", "報告書提出対応", "優先対応"],
+      description: "複数拠点・広域管理に最適な年間契約プランです",
+      features: ["年3回〜のご訪問", "スケジュール調整", "報告書提出対応", "優先対応", "複数拠点の一括管理"],
       highlight: true,
     },
     {
-      name: "伐採・防草対応",
+      name: "道路の舗装工事",
       price: "別途お見積もり",
       unit: "",
-      description: "樹木伐採や防草シート施工など",
-      features: ["小規模伐採対応", "防草シート施工", "砂利敷き対応", "現地調査無料"],
+      description: "草刈りと合わせた小規模補修・通路整備に対応します",
+      features: ["小規模補修に対応", "草刈りと同時施工OK", "現地調査無料", "条件により対応可否を判断"],
       highlight: false,
     },
   ];
@@ -36,7 +36,7 @@ export default function PricingRoute() {
   const additionalInfo = [
     {
       title: "追加料金が発生する場合",
-      items: ["傾斜地・急斜面の場合", "大型機械が入れない場所", "障害物が多い現場", "刈草の量が極端に多い場合"],
+      items: ["傾斜地・急斜面の場合", "大型機械が入れない場所", "障害物が多い現場", "安全対策が必要な高木・危険木"],
     },
     {
       title: "割引対象",
@@ -46,7 +46,11 @@ export default function PricingRoute() {
 
   return (
     <PageLayout>
-      <PageHeader title="料金プラン" subtitle="Pricing" description="明確な料金体系で安心してご依頼いただけます" />
+      <PageHeader
+        title="料金プラン"
+        subtitle="Pricing"
+        backgroundImage="/page-headers/pricing.png"
+      />
       <Breadcrumb
         items={[
           { label: "TOP", path: "/" },
@@ -104,9 +108,11 @@ export default function PricingRoute() {
             ))}
           </div>
 
-          <div className="mt-16 text-center bg-emerald-50 p-10 rounded-xl max-w-3xl mx-auto">
+          <div className="my-16 text-center bg-emerald-50 p-10 rounded-xl max-w-3xl mx-auto">
             <h3 className="text-2xl font-bold text-gray-900 mb-4">正確なお見積もりは無料です</h3>
-            <p className="text-gray-700 mb-6">現地の写真をお送りいただければ、より正確なお見積もりが可能です</p>
+            <p className="text-gray-700 mb-6">
+              価格保証（他社見積提示で調整）・写真があれば概算見積も可能です
+            </p>
             <Link
               to="/contact"
               className="bg-emerald-600 text-white px-8 py-4 rounded-lg hover:bg-emerald-700 transition-colors font-bold text-lg"

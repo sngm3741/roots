@@ -57,7 +57,7 @@ export function ServicesPage() {
           ]}
         />
 
-        <section className="py-16 lg:py-24 bg-white">
+        <section className="py-16 lg:py-4 bg-white">
           <div className="container mx-auto px-4 sm:px-6">
             <div className="grid md:grid-cols-3 gap-8 lg:gap-10">
               {services.map((service, index) => (

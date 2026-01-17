@@ -4,26 +4,29 @@ export function Strengths() {
   const strengths = [
     {
       icon: <MapPinned className="text-white" size={48} />,
-      title: "知多半島特化",
-      description: "知多半島エリアに特化することで、移動コストを最小化。迅速な対応と低価格を実現しています。",
+      title: "地域密着・広域も相談可",
+      description: "知多半島を中心に迅速対応。条件により名古屋・県外の出張もご相談いただけます。",
       color: "bg-emerald-600",
     },
     {
       icon: <Award className="text-white" size={48} />,
-      title: "公共事業請負実績あり",
-      description: "市町村の公共事業を請け負った実績があり、品質と信頼性が証明されています。",
+      title: "公共事業請負実績",
+      description: "市町村の公共事業で培った品質基準と安全管理で対応します。",
       color: "bg-blue-600",
     },
     {
       icon: <Users className="text-white" size={48} />,
-      title: "熟練作業者のみ対応",
-      description: "経験豊富な熟練作業者が丁寧に作業を行います。近隣への配慮も徹底しています。",
+      title: "自社施工・柔軟対応",
+      description: "熟練技術者による自社施工。土日・夜間の緊急対応もご相談可能です。",
       color: "bg-teal-600",
     },
   ];
 
   return (
-    <section id="strengths" className="py-16 lg:py-24 bg-gradient-to-br from-gray-50 to-emerald-50">
+    <section
+      id="strengths"
+      className="py-16 lg:py-24 bg-gradient-to-br from-gray-50 to-emerald-50"
+    >
       <div className="container mx-auto px-4 sm:px-6">
         <div className="text-center mb-12 lg:mb-16">
           <h2 className="text-gray-900 mb-4">
@@ -31,7 +34,7 @@ export function Strengths() {
             <span className="text-3xl lg:text-4xl">当社の強み</span>
           </h2>
           <p className="text-lg text-gray-700 mt-4">
-            地域密着だからこそ実現できる高品質なサービス
+            自社施工×地域密着でコストを抑え、価格保証（他社見積提示で調整）にも対応
           </p>
         </div>
 

@@ -13,16 +13,18 @@ export function Breadcrumb({ items }: BreadcrumbProps) {
   return (
     <nav className="bg-gray-50 py-4">
       <div className="container mx-auto px-4 sm:px-6">
-        <ol className="flex items-center gap-2 text-sm">
+        <ol className="flex items-center gap-2 text-sm overflow-hidden">
           {items.map((item, index) => (
-            <li key={index} className="flex items-center gap-2">
+            <li key={index} className="flex items-center gap-2 min-w-0">
               {index > 0 ? <span className="text-gray-400">→</span> : null}
               {index === items.length - 1 ? (
-                <span className="text-gray-700 font-medium">{item.label}</span>
+                <span className="text-gray-700 font-medium truncate max-w-[60vw] sm:max-w-[50vw]">
+                  {item.label}
+                </span>
               ) : (
                 <Link
                   to={item.path}
-                  className="text-emerald-700 hover:text-emerald-800 transition-colors"
+                  className="text-emerald-700 hover:text-emerald-800 transition-colors shrink-0"
                 >
                   {item.label}
                 </Link>

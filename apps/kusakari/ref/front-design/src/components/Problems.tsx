@@ -25,7 +25,7 @@ export function Problems() {
   ];
 
   return (
-    <section className="py-16 lg:py-24 bg-white">
+    <section className="py-16 lg:py-4 bg-white">
       <div className="container mx-auto px-4 sm:px-6">
         <div className="text-center mb-12 lg:mb-16">
           <h2 className="text-gray-900 mb-4">

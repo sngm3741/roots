@@ -98,7 +98,7 @@ export function RecruitPage() {
         </section>
 
         {/* 募集職種 */}
-        <section className="py-16 lg:py-24 bg-white">
+        <section className="py-16 lg:py-4 bg-white">
           <div className="container mx-auto px-4 sm:px-6">
             <h2 className="text-3xl font-bold text-gray-900 mb-12 text-center">
               募集職種
@@ -159,7 +159,7 @@ export function RecruitPage() {
         </section>
 
         {/* 働く魅力 */}
-        <section className="py-16 lg:py-24 bg-gray-50">
+        <section className="py-2 lg:py-4 bg-gray-50">
           <div className="container mx-auto px-4 sm:px-6">
             <h2 className="text-3xl font-bold text-gray-900 mb-12 text-center">
               働く魅力
@@ -182,7 +182,7 @@ export function RecruitPage() {
         </section>
 
         {/* 応募フロー */}
-        <section className="py-16 lg:py-24 bg-white">
+        <section className="py-16 lg:py-4 bg-white">
           <div className="container mx-auto px-4 sm:px-6">
             <h2 className="text-3xl font-bold text-gray-900 mb-12 text-center">
               応募から入社まで
