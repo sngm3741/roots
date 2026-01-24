@@ -1,16 +1,17 @@
 import { isRouteErrorResponse } from "react-router";
 import type { Route } from "./+types/$slug";
-import { ProfilePage } from "~/components/profile/ProfilePage";
-import { NotFoundView } from "~/components/profile/NotFoundView";
-import { getProfileBySlug } from "~/data/profiles";
+import { ProfilePage } from "~/components/templates/ProfilePage";
+import { NotFoundView } from "~/components/templates/NotFoundView";
+import { getPageBySlug } from "~/data/profiles";
 
 export const meta: Route.MetaFunction = ({ data }) => {
-  if (!data?.profile) {
+  if (!data?.page) {
     return [{ title: "lilink" }];
   }
 
-  const title = `${data.profile.name} | lilink`;
-  const description = data.profile.subtitle ?? "リンク集プロフィールページ";
+  const title = `${data.page.profile.name} | lilink`;
+  const description =
+    data.page.profile.subtitle ?? "リンク集プロフィールページ";
 
   return [
     { title },
@@ -18,24 +19,24 @@ export const meta: Route.MetaFunction = ({ data }) => {
   ];
 };
 
-export const loader: Route.LoaderFunction = ({ params }) => {
+export const loader: Route.LoaderFunction = async ({ params }) => {
   const slug = params.slug;
   if (!slug) {
     throw new Response("プロフィールが見つかりません。", { status: 404 });
   }
 
-  const profile = getProfileBySlug(slug);
-  if (!profile) {
+  const page = await getPageBySlug(slug);
+  if (!page) {
     throw new Response("プロフィールが見つかりません。", { status: 404 });
   }
 
-  return { profile };
+  return { page };
 };
 
 export default function ProfileRoute({ loaderData }: Route.ComponentProps) {
-  const { profile } = loaderData;
+  const { page } = loaderData;
 
-  return <ProfilePage profile={profile} />;
+  return <ProfilePage page={page} />;
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {

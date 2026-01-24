@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Col } from "~/components/atoms/Col";
+import { Grid12 } from "~/components/atoms/Grid12";
 
 type ChatMessage = {
   id: string;
@@ -8,7 +10,11 @@ type ChatMessage = {
 
 const createId = () => `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 
-export function ChatbotCard() {
+type ChatbotCardProps = {
+  userId: string;
+};
+
+export function ChatbotCard({ userId }: ChatbotCardProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -46,7 +52,7 @@ export function ChatbotCard() {
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: text }),
+        body: JSON.stringify({ message: text, userId }),
       });
 
       const data = (await response.json()) as { reply?: string };
@@ -115,68 +121,96 @@ export function ChatbotCard() {
   }, []);
 
   const LoadingIndicator = () => (
-    <div className="grid justify-items-start">
-      <div className="flex items-center gap-1">
-        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-lilink-muted" />
-        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-lilink-muted [animation-delay:120ms]" />
-        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-lilink-muted [animation-delay:240ms]" />
-      </div>
-    </div>
+    <Grid12 gap="1" className="justify-items-start">
+      <Col span={12}>
+        <Grid12 gap="1" className="items-center">
+          <Col span={1}>
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-lilink-muted" />
+          </Col>
+          <Col span={1}>
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-lilink-muted [animation-delay:120ms]" />
+          </Col>
+          <Col span={1}>
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-lilink-muted [animation-delay:240ms]" />
+          </Col>
+        </Grid12>
+      </Col>
+    </Grid12>
   );
 
   return (
-    <section className="grid grid-cols-12 gap-4">
+    <Grid12 gap="4">
       {messages.length > 0 ? (
-        <div className="col-span-12 lilink-glass grid max-h-72 gap-4 overflow-y-auto px-4 py-4">
-        {messages.map((message) => (
-          <div
-              key={message.id}
-              className={
-                message.role === "user"
-                  ? "grid justify-items-end"
-                  : "grid justify-items-start"
-              }
-            >
-              <div
+        <Col span={12}>
+          <Grid12
+            gap="4"
+            className="lilink-glass max-h-72 overflow-y-auto px-4 py-4"
+          >
+            {messages.map((message) => (
+              <Col
+                key={message.id}
+                span={12}
                 className={
                   message.role === "user"
-                    ? "max-w-[85%] rounded-full bg-neutral-600 px-3 py-1.5 text-xs text-white shadow-[0_8px_20px_rgba(31,42,51,0.18)]"
-                    : "max-w-[85%] whitespace-pre-line text-sm text-lilink-ink"
+                    ? "justify-items-end"
+                    : "justify-items-start"
                 }
               >
-                {message.content}
-              </div>
-          </div>
-        ))}
-        {isLoading ? <LoadingIndicator /> : null}
-        <div ref={endOfMessagesRef} />
-      </div>
+                <div
+                  className={
+                    message.role === "user"
+                      ? "max-w-[85%] rounded-full bg-neutral-600 px-3 py-1.5 text-xs text-white shadow-[0_8px_20px_rgba(31,42,51,0.18)]"
+                      : "max-w-[85%] whitespace-pre-line text-sm text-lilink-ink"
+                  }
+                >
+                  {message.content}
+                </div>
+              </Col>
+            ))}
+            {isLoading ? (
+              <Col span={12}>
+                <LoadingIndicator />
+              </Col>
+            ) : null}
+            <Col span={12}>
+              <div ref={endOfMessagesRef} />
+            </Col>
+          </Grid12>
+        </Col>
       ) : null}
-      <form
-        className="col-span-12"
-        onSubmit={(event) => {
-          event.preventDefault();
-          handleSend();
-        }}
-      >
-        <div className="lilink-glass grid grid-cols-[1fr_auto] items-center gap-3 rounded-full px-4 py-3">
-          <input
-            type="text"
-            value={input}
-            onChange={(event) => setInput(event.target.value)}
-            placeholder="メッセージを入力"
-            className="w-full bg-transparent text-base text-lilink-ink outline-none placeholder:text-lilink-muted"
-          />
-          <button
-            type="submit"
-            disabled={isSendDisabled}
-            className="grid h-10 w-10 place-items-center rounded-full border border-lilink-border bg-gray-300 text-lilink-ink transition hover:border-lilink-accent hover:text-lilink-accent disabled:cursor-not-allowed disabled:opacity-50"
-            aria-label="送信"
+      <Col span={12}>
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            handleSend();
+          }}
+        >
+          <Grid12
+            gap="3"
+            className="lilink-glass items-center rounded-full px-4 py-3"
           >
-            ⬆
-          </button>
-        </div>
-      </form>
-    </section>
+            <Col span={10}>
+              <input
+                type="text"
+                value={input}
+                onChange={(event) => setInput(event.target.value)}
+                placeholder="今月のイベントは？"
+                className="w-full bg-transparent text-base text-lilink-ink outline-none placeholder:text-lilink-muted"
+              />
+            </Col>
+            <Col span={2} className="justify-items-end">
+              <button
+                type="submit"
+                disabled={isSendDisabled}
+                className="grid h-10 w-10 place-items-center rounded-full border border-lilink-border bg-gray-300 text-lilink-ink transition hover:border-lilink-accent hover:text-lilink-accent disabled:cursor-not-allowed disabled:opacity-50"
+                aria-label="送信"
+              >
+                ⬆
+              </button>
+            </Col>
+          </Grid12>
+        </form>
+      </Col>
+    </Grid12>
   );
 }

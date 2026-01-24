@@ -8,7 +8,7 @@ import {
 } from "react-router";
 import type { Route } from "./+types/root";
 import "./app.css";
-import { NotFoundView } from "./components/profile/NotFoundView";
+import { NotFoundView } from "./components/templates/NotFoundView";
 
 export const meta: Route.MetaFunction = () => [
   { title: "lilink" },

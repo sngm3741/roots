@@ -1,5 +1,5 @@
 import type { Route } from "./+types/not-found";
-import { NotFoundView } from "~/components/profile/NotFoundView";
+import { NotFoundView } from "~/components/templates/NotFoundView";
 
 export const loader: Route.LoaderFunction = () => {
   throw new Response("ページが見つかりません。", { status: 404 });
