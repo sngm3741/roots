@@ -311,11 +311,6 @@ const parseNumberParam = (value: string | null) => {
   return Number.isFinite(num) ? num : null;
 };
 
-const normalizeValue = (value: number, min: number, max: number) => {
-  if (max === min) return 1;
-  return (value - min) / (max - min);
-};
-
 const extractRagInputs = (messages: { role?: string; content?: string }[]) => {
   let age: number | null = null;
   let height: number | null = null;
@@ -353,106 +348,97 @@ const extractRagInputs = (messages: { role?: string; content?: string }[]) => {
 
     const specMatch = text.match(/(?:スペ|スペック)\s*[:=]?\s*(\d{2,3})/);
     if (specMatch) spec = Number(specMatch[1]);
+
+    // 例: "25 160 87" のようなラベルなし入力にも対応する
+    const plainNumbers = (text.match(/\d{1,3}/g) ?? []).map(Number);
+    if (plainNumbers.length >= 3) {
+      for (let i = 0; i <= plainNumbers.length - 3; i += 1) {
+        const a = plainNumbers[i];
+        const h = plainNumbers[i + 1];
+        const w = plainNumbers[i + 2];
+        const looksLikeProfile =
+          a >= 16 && a <= 69 && h >= 130 && h <= 210 && w >= 30 && w <= 180;
+        if (!looksLikeProfile) continue;
+        if (age === null) age = a;
+        if (height === null) height = h;
+        if (weight === null) weight = w;
+        break;
+      }
+    }
   }
 
   return { age, height, weight, spec, wantsList };
 };
 
+const parseAiChatJson = (raw: string) => {
+  const tryParse = (text: string) => {
+    try {
+      const parsed = JSON.parse(text);
+      return typeof parsed === "object" && parsed !== null ? parsed : null;
+    } catch {
+      return null;
+    }
+  };
+
+  const direct = tryParse(raw);
+  if (direct) return direct as Record<string, unknown>;
+
+  const block = raw.match(/\{[\s\S]*\}/);
+  if (!block) return null;
+  const extracted = tryParse(block[0]);
+  if (!extracted) return null;
+  return extracted as Record<string, unknown>;
+};
+
 const fetchRagCandidates = async (env: Env, age: number, spec: number) => {
-  const specRange = 5;
-  const ageRanges = [3, 5];
-  let ageRangeUsed = ageRanges[ageRanges.length - 1] ?? 5;
-  let rows: any[] = [];
+  const ageScale = 5;
+  const specScale = 5;
+  const topCount = 10;
+  const pickCount = 3;
 
-  for (const range of ageRanges) {
-    const result = await env.DB.prepare(
-      `SELECT
-        s.store_id AS id,
-        st.name AS name,
-        st.branch_name AS branch_name,
-        st.prefecture AS prefecture,
-        st.area AS area,
-        st.industry AS industry,
-        st.genre AS genre,
-        AVG(s.average_earning) AS avg_earning,
-        AVG(s.rating) AS avg_rating,
-        AVG(s.wait_time_hours) AS avg_wait,
-        COUNT(*) AS survey_count
+  const totalRes = await env.DB.prepare(
+    `SELECT COUNT(*) as c
+     FROM surveys
+     WHERE deleted_at IS NULL`,
+  ).first();
+
+  const rows = await env.DB.prepare(
+    `WITH ranked AS (
+       SELECT
+         s.*,
+         (SELECT COUNT(*) FROM store_comments sc WHERE sc.store_id = s.store_id AND sc.deleted_at IS NULL) AS comment_count,
+         ((s.age - ?) / ?) * ((s.age - ?) / ?) +
+         ((s.spec_score - ?) / ?) * ((s.spec_score - ?) / ?) AS distance_score
        FROM surveys s
-       JOIN stores st ON st.id = s.store_id
        WHERE s.deleted_at IS NULL
-         AND st.deleted_at IS NULL
-         AND s.age BETWEEN ? AND ?
-         AND s.spec_score BETWEEN ? AND ?
-       GROUP BY s.store_id`,
+       ORDER BY distance_score ASC
+       LIMIT ?
+     )
+     SELECT * FROM ranked
+     ORDER BY RANDOM()
+     LIMIT ?`,
+  )
+    .bind(
+      age,
+      ageScale,
+      age,
+      ageScale,
+      spec,
+      specScale,
+      spec,
+      specScale,
+      topCount,
+      pickCount,
     )
-      .bind(age - range, age + range, spec - specRange, spec + specRange)
-      .all();
-    const candidates = result.results ?? [];
-    if (candidates.length > 0) {
-      rows = candidates;
-      ageRangeUsed = range;
-      break;
-    }
-  }
-
-    if (rows.length === 0) {
-      return {
-        age,
-        spec,
-        ageRange: ageRangeUsed,
-        specRange,
-        totalCandidates: 0,
-        picks: [],
-      };
-    }
-
-  const earningValues = rows.map((row) => Number(row.avg_earning ?? 0));
-  const ratingValues = rows.map((row) => Number(row.avg_rating ?? 0));
-  const minEarning = Math.min(...earningValues);
-  const maxEarning = Math.max(...earningValues);
-  const minRating = Math.min(...ratingValues);
-  const maxRating = Math.max(...ratingValues);
-
-  const scored = rows.map((row) => {
-    const earning = Number(row.avg_earning ?? 0);
-    const rating = Number(row.avg_rating ?? 0);
-    const earningNorm = normalizeValue(earning, minEarning, maxEarning);
-    const ratingNorm = normalizeValue(rating, minRating, maxRating);
-    return {
-      row,
-      score: earningNorm * 0.7 + ratingNorm * 0.3,
-    };
-  });
-
-  const toStoreSummary = (row: any) =>
-      mapStore({
-        id: row.id,
-        name: row.name,
-        branch_name: row.branch_name ?? null,
-        prefecture: row.prefecture,
-        area: row.area ?? null,
-        industry: row.industry,
-        genre: row.genre ?? null,
-        avg_earning: Number(row.avg_earning ?? 0),
-        avg_rating: Number(row.avg_rating ?? 0),
-        avg_wait: Number(row.avg_wait ?? 0),
-        survey_count: Number(row.survey_count ?? 0),
-      });
-
-  const picks = scored
-    .slice()
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 3)
-    .map((item) => toStoreSummary(item.row));
+    .all();
 
   return {
     age,
     spec,
-    ageRange: ageRangeUsed,
-    specRange,
-    totalCandidates: rows.length,
-    picks,
+    ageScale,
+    specScale,
+    totalCandidates: totalRes?.c ?? 0,
+    picks: (rows.results ?? []).map(mapSurvey),
   };
 };
 
@@ -1007,6 +993,16 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
       }))
       .filter((message: any) => message.content.trim().length > 0)
       .slice(-12);
+    const latestUserMessage =
+      messages
+        .slice()
+        .reverse()
+        .find((message: { role: string; content: string }) => message.role === "user")
+        ?.content ?? "";
+    const isCasualTalk =
+      /やっほ|やっぴー|こんにちは|こんばんは|おはよう|はじめまして|元気|ええなに|何して|雑談|話そ|よろしく/.test(
+        latestUserMessage,
+      );
 
     const extracted = extractRagInputs(messages);
     const age = Number.isFinite(extracted.age ?? NaN) ? Number(extracted.age) : null;
@@ -1029,36 +1025,73 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
     }
 
     const model = env.AI_MODEL ?? "@cf/meta/llama-3.1-8b-instruct";
-    const systemPrompt = [
-      "あなたはMakotoClubの相談AIです。丁寧で簡潔な日本語で1〜3文で回答してください。",
-      "会話の目的は店舗候補の提示のみです。健康・運動・体型改善などの話題には触れないでください。",
+    const candidateSummary = (result?.picks ?? [])
+      .slice(0, 3)
+      .map((pick: ReturnType<typeof mapSurvey>, index: number) => {
+        const store = pick.storeBranch ? `${pick.storeName} ${pick.storeBranch}` : pick.storeName;
+        return `${index + 1}. ${store} / 年齢${pick.age} / スペ${pick.specScore} / 評価${pick.rating}`;
+      })
+      .join("\n");
+    const ragContext = [
+      `抽出値: age=${age ?? "null"}, height=${height ?? "null"}, weight=${weight ?? "null"}, spec=${computedSpec ?? "null"}`,
       `不足項目: ${missing.length ? missing.join("・") : "なし"}`,
-      `候補数: ${result?.totalCandidates ?? 0}`,
-      extracted.wantsList ? "ユーザーは一覧の表示を希望しています。" : "一覧希望の指示はありません。",
-      "不足項目がある場合は、それらを質問してください。",
-      "候補がある場合は、上位のおすすめがあることを伝えてください。",
-      "候補が0件の場合は該当がない旨を伝え、条件変更を促してください。",
+      `候補件数(返却): ${result?.picks?.length ?? 0}`,
+      extracted.wantsList ? "一覧希望: あり" : "一覧希望: なし",
+      `直近ユーザー発話: ${latestUserMessage || "(なし)"}`,
+      isCasualTalk ? "会話モード: カジュアル雑談" : "会話モード: 通常",
+      candidateSummary ? `候補サマリー:\n${candidateSummary}` : "候補サマリー: なし",
+    ].join("\n");
+    const systemPrompt = [
+      "あなたはMakotoClubの相談AIです。自然で短い日本語で返答してください。",
+      "会話の目的はアンケート候補の提示のみです。健康・運動・体型改善などの助言は禁止です。",
+      "以下のJSONだけを返してください。余計な文字を含めないこと。",
+      '{"reply":"string","followUpQuestion":"string","showTopLink":boolean}',
+      "replyは1〜3文、followUpQuestionは必要な場合のみ短く、不要なら空文字。",
+      "不足項目がある場合、まずユーザーの発話にワンクッションで返し、その後やわらかく不足項目を案内する。",
+      "挨拶や軽い雑談には、その内容に短く反応してから案内に繋げる。",
+      "候補がある場合は候補が見つかったことを自然に伝える。",
+      "候補が0件の場合は条件変更を促す。",
+      "一覧希望があり候補がある場合はshowTopLink=true、それ以外はfalse。",
+      `\n判断材料:\n${ragContext}`,
     ].join("\n");
 
     let reply = "";
+    let followUpQuestion = "";
+    let aiShowTopLink = false;
     try {
       const aiResponse = await env.AI.run(model, {
         messages: [{ role: "system", content: systemPrompt }, ...messages],
       });
       if (typeof aiResponse?.response === "string") {
-        reply = aiResponse.response.trim();
+        const parsed = parseAiChatJson(aiResponse.response.trim());
+        if (parsed) {
+          if (typeof parsed.reply === "string") {
+            reply = parsed.reply.trim();
+          }
+          if (typeof parsed.followUpQuestion === "string") {
+            followUpQuestion = parsed.followUpQuestion.trim();
+          }
+          if (typeof parsed.showTopLink === "boolean") {
+            aiShowTopLink = parsed.showTopLink;
+          }
+        } else {
+          reply = aiResponse.response.trim();
+        }
       }
     } catch (error) {
       console.error("AI応答の取得に失敗しました", error);
     }
 
-    if (missing.length > 0) {
-      reply = `${missing.join("と")}を教えてください。`;
-    } else if (result) {
-      if (result.totalCandidates > 0) {
-        reply = `年齢${age}歳 スペ${computedSpec}の方におすすめの店舗はこちらです。`;
+    if (missing.length > 0 && !reply) {
+      const missingText = missing.join("と");
+      reply = isCasualTalk
+        ? `いいね、その感じ。参考になりそうなアンケートを選びたいから、${missingText}を教えてくれる？`
+        : `ありがとう。参考になりそうなアンケートを選ぶために、${missingText}を教えてください。`;
+    } else if (result && !reply) {
+      if (result.picks.length > 0) {
+        reply = `年齢${age}歳 スペ${computedSpec}に近いアンケートはこちらです。`;
       } else {
-        reply = `年齢${age}歳 スペ${computedSpec}の条件では該当店舗がありませんでした。条件を変えて探してみてください。`;
+        reply = `年齢${age}歳 スペ${computedSpec}の条件では該当アンケートがありませんでした。条件を変えて探してみてください。`;
       }
     } else if (!reply) {
       reply = "年齢とスペックを教えてください。";
@@ -1067,13 +1100,46 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
     if (/(健康|運動|目標|体型|ダイエット|トレーニング)/.test(reply)) {
       reply = missing.length > 0 ? `${missing.join("と")}を教えてください。` : "候補をお出しします。";
     }
+    if (missing.length > 0 && /^(年齢|身長|体重)(と|、|が)/.test(reply)) {
+      const missingText = missing.join("と");
+      reply = isCasualTalk
+        ? `もちろん。まずは${missingText}を教えてくれたら、合いそうなアンケートを選べるよ。`
+        : `参考になりそうなアンケートを選ぶために、${missingText}を教えてください。`;
+    }
+    // 値が揃って候補も返せる状態なのに再入力を要求しないように補正する
+    if (
+      missing.length === 0 &&
+      result &&
+      /(教えて|入力|不足|分かりません)/.test(reply) &&
+      /(年齢|身長|体重|スペ)/.test(reply)
+    ) {
+      if (result.picks.length > 0) {
+        reply = `ありがとう。年齢${age}歳 スペ${computedSpec}に近いアンケートを選びました。`;
+      } else {
+        reply = `年齢${age}歳 スペ${computedSpec}の条件では該当アンケートがありませんでした。条件を変えて探してみてください。`;
+      }
+    }
+    // 必要値が揃った後は、返答フォーマットを固定してカード表示と整合させる
+    if (missing.length === 0 && result) {
+      const specLabel =
+        specDirect !== null
+          ? `${specDirect}`
+          : `${height ?? "-"}cm - ${weight ?? "-"}kg（= ${computedSpec ?? "-"}）`;
+      if (result.picks.length > 0) {
+        reply = `${age}歳 スペ${specLabel} の方が参考になるアンケートはこちらです。`;
+      } else {
+        reply = `${age}歳 スペ${specLabel} の条件では該当アンケートがありませんでした。`;
+      }
+    }
 
-    const shouldShowTopLink = Boolean(result && result.totalCandidates > 0);
+    const shouldShowTopLink =
+      aiShowTopLink || Boolean(result && result.picks.length > 0 && extracted.wantsList);
 
     return Response.json({
       reply,
       filters: age !== null && computedSpec !== null ? { age, spec: computedSpec } : null,
       results: result ? { picks: result.picks } : null,
+      followUpQuestion,
       showTopLink: shouldShowTopLink,
     });
   }

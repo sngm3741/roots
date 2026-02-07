@@ -13,8 +13,14 @@ export type LinkItem = {
   title?: string;
   description?: string;
   url?: string;
+  linkUrl?: string;
+  imageUrl?: string;
   iconUrl?: string;
+  source?: string;
+  duration?: string;
+  previewUrl?: string;
   showUrl?: boolean;
+  category?: "event" | "blog" | "video";
   colStart?: number;
   colSpan?: number;
   rowSpan?: number;
@@ -51,8 +57,17 @@ export type OptionalType = "event" | "product" | "gallery" | "creator";
 export type EventItem = {
   id: string;
   title: string;
-  date: string;
-  location?: string;
+  dates: string[];
+  reservationRequired?: boolean;
+  linkUrl?: string;
+};
+
+export type EventMaster = {
+  id: string;
+  title: string;
+  dates?: string[];
+  reservationRequired?: boolean;
+  linkUrl?: string;
 };
 
 export type ProductItem = {

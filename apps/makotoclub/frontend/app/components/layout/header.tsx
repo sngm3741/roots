@@ -4,22 +4,42 @@ import { PostIcon } from "../ui/post-icon";
 import { Brain, Heart } from "lucide-react";
 import { BlueskyIcon, XIcon } from "../ui/social-icons";
 
-const navItems = [
-  { label: "よくある質問", href: "/faq" },
-  { label: "お問い合わせ", href: "/contact" },
-  { label: "投稿ガイドライン", href: "/guideline" },
-  { label: "利用規約", href: "/terms" },
-  { label: "運営会社情報", href: "/company" },
-];
-
-const collabItems = [
+const sitemapSections = [
   {
-    id: "partner",
-    title: "提携店舗募集中",
-    label: "掲載のご相談はこちら",
-    description: "掲載・提携をご希望の店舗運営者様はお問い合わせください。",
-    imageUrl: "/logo.jpeg",
-    href: "/contact",
+    title: "探す",
+    items: [
+      { label: "店舗一覧", href: "/stores" },
+      { label: "アンケート一覧", href: "/surveys" },
+      { label: "ブックマーク", href: "/bookmarks" },
+    ],
+  },
+  {
+    title: "アンケート",
+    items: [
+      { label: "アンケート投稿", href: "/new" },
+      { label: "投稿ガイドライン", href: "/guideline" },
+      { label: "よくある質問", href: "/faq" },
+    ],
+  },
+  {
+    title: "読み物",
+    items: [{ label: "体験談ストーリーズ", href: "/stories" }],
+  },
+  {
+    title: "サービス",
+    items: [
+      { label: "マコトGPT", href: "/rag" },
+      { label: "お問い合わせ", href: "/contact" },
+    ],
+  },
+  {
+    title: "運営情報",
+    items: [
+      { label: "運営会社情報", href: "/company" },
+      { label: "特定商取引法", href: "/tokushoho" },
+      { label: "利用規約", href: "/terms" },
+      { label: "プライバシー", href: "/privacy" },
+    ],
   },
 ];
 
@@ -167,7 +187,7 @@ export function Header() {
                   className="ml-2 w-8 h-8 rounded-lg object-cover"
                 />
                 <span className="absolute left-1/2 -translate-x-1/2 whitespace-nowrap italic text-xl font-semibold text-gray-700">
-                  コラボ情報 🤝
+                  サイトマップ 🧭
                 </span>
               </div>
             </div>
@@ -177,30 +197,25 @@ export function Header() {
 
           {/* Menu Items */}
           <div className="flex-1 overflow-y-auto px-4 py-2 space-y-4 bg-pink-200">
-            {collabItems.map((item) => (
-              <a
-                key={item.id}
-                href={item.href}
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                }}
-                className="block rounded-2xl border border-pink-100/70 bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-pink-200 hover:shadow-md"
-              >
-                <div className="p-4">
-                  <div className="flex items-center gap-4">
-                    <img
-                      src={item.imageUrl}
-                      alt={`${item.title}のビジュアル`}
-                      className="h-20 w-20 rounded-xl object-cover"
-                    />
-                    <div className="min-w-0 space-y-2">
-                      <p className="text-xs font-semibold text-pink-500">{item.label}</p>
-                      <h3 className="text-sm font-semibold text-slate-900">{item.title}</h3>
-                      <p className="text-xs text-slate-600">{item.description}</p>
-                    </div>
-                  </div>
+            {sitemapSections.map((section) => (
+              <div key={section.title} className="rounded-2xl border border-pink-100/70 bg-white p-4 shadow-sm">
+                <p className="text-xs font-semibold tracking-wide text-pink-500">{section.title}</p>
+                <div className="mt-3 grid gap-2">
+                  {section.items.map((item) => (
+                    <a
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => {
+                        setMobileMenuOpen(false);
+                      }}
+                      className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50"
+                    >
+                      <span>{item.label}</span>
+                      <span className="text-xs text-slate-400">→</span>
+                    </a>
+                  ))}
                 </div>
-              </a>
+              </div>
             ))}
           </div>
           {/* メニューフッター */}

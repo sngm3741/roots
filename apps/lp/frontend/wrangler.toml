@@ -1,0 +1,5 @@
+name = "lp-frontend"
+pages_project = "lp-frontend"
+compatibility_date = "2026-02-06"
+pages_build_output_dir = "build"
+compatibility_flags = ["nodejs_compat"]

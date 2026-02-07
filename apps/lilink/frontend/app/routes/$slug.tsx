@@ -1,6 +1,6 @@
 import { isRouteErrorResponse } from "react-router";
 import type { Route } from "./+types/$slug";
-import { ProfilePage } from "~/components/templates/ProfilePage";
+import { UserPage } from "~/components/templates/UserPage";
 import { NotFoundView } from "~/components/templates/NotFoundView";
 import { getPageBySlug } from "~/data/profiles";
 
@@ -36,7 +36,7 @@ export const loader: Route.LoaderFunction = async ({ params }) => {
 export default function ProfileRoute({ loaderData }: Route.ComponentProps) {
   const { page } = loaderData;
 
-  return <ProfilePage page={page} />;
+  return <UserPage page={page} />;
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {

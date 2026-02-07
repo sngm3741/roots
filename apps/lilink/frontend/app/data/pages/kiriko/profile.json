@@ -1,0 +1,45 @@
+{
+  "slug": "kiriko",
+  "name": "きりこ",
+  "subtitle": "日本一のスパンカー❤️",
+  "avatarUrl": "https://cdn.bsky.app/img/avatar/plain/did:plc:4myhksrgvt52kg4yeop34oic/bafkreiha4yvmkiyvhx6q5u35lal7tshf2loms6gov64sy5gonqvcetnywy@jpeg",
+  "backgroundImageUrl": "https://as2.ftcdn.net/jpg/06/51/57/53/1000_F_651575394_at1v8IC3iPwdaiVIlUgt6JDqQMPOyl1W.jpg",
+  "chatbotEnabled": true,
+  "socialLinks": [
+    {
+      "id": "x-main",
+      "kind": "x",
+      "label": "X",
+      "description": "メイン",
+      "url": "https://x.com/Kirikoallin"
+    },
+    {
+      "id": "x-movie",
+      "kind": "x",
+      "label": "X",
+      "description": "動画紹介",
+      "url": "https://x.com/kirikomovie"
+    },
+    {
+      "id": "x-bar",
+      "kind": "x",
+      "label": "X",
+      "description": "お仕置きBAR",
+      "url": "https://x.com/osioki_bar"
+    },
+    {
+      "id": "bsky-main",
+      "kind": "bluesky",
+      "label": "Bluesky",
+      "description": "メイン",
+      "url": "https://bsky.app/profile/kiriko.studio-allin.com"
+    },
+    {
+      "id": "bsky-movie",
+      "kind": "bluesky",
+      "label": "Bluesky",
+      "description": "動画紹介",
+      "url": "https://bsky.app/profile/kirikomovie.bsky.social"
+    }
+  ]
+}

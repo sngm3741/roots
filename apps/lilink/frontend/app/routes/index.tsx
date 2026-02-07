@@ -1,6 +1,7 @@
 import { isRouteErrorResponse } from "react-router";
 import { Suspense, useState } from "react";
 import { Canvas } from "@react-three/fiber";
+import * as THREE from "three";
 import {
   AsciiRenderer,
   Center,
@@ -9,7 +10,7 @@ import {
   Text3D,
 } from "@react-three/drei";
 import type { Route } from "./+types/index";
-import { ProfilePage } from "~/components/templates/ProfilePage";
+import { UserPage } from "~/components/templates/UserPage";
 import { NotFoundView } from "~/components/templates/NotFoundView";
 import { getPageBySlug } from "~/data/profiles";
 
@@ -39,7 +40,7 @@ export const loader: Route.LoaderFunction = async ({ request }) => {
     return { page: null };
   }
 
-  const page = await getPageBySlug(slug, request);
+  const page = await getPageBySlug(slug);
   if (!page) {
     throw new Response("プロフィールが見つかりません。", { status: 404 });
   }
@@ -52,7 +53,7 @@ export default function IndexRoute({ loaderData }: Route.ComponentProps) {
   if (!page) {
     return <AsciiLandingPage />;
   }
-  return <ProfilePage page={page} />;
+  return <UserPage page={page} />;
 }
 
 function TextModel() {
@@ -178,6 +179,7 @@ function AsciiLandingPage() {
 
       <Canvas
         className="relative z-10"
+        style={{ touchAction: "none" }}
         camera={{
           position: [0, 0, 6],
           fov: 50,
@@ -210,8 +212,8 @@ function AsciiLandingPage() {
           enableZoom={true}
           enableRotate={true}
           touches={{
-            ONE: 2,
-            TWO: 1,
+            ONE: THREE.TOUCH.ROTATE,
+            TWO: THREE.TOUCH.DOLLY_PAN,
           }}
         />
       </Canvas>
