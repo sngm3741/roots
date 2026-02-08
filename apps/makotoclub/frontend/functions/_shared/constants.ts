@@ -1,0 +1,8 @@
+export const AI_CHAT_RATE_LIMIT_MAX = 30;
+export const AI_CHAT_RATE_LIMIT_WINDOW_SEC = 300;
+export const UPLOAD_RATE_LIMIT_MAX = 20;
+export const UPLOAD_RATE_LIMIT_WINDOW_SEC = 300;
+export const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
+export const COMMENT_PAGE_DEFAULT = 1;
+export const COMMENT_PAGE_LIMIT_DEFAULT = 5;
+export const COMMENT_PAGE_LIMIT_MAX = 50;

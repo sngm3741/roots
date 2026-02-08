@@ -24,3 +24,10 @@ export interface StoreCommentDetail {
     storeArea?: string | null;
   };
 }
+
+export interface StoreCommentListResponse {
+  items: StoreComment[];
+  total: number;
+  page: number;
+  limit: number;
+}

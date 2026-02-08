@@ -156,8 +156,8 @@ export async function loader({ context, request }: LoaderFunctionArgs) {
   }
 
   try {
-    const pvUrl = new URL("/api/metrics/pv", apiBaseUrl);
-    pvUrl.searchParams.set("path", "/");
+    const pvUrl = new URL("/api/metrics/v2/summary", apiBaseUrl);
+    pvUrl.searchParams.set("scope", "site");
     const pvRes = await fetch(pvUrl);
     if (pvRes.ok) {
       const data = (await pvRes.json()) as { count?: number; todayCount?: number };
@@ -294,12 +294,10 @@ function Hero({
   }, [pvTarget]);
 
   useEffect(() => {
-    const track = async () => {
+    const refreshSummary = async () => {
       try {
-        const res = await fetch("/api/metrics/pv", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ path: "/" }),
+        const res = await fetch("/api/metrics/v2/summary?scope=site", {
+          cache: "no-store",
         });
         if (!res.ok) return;
         const data = (await res.json()) as { count?: number; todayCount?: number };
@@ -308,14 +306,12 @@ function Hero({
         }
         if (typeof data.todayCount === "number") {
           setPageViewsToday(data.todayCount);
-        } else {
-          setPvMode("total");
         }
       } catch {
         // 表示用なので失敗は無視
       }
     };
-    track();
+    refreshSummary();
   }, []);
 
   return (
@@ -364,33 +360,31 @@ function Hero({
             </svg>
           }
         />
-        {pageViews !== null && (
-          <CounterBadge
-            label={pvMode === "total" ? "PV数(累計)" : "PV数(今日)"}
-            value={displayPageViews} 
-            tone="sky"
-            onClick={
-              canTogglePv
-                ? () => {
-                    setPvMode((current) => (current === "total" ? "today" : "total"));
-                  }
-                : undefined
-            }
-            pressed={pvMode === "today"}
-            ariaLabel={canTogglePv ? "タップでPV表示を切り替え" : "累計PV"}
-            icon={
-              <svg
-                aria-hidden="true"
-                viewBox="0 0 512 512"
-                className="h-4 w-4 text-sky-500"
-                fill="currentColor"
-              >
-                <path d="M507.024,246.257C454.633,143.663,358.44,79.938,256,79.938c-102.41,0-198.604,63.725-251.022,166.318L0,256.001l4.978,9.744C57.396,368.339,153.59,432.062,256,432.062c102.44,0,198.633-63.723,251.024-166.316l4.976-9.744L507.024,246.257z M256,389.235c-84.328,0-161.27-49.588-207.693-133.234C94.73,172.354,171.672,122.767,256,122.767c84.358,0,161.299,49.588,207.695,133.234C417.299,339.648,340.358,389.235,256,389.235z" />
-                <path d="M256,153.686c-57.158,0-103.498,46.34-103.498,103.5c0,57.158,46.34,103.498,103.498,103.498s103.5-46.34,103.5-103.498C359.5,200.026,313.158,153.686,256,153.686z M256,302.745c-25.135,0-45.558-20.424-45.558-45.559c0-5.646,1.17-10.972,3.025-15.949l37.85,14.764l-15.99-39.216c6.231-3.178,13.188-5.158,20.674-5.158c25.137,0,45.56,20.424,45.56,45.56C301.56,282.321,281.137,302.745,256,302.745z" />
-              </svg>
-            }
-          />
-        )}
+        <CounterBadge
+          label={pvMode === "total" ? "PV数(累計)" : "PV数(今日)"}
+          value={displayPageViews}
+          tone="sky"
+          onClick={
+            canTogglePv
+              ? () => {
+                  setPvMode((current) => (current === "total" ? "today" : "total"));
+                }
+              : undefined
+          }
+          pressed={pvMode === "today"}
+          ariaLabel={canTogglePv ? "タップでPV表示を切り替え" : "累計PV"}
+          icon={
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 512 512"
+              className="h-4 w-4 text-sky-500"
+              fill="currentColor"
+            >
+              <path d="M507.024,246.257C454.633,143.663,358.44,79.938,256,79.938c-102.41,0-198.604,63.725-251.022,166.318L0,256.001l4.978,9.744C57.396,368.339,153.59,432.062,256,432.062c102.44,0,198.633-63.723,251.024-166.316l4.976-9.744L507.024,246.257z M256,389.235c-84.328,0-161.27-49.588-207.693-133.234C94.73,172.354,171.672,122.767,256,122.767c84.358,0,161.299,49.588,207.695,133.234C417.299,339.648,340.358,389.235,256,389.235z" />
+              <path d="M256,153.686c-57.158,0-103.498,46.34-103.498,103.5c0,57.158,46.34,103.498,103.498,103.498s103.5-46.34,103.5-103.498C359.5,200.026,313.158,153.686,256,153.686z M256,302.745c-25.135,0-45.558-20.424-45.558-45.559c0-5.646,1.17-10.972,3.025-15.949l37.85,14.764l-15.99-39.216c6.231-3.178,13.188-5.158,20.674-5.158c25.137,0,45.56,20.424,45.56,45.56C301.56,282.321,281.137,302.745,256,302.745z" />
+            </svg>
+          }
+        />
       </div>
      
     </section>

@@ -91,7 +91,7 @@ export default function Surveys() {
             <p className="text-sm text-slate-600">アンケートがありません。</p>
           )}
         </div>
-        <Pagination current={page} totalPages={totalPages} sort={sort} />
+        <Pagination current={page} totalPages={totalPages} filters={filters} />
       </div>
     </main>
   );
@@ -202,19 +202,32 @@ function SortBar({ sort, filters }: { sort: string; filters: Record<string, stri
   );
 }
 
-function Pagination({ current, totalPages, sort }: { current: number; totalPages: number; sort: string }) {
+function Pagination({
+  current,
+  totalPages,
+  filters,
+}: {
+  current: number;
+  totalPages: number;
+  filters: Record<string, string>;
+}) {
   const prev = current > 1 ? current - 1 : null;
   const next = current < totalPages ? current + 1 : null;
+  const buildHref = (page: number) => {
+    const params = new URLSearchParams(filters);
+    params.set("page", String(page));
+    return `?${params.toString()}`;
+  };
   return (
     <div className="flex items-center justify-center gap-3 text-sm text-slate-700">
       <Button variant="ghost" size="sm" asChild disabled={!prev}>
-        <a href={prev ? `?page=${prev}&sort=${sort}` : undefined}>前へ</a>
+        <a href={prev ? buildHref(prev) : undefined}>前へ</a>
       </Button>
       <span className="rounded-full bg-white/80 px-3 py-1 text-slate-800 shadow-sm border border-slate-100">
         {current} / {totalPages}
       </span>
       <Button variant="ghost" size="sm" asChild disabled={!next}>
-        <a href={next ? `?page=${next}&sort=${sort}` : undefined}>次へ</a>
+        <a href={next ? buildHref(next) : undefined}>次へ</a>
       </Button>
     </div>
   );

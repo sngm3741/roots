@@ -94,7 +94,7 @@ export default function Stores() {
               <div className="text-sm text-slate-600">店舗が見つかりませんでした。</div>
             )}
           </div>
-          <Pagination current={page} totalPages={totalPages} />
+          <Pagination current={page} totalPages={totalPages} filters={filters} />
         </section>
       </div>
     </main>
@@ -288,19 +288,32 @@ function SortBar({ filters }: { filters: Record<string, string> }) {
   );
 }
 
-function Pagination({ current, totalPages }: { current: number; totalPages: number }) {
+function Pagination({
+  current,
+  totalPages,
+  filters,
+}: {
+  current: number;
+  totalPages: number;
+  filters: Record<string, string>;
+}) {
   const prev = current > 1 ? current - 1 : null;
   const next = current < totalPages ? current + 1 : null;
+  const buildHref = (page: number) => {
+    const params = new URLSearchParams(filters);
+    params.set("page", String(page));
+    return `?${params.toString()}`;
+  };
   return (
     <div className="flex items-center justify-center gap-3 text-sm text-slate-700">
       <Button variant="ghost" size="sm" asChild disabled={!prev}>
-        <a href={prev ? `?page=${prev}` : undefined}>前へ</a>
+        <a href={prev ? buildHref(prev) : undefined}>前へ</a>
       </Button>
       <span className="rounded-full bg-white/80 px-3 py-1 text-slate-800 shadow-sm border border-slate-100">
         {current} / {totalPages}
       </span>
       <Button variant="ghost" size="sm" asChild disabled={!next}>
-        <a href={next ? `?page=${next}` : undefined}>次へ</a>
+        <a href={next ? buildHref(next) : undefined}>次へ</a>
       </Button>
     </div>
   );

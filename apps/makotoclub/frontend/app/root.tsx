@@ -14,6 +14,7 @@ import { Header } from "./components/layout/header";
 import { Footer } from "./components/layout/footer";
 import { BreadcrumbProvider } from "./components/common/breadcrumb-context";
 import { Breadcrumbs } from "./components/common/breadcrumbs";
+import { PageAnalyticsTracker } from "./components/common/page-analytics-tracker";
 
 export const meta: Route.MetaFunction = () => {
   const title = "マコトクラブ";
@@ -63,6 +64,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </head>
       <body className="bg-transparent text-slate-900">
         <BreadcrumbProvider>
+          <PageAnalyticsTracker />
           <Header />
           <main className="min-h-screen pb-2 pt-24">
             <div className="mx-auto max-w-5xl px-4">

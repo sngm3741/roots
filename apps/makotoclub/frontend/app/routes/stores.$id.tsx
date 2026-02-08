@@ -1,4 +1,4 @@
-import { type LoaderFunctionArgs, useLoaderData } from "react-router";
+import { type LoaderFunctionArgs, useLoaderData, useLocation, useNavigate } from "react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "../components/ui/button";
 import { Pagination } from "../components/ui/pagination";
@@ -6,7 +6,7 @@ import { fetchStoreDetail } from "../lib/stores.server";
 import { fetchStoreComments } from "../lib/comments.server";
 import { getApiBaseUrl } from "../config.server";
 import type { StoreDetail } from "../types/store";
-import type { StoreComment } from "../types/comment";
+import type { StoreComment, StoreCommentListResponse } from "../types/comment";
 import { RatingStars } from "../components/ui/rating-stars";
 import { BreadcrumbLabelSetter } from "../components/common/breadcrumb-label-setter";
 import { ImageGallery } from "../components/ui/image-gallery";
@@ -37,8 +37,10 @@ import { useStoreBookmark } from "../lib/store-bookmarks";
 
 type LoaderData = {
   store: StoreDetail | null;
-  comments: StoreComment[];
+  commentList: StoreCommentListResponse;
 };
+
+const COMMENT_PAGE_SIZE = 5;
 
 const SORT_OPTIONS = [
   { value: "newest", label: "新着順" },
@@ -49,29 +51,43 @@ const SORT_OPTIONS = [
 type SortKey = (typeof SORT_OPTIONS)[number]["value"];
 
 export async function loader({ params, context, request }: LoaderFunctionArgs) {
-  const apiBaseUrl = getApiBaseUrl(context.cloudflare?.env ?? {}, new URL(request.url).origin);
+  const requestUrl = new URL(request.url);
+  const apiBaseUrl = getApiBaseUrl(context.cloudflare?.env ?? {}, requestUrl.origin);
   const storeId = params.id!;
+  const pageRaw = Number(requestUrl.searchParams.get("commentPage") ?? "1");
+  const commentPage = Number.isFinite(pageRaw) && pageRaw >= 1 ? Math.floor(pageRaw) : 1;
 
   let store: StoreDetail | null = null;
-  let comments: StoreComment[] = [];
+  let commentList: StoreCommentListResponse = {
+    items: [],
+    total: 0,
+    page: commentPage,
+    limit: COMMENT_PAGE_SIZE,
+  };
   try {
     store = await fetchStoreDetail({ API_BASE_URL: apiBaseUrl }, storeId);
     if (store?.id) {
-      comments = await fetchStoreComments({ API_BASE_URL: apiBaseUrl }, store.id);
+      commentList = await fetchStoreComments({ API_BASE_URL: apiBaseUrl }, store.id, {
+        page: commentPage,
+        limit: COMMENT_PAGE_SIZE,
+      });
     }
   } catch (error) {
     console.error("Failed to load store detail", error);
   }
 
-  return Response.json({ store, comments });
+  return Response.json({ store, commentList });
 }
 
 export default function StoreDetailPage() {
-  const { store, comments: initialComments } = useLoaderData() as LoaderData;
+  const { store, commentList: initialCommentList } = useLoaderData() as LoaderData;
+  const navigate = useNavigate();
+  const location = useLocation();
   const [sort, setSort] = useState<SortKey>("newest");
   const [page, setPage] = useState(1);
   const pageSize = 5;
-  const [comments, setComments] = useState<StoreComment[]>(initialComments);
+  const [comments, setComments] = useState<StoreComment[]>(initialCommentList.items);
+  const [commentTotal, setCommentTotal] = useState(initialCommentList.total);
   const [commentName, setCommentName] = useState("");
   const [commentBody, setCommentBody] = useState("");
   const [replyName, setReplyName] = useState("");
@@ -80,8 +96,9 @@ export default function StoreDetailPage() {
   const [commentError, setCommentError] = useState<string | null>(null);
   const [isCommentSubmitting, setIsCommentSubmitting] = useState(false);
   const commentsEndRef = useRef<HTMLDivElement | null>(null);
-  const [commentPage, setCommentPage] = useState(1);
-  const commentPageSize = 5;
+  const currentCommentPage = initialCommentList.page;
+  const commentPageSize = initialCommentList.limit;
+  const totalCommentPages = Math.max(1, Math.ceil(commentTotal / commentPageSize));
   const commentMaxChars = 1000;
   const { isBookmarked, toggle } = useStoreBookmark(store?.id ?? "");
 
@@ -94,8 +111,9 @@ export default function StoreDetailPage() {
   }
 
   useEffect(() => {
-    setComments(initialComments);
-  }, [initialComments]);
+    setComments(initialCommentList.items);
+    setCommentTotal(initialCommentList.total);
+  }, [initialCommentList.items, initialCommentList.total]);
 
   const waitLabel =
     store.waitTimeLabel ??
@@ -159,12 +177,6 @@ export default function StoreDetailPage() {
     return list;
   }, [comments]);
 
-  const totalCommentPages = Math.max(1, Math.ceil(orderedComments.length / commentPageSize));
-  const pagedComments = useMemo(() => {
-    const start = (commentPage - 1) * commentPageSize;
-    return orderedComments.slice(start, start + commentPageSize);
-  }, [orderedComments, commentPage, commentPageSize]);
-
   const commentsByParent = useMemo(() => {
     const map = new Map<string | null, StoreComment[]>();
     for (const comment of comments) {
@@ -194,21 +206,16 @@ export default function StoreDetailPage() {
 
   const commentNumberById = useMemo(() => {
     const map = new Map<string, number>();
+    const offset = (currentCommentPage - 1) * commentPageSize;
     orderedComments.forEach((comment, index) => {
       if (typeof comment.seq === "number") {
         map.set(comment.id, comment.seq);
       } else {
-        map.set(comment.id, index + 1);
+        map.set(comment.id, offset + index + 1);
       }
     });
     return map;
-  }, [orderedComments]);
-
-  useEffect(() => {
-    if (commentPage > totalCommentPages) {
-      setCommentPage(totalCommentPages);
-    }
-  }, [commentPage, totalCommentPages]);
+  }, [orderedComments, currentCommentPage, commentPageSize]);
 
   const submitComment = async (params: {
     body: string;
@@ -247,22 +254,17 @@ export default function StoreDetailPage() {
         setIsCommentSubmitting(false);
         return;
       }
-      const data = (await res.json()) as StoreComment;
-      setComments((prev) => {
-        const next = [...prev, data];
-        const nextPages = Math.max(1, Math.ceil(next.length / commentPageSize));
-        setCommentPage(nextPages);
-        return next;
-      });
+      await res.json();
+      const nextTotal = commentTotal + 1;
+      const nextPages = Math.max(1, Math.ceil(nextTotal / commentPageSize));
       setCommentBody("");
       setCommentName("");
       setReplyBody("");
       setReplyName("");
       setReplyToId(null);
-      requestAnimationFrame(() => {
-        commentsEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-        commentsEndRef.current?.focus();
-      });
+      const searchParams = new URLSearchParams(location.search);
+      searchParams.set("commentPage", String(nextPages));
+      navigate(`${location.pathname}?${searchParams.toString()}`, { replace: false });
     } catch {
       setCommentError("投稿に失敗しました。");
     } finally {
@@ -493,7 +495,7 @@ export default function StoreDetailPage() {
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-lg font-semibold text-slate-900">コメント</h2>
           <span className="text-xs text-slate-500">
-            {orderedComments.length.toLocaleString("ja-JP")}件
+            {commentTotal.toLocaleString("ja-JP")}件
           </span>
         </div>
 
@@ -521,7 +523,7 @@ export default function StoreDetailPage() {
         {orderedComments.length > 0 ? (
           <>
             <CommentList
-              comments={pagedComments}
+              comments={orderedComments}
               commentNumberById={commentNumberById}
               replyCountById={replyCountById}
               activeReplyId={replyToId}
@@ -529,9 +531,13 @@ export default function StoreDetailPage() {
               renderReplyForm={renderReplyForm}
             />
             <Pagination
-              currentPage={commentPage}
+              currentPage={currentCommentPage}
               totalPages={totalCommentPages}
-              onPageChange={setCommentPage}
+              onPageChange={(nextPage) => {
+                const params = new URLSearchParams(location.search);
+                params.set("commentPage", String(nextPage));
+                navigate(`${location.pathname}?${params.toString()}`, { replace: false });
+              }}
             />
           </>
         ) : (

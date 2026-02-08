@@ -9,6 +9,7 @@ type SurveySearchParams = {
   prefecture?: string;
   industry?: string;
   genre?: string;
+  visitedPeriod?: string;
   spec?: number;
   age?: number;
 };
@@ -22,6 +23,7 @@ export async function fetchSurveys(env: { API_BASE_URL?: string }, params: Surve
   if (params.prefecture) search.set("prefecture", params.prefecture);
   if (params.industry) search.set("industry", params.industry);
   if (params.genre) search.set("genre", params.genre);
+  if (params.visitedPeriod) search.set("visitedPeriod", params.visitedPeriod);
   if (typeof params.spec === "number") search.set("spec", String(params.spec));
   if (typeof params.age === "number") search.set("age", String(params.age));
   return apiClient.fetchJson<SurveyListResponse>(`/api/surveys?${search.toString()}`, env);

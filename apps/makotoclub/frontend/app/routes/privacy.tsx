@@ -17,6 +17,8 @@ export default function Privacy() {
           <li>投稿された画像</li>
           <li>任意で入力された連絡先（メールアドレス）</li>
           <li>アクセスログ（IPアドレス、User-Agent、リクエストパス、メソッド、ステータス、日時）</li>
+          <li>アクセス解析情報（閲覧ページ、流入元ホスト、UTMパラメータ、滞在時間の推定値）</li>
+          <li>アクセス解析用Cookie（セッション識別子。Cookie名: `mc_sid`）</li>
         </ul>
       </section>
 
@@ -28,14 +30,18 @@ export default function Privacy() {
           <li>不正行為や権利侵害への対応</li>
           <li>お問い合わせ対応</li>
           <li>サービス改善や品質向上</li>
+          <li>ページ閲覧数・滞在傾向・流入元の把握による導線改善</li>
         </ul>
       </section>
 
       <section className="card-surface space-y-4 rounded-3xl border border-pink-100/80 bg-white/95 p-6">
         <h2 className="text-lg font-semibold text-slate-900">3. 保存期間</h2>
-        <p className="text-sm text-slate-700 leading-relaxed">
-          アクセスログは不正対策および権利侵害対応のため、取得日から1年間保存します。その他の情報は、利用目的の達成に必要な期間に限り保存します。
-        </p>
+        <ul className="list-disc space-y-2 pl-5 text-sm text-slate-700 leading-relaxed">
+          <li>アクセスログ（不正対策・権利侵害対応）は取得日から1年間保存します。</li>
+          <li>アクセス解析データ（PV、滞在時間推定、流入情報）は取得日から30日間保存します。</li>
+          <li>アクセス解析用Cookie（`mc_sid`）の有効期間は30日です。</li>
+          <li>その他の情報は、利用目的の達成に必要な期間に限り保存します。</li>
+        </ul>
       </section>
 
       <section className="card-surface space-y-4 rounded-3xl border border-pink-100/80 bg-white/95 p-6">
