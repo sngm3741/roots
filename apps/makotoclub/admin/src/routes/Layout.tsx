@@ -54,6 +54,16 @@ export const Layout = () => {
             >
               アクセスログ
             </NavLink>
+            <NavLink
+              to="/analytics"
+              className={({ isActive }) =>
+                `rounded-xl px-3 py-2 transition hover:text-slate-900 ${
+                  isActive ? "bg-pink-50 text-slate-900" : ""
+                }`
+              }
+            >
+              解析
+            </NavLink>
           </nav>
           <Button variant="secondary" size="sm">
             管理

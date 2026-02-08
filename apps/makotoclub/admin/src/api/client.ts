@@ -1,4 +1,11 @@
-import { AccessLogEntry, Store, StorePayload, Survey, SurveyPayload } from "../types";
+import {
+  AccessLogEntry,
+  AnalyticsSnapshot,
+  Store,
+  StorePayload,
+  Survey,
+  SurveyPayload,
+} from "../types";
 
 type ListResponse<T> = { items: T[]; total: number };
 
@@ -36,4 +43,6 @@ export const adminApi = {
   listDraftSurveys: () => fetchJson<ListResponse<Survey>>("/api/surveys/drafts"),
   listAccessLogs: (page = 1, limit = 50) =>
     fetchJson<ListResponse<AccessLogEntry>>(`/api/access-logs?page=${page}&limit=${limit}`),
+  getAnalytics: (days = 7, limit = 20) =>
+    fetchJson<AnalyticsSnapshot>(`/api/analytics?days=${days}&limit=${limit}`),
 };

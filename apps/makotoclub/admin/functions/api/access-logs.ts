@@ -37,6 +37,13 @@ export const onRequestGet: PagesFunction = async ({ request, env }) => {
   const limit = Math.min(100, Math.max(1, Number(searchParams.get("limit") || "50")));
   const offset = (page - 1) * limit;
 
+  const hasTable = await env.DB.prepare(
+    `SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'access_logs'`,
+  ).first();
+  if (!hasTable?.name) {
+    return json({ items: [], total: 0, page, limit });
+  }
+
   const whereClause = "datetime(created_at) >= datetime('now', '-365 days')";
 
   const totalRow = await env.DB.prepare(

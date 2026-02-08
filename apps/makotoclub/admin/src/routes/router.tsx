@@ -6,6 +6,7 @@ import { SurveyListPage } from "./surveys/SurveyListPage";
 import { SurveyFormPage } from "./surveys/SurveyFormPage";
 import { DraftSurveyListPage } from "./surveys/DraftSurveyListPage";
 import { AccessLogPage } from "./access-logs/AccessLogPage";
+import { AnalyticsPage } from "./analytics/AnalyticsPage";
 
 export const router = createBrowserRouter([
   {
@@ -21,6 +22,7 @@ export const router = createBrowserRouter([
       { path: "surveys/:id/edit", element: <SurveyFormPage mode="edit" /> },
       { path: "surveys/drafts", element: <DraftSurveyListPage /> },
       { path: "access-logs", element: <AccessLogPage /> },
+      { path: "analytics", element: <AnalyticsPage /> },
     ],
   },
 ]);
