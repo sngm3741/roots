@@ -1,0 +1,47 @@
+[
+  {
+    "id": "cab09f2a-0163-4485-86d3-28f2b5cfb98a",
+    "name": "アゲハ",
+    "branchName": "",
+    "prefecture": "茨城県",
+    "area": "",
+    "industry": "ソープ",
+    "genre": "",
+    "existingRecruitmentUrls": [],
+    "officialUrlCurrent": null,
+    "officialUrlCandidate": null,
+    "candidateSource": "unresolved",
+    "confidence": 0,
+    "searchQuery": "アゲハ  茨城県  公式サイト 求人"
+  },
+  {
+    "id": "f664c828-f1fa-4a1f-9df3-5764b072ea55",
+    "name": "アッシュ",
+    "branchName": "",
+    "prefecture": "東京都",
+    "area": "",
+    "industry": "デリヘル",
+    "genre": "",
+    "existingRecruitmentUrls": [],
+    "officialUrlCurrent": null,
+    "officialUrlCandidate": null,
+    "candidateSource": "unresolved",
+    "confidence": 0,
+    "searchQuery": "アッシュ  東京都  公式サイト 求人"
+  },
+  {
+    "id": "175b2912-863b-44a3-a38a-3e2aaa024e66",
+    "name": "ピカソ",
+    "branchName": "",
+    "prefecture": "熊本県",
+    "area": "",
+    "industry": "ソープ",
+    "genre": "",
+    "existingRecruitmentUrls": [],
+    "officialUrlCurrent": null,
+    "officialUrlCandidate": null,
+    "candidateSource": "unresolved",
+    "confidence": 0,
+    "searchQuery": "ピカソ  熊本県  公式サイト 求人"
+  }
+]

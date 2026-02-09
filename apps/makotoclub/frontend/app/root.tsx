@@ -66,7 +66,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <BreadcrumbProvider>
           <PageAnalyticsTracker />
           <Header />
-          <main className="min-h-screen pb-2 pt-24">
+          <main className="min-h-screen pb-2 pt-20">
             <div className="mx-auto max-w-5xl px-4">
               <Breadcrumbs />
               {children}

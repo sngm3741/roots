@@ -1,0 +1,47 @@
+[
+  {
+    "id": "3b09e62b-bf78-473d-a6d5-d21bc441c287",
+    "name": "ブルーバード",
+    "branchName": "横浜店",
+    "prefecture": "神奈川県",
+    "area": "",
+    "industry": "デリヘル",
+    "genre": "",
+    "existingRecruitmentUrls": [],
+    "officialUrlCurrent": null,
+    "officialUrlCandidate": null,
+    "candidateSource": "unresolved",
+    "confidence": 0,
+    "searchQuery": "ブルーバード 横浜店 神奈川県  公式サイト 求人"
+  },
+  {
+    "id": "9e5d110e-8c11-4dc9-bb0c-b7ab02deca31",
+    "name": "ブルーバード",
+    "branchName": "上越店",
+    "prefecture": "新潟県",
+    "area": "",
+    "industry": "デリヘル",
+    "genre": "",
+    "existingRecruitmentUrls": [],
+    "officialUrlCurrent": null,
+    "officialUrlCandidate": null,
+    "candidateSource": "unresolved",
+    "confidence": 0,
+    "searchQuery": "ブルーバード 上越店 新潟県  公式サイト 求人"
+  },
+  {
+    "id": "f6298246-f68d-44e9-a841-8b8a8f461e1d",
+    "name": "夕月",
+    "branchName": "",
+    "prefecture": "愛媛県",
+    "area": "",
+    "industry": "ソープ",
+    "genre": "",
+    "existingRecruitmentUrls": [],
+    "officialUrlCurrent": null,
+    "officialUrlCandidate": null,
+    "candidateSource": "unresolved",
+    "confidence": 0,
+    "searchQuery": "夕月  愛媛県  公式サイト 求人"
+  }
+]

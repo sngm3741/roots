@@ -16,6 +16,15 @@ const INTERNAL_REFERRER_HOSTS = new Set([
   "localhost",
   "127.0.0.1",
 ]);
+const OUTBOUND_LINK_TYPES = new Set([
+  "recruitment",
+  "official",
+  "line",
+  "x",
+  "bsky",
+  "phone",
+  "email",
+]);
 
 let analyticsTableReady = false;
 
@@ -100,6 +109,36 @@ const ensureAnalyticsTables = async (env: Env) => {
   await env.DB.prepare(
     `CREATE INDEX IF NOT EXISTS idx_analytics_session_attribution_source
      ON analytics_session_attribution(attribution_source)`,
+  ).run();
+
+  await env.DB.prepare(
+    `CREATE TABLE IF NOT EXISTS analytics_link_clicks (
+      id TEXT PRIMARY KEY,
+      occurred_at TEXT NOT NULL,
+      session_id TEXT,
+      visitor_hash TEXT,
+      source_path TEXT NOT NULL,
+      store_id TEXT NOT NULL,
+      store_name TEXT,
+      link_type TEXT NOT NULL,
+      target_url TEXT NOT NULL,
+      referrer_host TEXT,
+      utm_source TEXT,
+      utm_medium TEXT,
+      utm_campaign TEXT
+    )`,
+  ).run();
+  await env.DB.prepare(
+    `CREATE INDEX IF NOT EXISTS idx_analytics_link_clicks_occurred_at
+     ON analytics_link_clicks(occurred_at)`,
+  ).run();
+  await env.DB.prepare(
+    `CREATE INDEX IF NOT EXISTS idx_analytics_link_clicks_store
+     ON analytics_link_clicks(store_id)`,
+  ).run();
+  await env.DB.prepare(
+    `CREATE INDEX IF NOT EXISTS idx_analytics_link_clicks_link_type
+     ON analytics_link_clicks(link_type)`,
   ).run();
 
   analyticsTableReady = true;
@@ -484,6 +523,81 @@ export const handleMetricRoutes = async (
         utmCampaign,
       )
       .run();
+
+    return Response.json({ ok: true });
+  }
+
+  if (pathname === "/api/metrics/v2/outbound-click" && request.method === "POST") {
+    if (!env.DB) return new Response("DBが設定されていません。", { status: 500 });
+    await ensureAnalyticsTables(env);
+
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return new Response("JSONが不正です。", { status: 400 });
+    }
+
+    const payload = parseJsonObject(body);
+    const storeId = sanitizeOptionalText(payload?.storeId, 120);
+    const storeName = sanitizeOptionalText(payload?.storeName, 240);
+    const linkType = sanitizeOptionalText(payload?.linkType, 32);
+    const targetUrl = sanitizeOptionalText(payload?.targetUrl, 2000);
+    const sourcePath = normalizePath(
+      typeof payload?.path === "string" ? payload.path : null,
+    ) ?? "/";
+    if (!storeId) return new Response("storeIdが必要です。", { status: 400 });
+    if (!linkType || !OUTBOUND_LINK_TYPES.has(linkType)) {
+      return new Response("linkTypeが不正です。", { status: 400 });
+    }
+    if (!targetUrl) return new Response("targetUrlが必要です。", { status: 400 });
+
+    const cookieSessionId = parseCookie(request.headers.get("cookie"), SESSION_COOKIE_NAME);
+    const sessionId =
+      sanitizeOptionalText(payload?.sessionId, 120) ??
+      sanitizeOptionalText(cookieSessionId, 120) ??
+      "unknown";
+    const referrerHost =
+      extractReferrerHost(typeof payload?.referrer === "string" ? payload.referrer : null) ??
+      extractReferrerHost(request.headers.get("referer"));
+    const utmSource = sanitizeOptionalText(payload?.utmSource, 120);
+    const utmMedium = sanitizeOptionalText(payload?.utmMedium, 120);
+    const utmCampaign = sanitizeOptionalText(payload?.utmCampaign, 200);
+    const visitorHash = await hashText(getRequestClientKey(request));
+    const occurredAt = new Date().toISOString();
+
+    await env.DB.prepare(
+      `INSERT INTO analytics_link_clicks (
+        id, occurred_at, session_id, visitor_hash, source_path,
+        store_id, store_name, link_type, target_url,
+        referrer_host, utm_source, utm_medium, utm_campaign
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    )
+      .bind(
+        crypto.randomUUID(),
+        occurredAt,
+        sessionId,
+        visitorHash,
+        sourcePath,
+        storeId,
+        storeName,
+        linkType,
+        targetUrl,
+        referrerHost,
+        utmSource,
+        utmMedium,
+        utmCampaign,
+      )
+      .run();
+
+    await upsertSessionAttribution(env, {
+      sessionId,
+      occurredAt,
+      referrerHost,
+      utmSource,
+      utmMedium,
+      utmCampaign,
+    });
 
     return Response.json({ ok: true });
   }

@@ -14,6 +14,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 type ActionResult = { error?: string; success?: boolean; hasEmail?: boolean };
 
 const WORK_TYPE_OPTIONS = ["在籍", "出稼ぎ", "その他"];
+const MAX_UPLOAD_IMAGES = 3;
 
 const PREFS = [
   "北海道",
@@ -194,10 +195,9 @@ export async function action({ request, context }: ActionFunctionArgs) {
     return { error: "必須項目が未入力、または範囲外の値があります" };
   }
 
-  const fileEntries = (formData.getAll("images").filter((f) => f instanceof File) as File[]).slice(
-    0,
-    5,
-  );
+  const fileEntries = (
+    formData.getAll("images").filter((f) => f instanceof File) as File[]
+  ).slice(0, MAX_UPLOAD_IMAGES);
   const uploadedUrls: string[] = [];
   for (const file of fileEntries) {
     if (!file || file.size === 0) continue;
@@ -314,7 +314,7 @@ export default function NewSurvey() {
   const [waitUi, setWaitUi] = useState<number>(0);
   const [earnUi, setEarnUi] = useState<number>(0);
   const [castUi, setCastUi] = useState<number>(0);
-  const MAX_IMAGES = 3;
+  const MAX_IMAGES = MAX_UPLOAD_IMAGES;
   const MAX_SIZE = 5 * 1024 * 1024; // 5MB
   const shareUrl =
     typeof window === "undefined" ? "https://makoto-club.com" : window.location.href;
@@ -800,7 +800,7 @@ export default function NewSurvey() {
                       name={field.name}
                       type="range"
                       min="0"
-                      max="20"
+                      max="30"
                       step="1"
                       value={earnUi}
                       onBlur={field.onBlur}
@@ -815,8 +815,8 @@ export default function NewSurvey() {
                     />
                     <div className="flex justify-between text-xs text-slate-500">
                       <span>0万円</span>
-                      <span>10万円</span>
-                      <span>20万円</span>
+                      <span>15万円</span>
+                      <span>30万円</span>
                     </div>
                   </div>
                 )}
@@ -848,7 +848,7 @@ export default function NewSurvey() {
                       name={field.name}
                       type="range"
                       min="0"
-                      max="20000"
+                      max="30000"
                       step="500"
                       value={castUi}
                       onBlur={field.onBlur}
@@ -863,8 +863,8 @@ export default function NewSurvey() {
                     />
                     <div className="flex justify-between text-xs text-slate-500">
                       <span>0円</span>
-                      <span>10,000円</span>
-                      <span>20,000円</span>
+                      <span>15,000円</span>
+                      <span>30,000円</span>
                     </div>
                   </div>
                 )}
@@ -1187,12 +1187,12 @@ export default function NewSurvey() {
             <p className="mt-2 text-sm text-slate-600">
               アンケートの送信に失敗しました。バグ報告はこちらまでご連絡ください。
             </p>
-            <a
-              href="/contact"
+            <Link
+              to="/contact"
               className="mt-3 inline-flex items-center justify-center rounded-full border border-pink-200 bg-pink-50 px-4 py-2 text-sm font-semibold text-pink-600 transition hover:border-pink-300 hover:bg-pink-100"
             >
               バグ報告はこちらまで
-            </a>
+            </Link>
             <p className="mt-2 text-xs text-slate-500">可能ならスクショもお願いします🙇</p>
             <p className="mt-3 text-xs text-slate-400">{serverError}</p>
             <div className="mt-4 flex justify-end">

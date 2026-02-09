@@ -1,0 +1,47 @@
+[
+  {
+    "id": "619c776a-ff87-4e0a-9ab7-79d95b46968b",
+    "name": "アンドエッセンス",
+    "branchName": "",
+    "prefecture": "静岡県",
+    "area": "",
+    "industry": "デリヘル",
+    "genre": "",
+    "existingRecruitmentUrls": [],
+    "officialUrlCurrent": null,
+    "officialUrlCandidate": null,
+    "candidateSource": "unresolved",
+    "confidence": 0,
+    "searchQuery": "アンドエッセンス  静岡県  公式サイト 求人"
+  },
+  {
+    "id": "840d2aa7-9c64-45f3-a5d6-090b36549807",
+    "name": "ヴェルサイユ",
+    "branchName": "",
+    "prefecture": "東京都",
+    "area": "吉原",
+    "industry": "ソープ",
+    "genre": "高級店",
+    "existingRecruitmentUrls": [],
+    "officialUrlCurrent": null,
+    "officialUrlCandidate": null,
+    "candidateSource": "unresolved",
+    "confidence": 0,
+    "searchQuery": "ヴェルサイユ  東京都 吉原 公式サイト 求人"
+  },
+  {
+    "id": "4d071b67-3d9e-4d02-91e8-c4d67fa8799a",
+    "name": "極楽城",
+    "branchName": "",
+    "prefecture": "千葉県",
+    "area": "",
+    "industry": "ソープ",
+    "genre": "",
+    "existingRecruitmentUrls": [],
+    "officialUrlCurrent": null,
+    "officialUrlCandidate": null,
+    "candidateSource": "unresolved",
+    "confidence": 0,
+    "searchQuery": "極楽城  千葉県  公式サイト 求人"
+  }
+]

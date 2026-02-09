@@ -18,7 +18,7 @@ const stories = [
 
 export default function StoriesPage() {
   return (
-    <main className="mx-auto w-full max-w-5xl px-4 pb-16 pt-24">
+    <main className="mx-auto w-full max-w-5xl px-4 pb-16 pt-20">
       <header className="space-y-2">
         <h1 className="text-2xl font-semibold text-slate-900">体験談ストーリーズ</h1>
         <p className="text-sm text-slate-600">

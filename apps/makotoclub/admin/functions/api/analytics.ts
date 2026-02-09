@@ -7,6 +7,8 @@ type Summary = {
   todayUniqueVisitors: number;
   averageStaySeconds: number;
   bounceRate: number;
+  totalOutboundClicks: number;
+  todayOutboundClicks: number;
 };
 
 type DailyPoint = {
@@ -40,6 +42,27 @@ type UtmPoint = {
   pageViews: number;
 };
 
+type OutboundStorePoint = {
+  storeId: string;
+  storeName: string;
+  clicks: number;
+  recruitmentClicks: number;
+  lineClicks: number;
+  xClicks: number;
+  bskyClicks: number;
+  lastClickedAt: string | null;
+};
+
+type OutboundRecentPoint = {
+  occurredAt: string;
+  storeId: string;
+  storeName: string;
+  linkType: string;
+  sourcePath: string;
+  targetUrl: string;
+  inflowSource: string;
+};
+
 type AnalyticsResponse = {
   generatedAt: string;
   rangeDays: number;
@@ -51,10 +74,13 @@ type AnalyticsResponse = {
   landingReferrers: LandingReferrerPoint[];
   internalReferrers: InternalReferrerPoint[];
   utmCampaigns: UtmPoint[];
+  outboundTopStores: OutboundStorePoint[];
+  outboundRecentClicks: OutboundRecentPoint[];
   coverage: {
     hasAccessHits: boolean;
     hasPageViews: boolean;
     hasSessionAttribution: boolean;
+    hasLinkClicks: boolean;
     note: string | null;
   };
 };
@@ -99,6 +125,8 @@ const emptyResponse = (rangeDays: number, note: string | null): AnalyticsRespons
     todayUniqueVisitors: 0,
     averageStaySeconds: 0,
     bounceRate: 0,
+    totalOutboundClicks: 0,
+    todayOutboundClicks: 0,
   },
   daily: [],
   paths: [],
@@ -106,10 +134,13 @@ const emptyResponse = (rangeDays: number, note: string | null): AnalyticsRespons
   landingReferrers: [],
   internalReferrers: [],
   utmCampaigns: [],
+  outboundTopStores: [],
+  outboundRecentClicks: [],
   coverage: {
     hasAccessHits: false,
     hasPageViews: false,
     hasSessionAttribution: false,
+    hasLinkClicks: false,
     note,
   },
 });
@@ -150,6 +181,7 @@ export const onRequestGet: PagesFunction = async ({ request, env }) => {
   const hasAccessHits = await hasTable(env, "analytics_access_hits");
   const hasPageViews = await hasTable(env, "analytics_page_views");
   const hasSessionAttribution = await hasTable(env, "analytics_session_attribution");
+  const hasLinkClicks = await hasTable(env, "analytics_link_clicks");
 
   if (!hasAccessHits && !hasPageViews) {
     return json(emptyResponse(rangeDays, "解析テーブルがまだ作成されていません。"));
@@ -159,6 +191,7 @@ export const onRequestGet: PagesFunction = async ({ request, env }) => {
   result.coverage.hasAccessHits = hasAccessHits;
   result.coverage.hasPageViews = hasPageViews;
   result.coverage.hasSessionAttribution = hasSessionAttribution;
+  result.coverage.hasLinkClicks = hasLinkClicks;
   const coverageNotes: string[] = [];
   if (!hasAccessHits || !hasPageViews) {
     coverageNotes.push(
@@ -168,6 +201,11 @@ export const onRequestGet: PagesFunction = async ({ request, env }) => {
   if (!hasSessionAttribution) {
     coverageNotes.push(
       "first-touch補完テーブルが未作成のため、流入元のdirect補完は無効です。",
+    );
+  }
+  if (!hasLinkClicks) {
+    coverageNotes.push(
+      "外部リンククリック計測テーブルが未作成のため、店舗リンクのクリック集計は未反映です。",
     );
   }
   result.coverage.note = coverageNotes.length ? coverageNotes.join(" ") : null;
@@ -405,6 +443,103 @@ export const onRequestGet: PagesFunction = async ({ request, env }) => {
     result.paths = result.paths.map((path) => ({
       ...path,
       averageStaySeconds: pathStayMap.get(path.path) ?? 0,
+    }));
+  }
+
+  if (hasLinkClicks) {
+    const totalOutboundRow = await env.DB.prepare(
+      `SELECT COUNT(*) AS c
+       FROM analytics_link_clicks`,
+    ).first();
+    const todayOutboundRow = await env.DB.prepare(
+      `SELECT COUNT(*) AS c
+       FROM analytics_link_clicks
+       WHERE strftime('%Y-%m-%d', datetime(occurred_at, '+9 hours')) = ?`,
+    )
+      .bind(today)
+      .first();
+    result.summary.totalOutboundClicks = toNumber(totalOutboundRow?.c);
+    result.summary.todayOutboundClicks = toNumber(todayOutboundRow?.c);
+
+    const topStoreRows = await env.DB.prepare(
+      `SELECT
+         store_id,
+         COALESCE(NULLIF(store_name, ''), '(不明店舗)') AS store_name,
+         COUNT(*) AS clicks,
+         SUM(CASE WHEN link_type IN ('recruitment', 'official') THEN 1 ELSE 0 END) AS recruitment_clicks,
+         SUM(CASE WHEN link_type = 'line' THEN 1 ELSE 0 END) AS line_clicks,
+         SUM(CASE WHEN link_type = 'x' THEN 1 ELSE 0 END) AS x_clicks,
+         SUM(CASE WHEN link_type = 'bsky' THEN 1 ELSE 0 END) AS bsky_clicks,
+         MAX(occurred_at) AS last_clicked_at
+       FROM analytics_link_clicks
+       WHERE datetime(occurred_at) >= datetime('now', ?)
+       GROUP BY store_id, COALESCE(NULLIF(store_name, ''), '(不明店舗)')
+       ORDER BY clicks DESC
+       LIMIT ?`,
+    )
+      .bind(sinceModifier, limit)
+      .all();
+    result.outboundTopStores = (topStoreRows.results ?? []).map((row) => ({
+      storeId: String((row as Record<string, unknown>).store_id ?? ""),
+      storeName: String((row as Record<string, unknown>).store_name ?? "(不明店舗)"),
+      clicks: toNumber((row as Record<string, unknown>).clicks),
+      recruitmentClicks: toNumber((row as Record<string, unknown>).recruitment_clicks),
+      lineClicks: toNumber((row as Record<string, unknown>).line_clicks),
+      xClicks: toNumber((row as Record<string, unknown>).x_clicks),
+      bskyClicks: toNumber((row as Record<string, unknown>).bsky_clicks),
+      lastClickedAt:
+        typeof (row as Record<string, unknown>).last_clicked_at === "string"
+          ? ((row as Record<string, unknown>).last_clicked_at as string)
+          : null,
+    }));
+
+    const recentRows = hasSessionAttribution
+      ? await env.DB.prepare(
+          `SELECT
+             lc.occurred_at,
+             lc.store_id,
+             COALESCE(NULLIF(lc.store_name, ''), '(不明店舗)') AS store_name,
+             lc.link_type,
+             lc.source_path,
+             lc.target_url,
+             COALESCE(
+               NULLIF(LOWER(asa.attribution_source), ''),
+               NULLIF(LOWER(lc.referrer_host), ''),
+               '(direct)'
+             ) AS inflow_source
+           FROM analytics_link_clicks lc
+           LEFT JOIN analytics_session_attribution asa
+             ON asa.session_id = lc.session_id
+           WHERE datetime(lc.occurred_at) >= datetime('now', ?)
+           ORDER BY datetime(lc.occurred_at) DESC
+           LIMIT ?`,
+        )
+          .bind(sinceModifier, limit)
+          .all()
+      : await env.DB.prepare(
+          `SELECT
+             occurred_at,
+             store_id,
+             COALESCE(NULLIF(store_name, ''), '(不明店舗)') AS store_name,
+             link_type,
+             source_path,
+             target_url,
+             COALESCE(NULLIF(LOWER(referrer_host), ''), '(direct)') AS inflow_source
+           FROM analytics_link_clicks
+           WHERE datetime(occurred_at) >= datetime('now', ?)
+           ORDER BY datetime(occurred_at) DESC
+           LIMIT ?`,
+        )
+          .bind(sinceModifier, limit)
+          .all();
+    result.outboundRecentClicks = (recentRows.results ?? []).map((row) => ({
+      occurredAt: String((row as Record<string, unknown>).occurred_at ?? ""),
+      storeId: String((row as Record<string, unknown>).store_id ?? ""),
+      storeName: String((row as Record<string, unknown>).store_name ?? "(不明店舗)"),
+      linkType: String((row as Record<string, unknown>).link_type ?? "unknown"),
+      sourcePath: String((row as Record<string, unknown>).source_path ?? "/"),
+      targetUrl: String((row as Record<string, unknown>).target_url ?? ""),
+      inflowSource: String((row as Record<string, unknown>).inflow_source ?? "(direct)"),
     }));
   }
 

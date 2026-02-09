@@ -1,0 +1,47 @@
+[
+  {
+    "id": "a9e0bb9c-6db7-4982-a4a8-f8a294534605",
+    "name": "パルコ",
+    "branchName": "",
+    "prefecture": "茨城県",
+    "area": "",
+    "industry": "ソープ",
+    "genre": "",
+    "existingRecruitmentUrls": [],
+    "officialUrlCurrent": null,
+    "officialUrlCandidate": null,
+    "candidateSource": "unresolved",
+    "confidence": 0,
+    "searchQuery": "パルコ  茨城県  公式サイト 求人"
+  },
+  {
+    "id": "0d290257-aeb1-4f92-9467-f7bf7fe2a6c5",
+    "name": "秋葉原コスプレ学園",
+    "branchName": "in西川口",
+    "prefecture": "埼玉県",
+    "area": "",
+    "industry": "箱ヘル",
+    "genre": "学園系",
+    "existingRecruitmentUrls": [],
+    "officialUrlCurrent": null,
+    "officialUrlCandidate": null,
+    "candidateSource": "unresolved",
+    "confidence": 0,
+    "searchQuery": "秋葉原コスプレ学園 in西川口 埼玉県  公式サイト 求人"
+  },
+  {
+    "id": "54e9e3aa-c7ce-4645-b4ff-abee60ad38a5",
+    "name": "イキすぎハイスタイル",
+    "branchName": "",
+    "prefecture": "富山県",
+    "area": "",
+    "industry": "デリヘル",
+    "genre": "",
+    "existingRecruitmentUrls": [],
+    "officialUrlCurrent": null,
+    "officialUrlCandidate": null,
+    "candidateSource": "unresolved",
+    "confidence": 0,
+    "searchQuery": "イキすぎハイスタイル  富山県  公式サイト 求人"
+  }
+]

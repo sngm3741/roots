@@ -1,0 +1,47 @@
+[
+  {
+    "id": "17867c96-4d80-4164-a0aa-c49961c0a6a0",
+    "name": "ライト",
+    "branchName": "",
+    "prefecture": "広島県",
+    "area": "",
+    "industry": "ソープ",
+    "genre": "",
+    "existingRecruitmentUrls": [],
+    "officialUrlCurrent": null,
+    "officialUrlCandidate": null,
+    "candidateSource": "unresolved",
+    "confidence": 0,
+    "searchQuery": "ライト  広島県  公式サイト 求人"
+  },
+  {
+    "id": "1928f16a-aba4-4c3e-bba1-7eb39cad0387",
+    "name": "生パネル",
+    "branchName": "",
+    "prefecture": "千葉県",
+    "area": "",
+    "industry": "デリヘル",
+    "genre": "",
+    "existingRecruitmentUrls": [],
+    "officialUrlCurrent": null,
+    "officialUrlCandidate": null,
+    "candidateSource": "unresolved",
+    "confidence": 0,
+    "searchQuery": "生パネル  千葉県  公式サイト 求人"
+  },
+  {
+    "id": "c87e1467-dac2-408a-8855-f15eebb61ba0",
+    "name": "トウキョウアイドルアカデミー",
+    "branchName": "",
+    "prefecture": "東京都",
+    "area": "",
+    "industry": "デリヘル",
+    "genre": "",
+    "existingRecruitmentUrls": [],
+    "officialUrlCurrent": null,
+    "officialUrlCandidate": null,
+    "candidateSource": "unresolved",
+    "confidence": 0,
+    "searchQuery": "トウキョウアイドルアカデミー  東京都  公式サイト 求人"
+  }
+]

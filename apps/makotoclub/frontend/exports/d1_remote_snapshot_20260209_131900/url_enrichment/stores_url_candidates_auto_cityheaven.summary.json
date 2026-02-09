@@ -1,0 +1,10 @@
+{
+  "generatedAt": "2026-02-09T05:01:10.647Z",
+  "inputPath": "/Users/sngm3741/Workspace/roots/apps/makotoclub/frontend/exports/d1_remote_snapshot_20260209_131900/url_enrichment/stores_url_worklist_unresolved.json",
+  "outputPath": "/Users/sngm3741/Workspace/roots/apps/makotoclub/frontend/exports/d1_remote_snapshot_20260209_131900/url_enrichment/stores_url_candidates_auto_cityheaven.json",
+  "mergedOutputPath": "/Users/sngm3741/Workspace/roots/apps/makotoclub/frontend/exports/d1_remote_snapshot_20260209_131900/url_enrichment/stores_url_worklist_with_candidates_auto_cityheaven.json",
+  "total": 161,
+  "resolvedCount": 0,
+  "unresolvedCount": 161,
+  "method": "yahoo_search_and_cityheaven_official_pc"
+}

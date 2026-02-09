@@ -8,6 +8,38 @@ const json = (body: unknown, init?: ResponseInit) =>
     ...init,
   });
 
+const hasOwn = (value: unknown, key: string) =>
+  !!value && typeof value === "object" && Object.prototype.hasOwnProperty.call(value, key);
+
+const normalizeOptionalText = (value: unknown): string | null => {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  return trimmed ? trimmed : null;
+};
+
+const normalizeOptionalEmail = (value: unknown): { ok: boolean; value: string | null } => {
+  if (value === undefined || value === null || value === "") return { ok: true, value: null };
+  if (typeof value !== "string") return { ok: false, value: null };
+  const trimmed = value.trim();
+  if (!trimmed) return { ok: true, value: null };
+  const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed);
+  return valid ? { ok: true, value: trimmed } : { ok: false, value: null };
+};
+
+const normalizeOptionalHttpsUrl = (value: unknown): { ok: boolean; value: string | null } => {
+  if (value === undefined || value === null || value === "") return { ok: true, value: null };
+  if (typeof value !== "string") return { ok: false, value: null };
+  const trimmed = value.trim();
+  if (!trimmed) return { ok: true, value: null };
+  try {
+    const parsed = new URL(trimmed);
+    if (parsed.protocol !== "https:") return { ok: false, value: null };
+    return { ok: true, value: parsed.toString() };
+  } catch {
+    return { ok: false, value: null };
+  }
+};
+
 export const onRequestGet: PagesFunction = async ({ env }) => {
   const rows = await env.DB.prepare(
     `SELECT
@@ -34,11 +66,48 @@ export const onRequestPost: PagesFunction = async ({ request, env }) => {
   const payload = parseResult.data;
   const now = new Date().toISOString();
   const id = crypto.randomUUID();
+  const normalizedPhoneNumber = normalizeOptionalText(payload.phoneNumber);
+  const normalizedEmail = normalizeOptionalEmail(payload.email);
+  if (!normalizedEmail.ok) {
+    return json({ message: "Emailの形式が不正です。" }, { status: 400 });
+  }
+  const normalizedLineUrl = normalizeOptionalHttpsUrl(payload.lineUrl);
+  if (!normalizedLineUrl.ok) {
+    return json({ message: "LINE URLは https のURLのみ登録できます。" }, { status: 400 });
+  }
+  const normalizedTwitterUrl = normalizeOptionalHttpsUrl(payload.twitterUrl);
+  if (!normalizedTwitterUrl.ok) {
+    return json({ message: "X(Twitter) URLは https のURLのみ登録できます。" }, { status: 400 });
+  }
+  const normalizedBskyUrl = normalizeOptionalHttpsUrl(payload.bskyUrl);
+  if (!normalizedBskyUrl.ok) {
+    return json({ message: "Bsky URLは https のURLのみ登録できます。" }, { status: 400 });
+  }
 
   await env.DB.prepare(
     `INSERT INTO stores
-      (id, name, branch_name, prefecture, area, industry, genre, cast_back, recruitment_urls, business_hours_open, business_hours_close, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      (
+        id,
+        name,
+        branch_name,
+        prefecture,
+        area,
+        industry,
+        genre,
+        cast_back,
+        phone_number,
+        email,
+        line_url,
+        twitter_url,
+        bsky_url,
+        women_recruitment_page_missing,
+        recruitment_urls,
+        business_hours_open,
+        business_hours_close,
+        created_at,
+        updated_at
+      )
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   )
     .bind(
       id,
@@ -49,6 +118,12 @@ export const onRequestPost: PagesFunction = async ({ request, env }) => {
       payload.category,
       payload.genre ?? null,
       typeof payload.castBack === "number" ? payload.castBack : null,
+      normalizedPhoneNumber,
+      normalizedEmail.value,
+      normalizedLineUrl.value,
+      normalizedTwitterUrl.value,
+      normalizedBskyUrl.value,
+      payload.womenRecruitmentPageMissing ? 1 : 0,
       JSON.stringify(payload.recruitmentUrls ?? []),
       payload.businessHours?.open ?? null,
       payload.businessHours?.close ?? null,
@@ -66,6 +141,33 @@ export const onRequestPut: PagesFunction = async ({ request, env }) => {
   if (!payload.id) return json({ message: "idが必要です" }, { status: 400 });
 
   const now = new Date().toISOString();
+  const hasPhoneNumber = hasOwn(payload, "phoneNumber");
+  const hasEmail = hasOwn(payload, "email");
+  const hasLineUrl = hasOwn(payload, "lineUrl");
+  const hasTwitterUrl = hasOwn(payload, "twitterUrl");
+  const hasBskyUrl = hasOwn(payload, "bskyUrl");
+  const hasWomenRecruitmentPageMissing = hasOwn(payload, "womenRecruitmentPageMissing");
+  const normalizedPhoneNumber = normalizeOptionalText(payload.phoneNumber);
+  const normalizedEmail = normalizeOptionalEmail(payload.email);
+  if (hasEmail && !normalizedEmail.ok) {
+    return json({ message: "Emailの形式が不正です。" }, { status: 400 });
+  }
+  const normalizedLineUrl = normalizeOptionalHttpsUrl(payload.lineUrl);
+  if (hasLineUrl && !normalizedLineUrl.ok) {
+    return json({ message: "LINE URLは https のURLのみ登録できます。" }, { status: 400 });
+  }
+  const normalizedTwitterUrl = normalizeOptionalHttpsUrl(payload.twitterUrl);
+  if (hasTwitterUrl && !normalizedTwitterUrl.ok) {
+    return json({ message: "X(Twitter) URLは https のURLのみ登録できます。" }, { status: 400 });
+  }
+  const normalizedBskyUrl = normalizeOptionalHttpsUrl(payload.bskyUrl);
+  if (hasBskyUrl && !normalizedBskyUrl.ok) {
+    return json({ message: "Bsky URLは https のURLのみ登録できます。" }, { status: 400 });
+  }
+  const hasBusinessHours = hasOwn(payload, "businessHours");
+  const normalizedBusinessHoursOpen = normalizeOptionalText(payload.businessHours?.open);
+  const normalizedBusinessHoursClose = normalizeOptionalText(payload.businessHours?.close);
+
   await env.DB.prepare(
     `UPDATE stores SET
       name = COALESCE(?, name),
@@ -75,9 +177,15 @@ export const onRequestPut: PagesFunction = async ({ request, env }) => {
       industry = COALESCE(?, industry),
       genre = COALESCE(?, genre),
       cast_back = COALESCE(?, cast_back),
+      phone_number = CASE WHEN ? = 1 THEN ? ELSE phone_number END,
+      email = CASE WHEN ? = 1 THEN ? ELSE email END,
+      line_url = CASE WHEN ? = 1 THEN ? ELSE line_url END,
+      twitter_url = CASE WHEN ? = 1 THEN ? ELSE twitter_url END,
+      bsky_url = CASE WHEN ? = 1 THEN ? ELSE bsky_url END,
+      women_recruitment_page_missing = CASE WHEN ? = 1 THEN ? ELSE women_recruitment_page_missing END,
       recruitment_urls = COALESCE(?, recruitment_urls),
-      business_hours_open = COALESCE(?, business_hours_open),
-      business_hours_close = COALESCE(?, business_hours_close),
+      business_hours_open = CASE WHEN ? = 1 THEN ? ELSE COALESCE(?, business_hours_open) END,
+      business_hours_close = CASE WHEN ? = 1 THEN ? ELSE COALESCE(?, business_hours_close) END,
       updated_at = ?
     WHERE id = ? AND deleted_at IS NULL`
   )
@@ -89,11 +197,27 @@ export const onRequestPut: PagesFunction = async ({ request, env }) => {
       payload.category ?? null,
       payload.genre ?? null,
       typeof payload.castBack === "number" ? payload.castBack : null,
+      hasPhoneNumber ? 1 : 0,
+      normalizedPhoneNumber,
+      hasEmail ? 1 : 0,
+      normalizedEmail.value,
+      hasLineUrl ? 1 : 0,
+      normalizedLineUrl.value,
+      hasTwitterUrl ? 1 : 0,
+      normalizedTwitterUrl.value,
+      hasBskyUrl ? 1 : 0,
+      normalizedBskyUrl.value,
+      hasWomenRecruitmentPageMissing ? 1 : 0,
+      payload.womenRecruitmentPageMissing ? 1 : 0,
       Array.isArray((payload as any).recruitmentUrls)
         ? JSON.stringify((payload as any).recruitmentUrls)
         : null,
-      payload.businessHours?.open ?? null,
-      payload.businessHours?.close ?? null,
+      hasBusinessHours ? 1 : 0,
+      normalizedBusinessHoursOpen,
+      normalizedBusinessHoursOpen,
+      hasBusinessHours ? 1 : 0,
+      normalizedBusinessHoursClose,
+      normalizedBusinessHoursClose,
       now,
       payload.id,
     )

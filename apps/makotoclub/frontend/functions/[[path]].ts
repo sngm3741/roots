@@ -9,6 +9,7 @@ import { Resvg, initWasm } from "@resvg/resvg-wasm";
 // @ts-ignore resvgのwasmは型が無いので明示的に無視する
 import resvgWasm from "@resvg/resvg-wasm/index_bg.wasm";
 import { handleCommentRoutes } from "./_api/comments";
+import { handleLinkPreviewRoutes } from "./_api/link-preview";
 import { handleMetricRoutes, recordAccessHit } from "./_api/metrics";
 import { handleStoreRoutes } from "./_api/stores";
 import { handleSurveyRoutes } from "./_api/surveys";
@@ -907,6 +908,9 @@ async function handleApi(request: Request, env: Env): Promise<Response | null> {
 
   const storeResponse = await handleStoreRoutes(request, url, pathname, env);
   if (storeResponse) return storeResponse;
+
+  const linkPreviewResponse = await handleLinkPreviewRoutes(request, url, pathname, env);
+  if (linkPreviewResponse) return linkPreviewResponse;
 
   return null;
 }

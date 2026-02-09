@@ -1,3 +1,5 @@
+import { Link } from "react-router";
+
 export function Footer() {
   return (
     <footer className="bg-white border-t border-gray-200">
@@ -12,18 +14,18 @@ export function Footer() {
             />
           </div>
           <div className="flex items-center gap-6 text-sm text-gray-600">
-            <a className="hover:text-gray-900 transition-colors" href="/guideline">
+            <Link className="hover:text-gray-900 transition-colors" to="/guideline">
               投稿ガイドライン
-            </a>
-            <a className="hover:text-gray-900 transition-colors" href="/terms">
+            </Link>
+            <Link className="hover:text-gray-900 transition-colors" to="/terms">
               利用規約
-            </a>
-            <a className="hover:text-gray-900 transition-colors" href="/privacy">
+            </Link>
+            <Link className="hover:text-gray-900 transition-colors" to="/privacy">
               プライバシーポリシー
-            </a>
-            <a className="hover:text-gray-900 transition-colors" href="/contact">
+            </Link>
+            <Link className="hover:text-gray-900 transition-colors" to="/contact">
               お問い合わせ
-            </a>
+            </Link>
           </div>
         </div>
       </div>

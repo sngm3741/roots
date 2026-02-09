@@ -1,0 +1,10 @@
+{
+  "generatedAt": "2026-02-09T04:18:38Z",
+  "sourceSnapshot": "/Users/sngm3741/Workspace/roots/apps/makotoclub/frontend/exports/d1_remote_snapshot_20260209_131900/tables/stores.json",
+  "worklist": "/Users/sngm3741/Workspace/roots/apps/makotoclub/frontend/exports/d1_remote_snapshot_20260209_131900/url_enrichment/stores_url_worklist.json",
+  "unresolved": "/Users/sngm3741/Workspace/roots/apps/makotoclub/frontend/exports/d1_remote_snapshot_20260209_131900/url_enrichment/stores_url_worklist_unresolved.json",
+  "resolved": "/Users/sngm3741/Workspace/roots/apps/makotoclub/frontend/exports/d1_remote_snapshot_20260209_131900/url_enrichment/stores_url_worklist_resolved_from_db.json",
+  "total": 162,
+  "unresolvedCount": 161,
+  "resolvedCount": 1
+}

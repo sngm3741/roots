@@ -1,4 +1,5 @@
 import { type FormEvent, type KeyboardEvent, useEffect, useRef, useState } from "react";
+import { Link } from "react-router";
 import { Send, Sparkles } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { SurveyCard } from "../components/cards/survey-card";
@@ -156,8 +157,8 @@ export default function RagPage() {
                             className="overflow-hidden"
                           />
                         ))}
-                        <a
-                          href="/"
+                        <Link
+                          to="/"
                           className="group flex min-h-40 flex-col justify-between rounded-2xl border border-dashed border-slate-300 bg-white p-4 transition hover:border-slate-500 hover:bg-slate-100"
                         >
                           <div className="text-xs font-semibold tracking-wide text-slate-500">
@@ -171,7 +172,7 @@ export default function RagPage() {
                               トップページで店舗・アンケートを条件検索できます。
                             </p>
                           </div>
-                        </a>
+                        </Link>
                       </div>
                     ) : (
                       <div className="text-xs text-slate-500">該当するアンケートがありません。</div>

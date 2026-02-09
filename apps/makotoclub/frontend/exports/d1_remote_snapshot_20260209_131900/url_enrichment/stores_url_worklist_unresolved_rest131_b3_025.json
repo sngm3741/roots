@@ -1,0 +1,47 @@
+[
+  {
+    "id": "525c19d1-575f-418a-bca9-5f3c3e01bf82",
+    "name": "ワンモア奥様",
+    "branchName": "西川口店",
+    "prefecture": "埼玉県",
+    "area": "",
+    "industry": "デリヘル",
+    "genre": "",
+    "existingRecruitmentUrls": [],
+    "officialUrlCurrent": null,
+    "officialUrlCandidate": null,
+    "candidateSource": "unresolved",
+    "confidence": 0,
+    "searchQuery": "ワンモア奥様 西川口店 埼玉県  公式サイト 求人"
+  },
+  {
+    "id": "747df22e-825a-4e16-b4fa-79af6b79cd28",
+    "name": "アイリス",
+    "branchName": "岐阜店",
+    "prefecture": "岐阜県",
+    "area": "",
+    "industry": "デリヘル",
+    "genre": "",
+    "existingRecruitmentUrls": [],
+    "officialUrlCurrent": null,
+    "officialUrlCandidate": null,
+    "candidateSource": "unresolved",
+    "confidence": 0,
+    "searchQuery": "アイリス 岐阜店 岐阜県  公式サイト 求人"
+  },
+  {
+    "id": "dc595135-c568-4de4-95a0-0e1150ae4bcc",
+    "name": "ティアラ",
+    "branchName": "",
+    "prefecture": "埼玉県",
+    "area": "西川口",
+    "industry": "ソープ",
+    "genre": "",
+    "existingRecruitmentUrls": [],
+    "officialUrlCurrent": null,
+    "officialUrlCandidate": null,
+    "candidateSource": "unresolved",
+    "confidence": 0,
+    "searchQuery": "ティアラ  埼玉県 西川口 公式サイト 求人"
+  }
+]

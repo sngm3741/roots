@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { adminApi } from "../../api/client";
 import { Store, SurveyPayload } from "../../types";
@@ -60,6 +60,33 @@ const toFormState = (survey: SurveyPayload): SurveyFormState => ({
   imageUrls: survey.imageUrls ?? [],
 });
 
+const BSKY_MAX_TEXT = 290;
+
+const normalizeShareText = (value: string | undefined) => {
+  const trimmed = (value ?? "").trim();
+  return trimmed.length > 0 ? trimmed : "（未入力）";
+};
+
+const buildBskyShareText = (form: SurveyFormState, surveyUrl: string) => {
+  const sections = [
+    `🔸客層\n${normalizeShareText(form.customerComment)}`,
+    `🔸スタッフ\n${normalizeShareText(form.staffComment)}`,
+    `🔸環境\n${normalizeShareText(form.workEnvironmentComment)}`,
+    `🔸その他\n${normalizeShareText(form.etcComment)}`,
+  ];
+  const body = sections.join("\n\n");
+  const fullText = `${body}\n\n${surveyUrl}`;
+  if (fullText.length <= BSKY_MAX_TEXT) return fullText;
+
+  const suffix = `...\n\n${surveyUrl}`;
+  const available = BSKY_MAX_TEXT - suffix.length;
+  if (available <= 0) return surveyUrl;
+
+  const clippedBody = body.slice(0, available).trimEnd();
+  if (!clippedBody) return surveyUrl;
+  return `${clippedBody}...\n\n${surveyUrl}`;
+};
+
 export const SurveyFormPage = ({ mode }: Props) => {
   const params = useParams();
   const navigate = useNavigate();
@@ -71,6 +98,14 @@ export const SurveyFormPage = ({ mode }: Props) => {
   const [isReadOnly, setIsReadOnly] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const surveyPublicUrl = params.id ? `https://makoto-club.com/surveys/${params.id}` : "";
+  const bskyShareText = useMemo(() => {
+    if (!surveyPublicUrl) return "";
+    return buildBskyShareText(form, surveyPublicUrl);
+  }, [form, surveyPublicUrl]);
+  const bskyShareUrl = bskyShareText
+    ? `https://bsky.app/intent/compose?text=${encodeURIComponent(bskyShareText)}`
+    : "";
 
   useEffect(() => {
     const load = async () => {
@@ -222,9 +257,18 @@ export const SurveyFormPage = ({ mode }: Props) => {
             {isReadOnly ? "投稿内容の確認専用ページです（編集はできません）。" : "アンケート内容を入力してください。"}
           </p>
         </div>
-        <Button variant="outline" onClick={() => navigate(-1)}>
-          戻る
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          {bskyShareUrl ? (
+            <Button asChild variant="secondary">
+              <a href={bskyShareUrl} target="_blank" rel="noreferrer">
+                Bskyに共有
+              </a>
+            </Button>
+          ) : null}
+          <Button variant="outline" onClick={() => navigate(-1)}>
+            戻る
+          </Button>
+        </div>
       </div>
 
       {error && <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-red-700">{error}</div>}

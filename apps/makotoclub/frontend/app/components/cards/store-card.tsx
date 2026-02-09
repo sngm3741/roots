@@ -1,3 +1,4 @@
+import { Link } from "react-router";
 import type { StoreSummary } from "../../types/store";
 import { CircleDollarSign, Clock, FileText, Heart, MapPin, Store } from "lucide-react";
 import { RatingStars } from "../ui/rating-stars";
@@ -21,8 +22,8 @@ export function StoreCard({ store, className }: Props) {
     (Number.isFinite(store.waitTimeHours) ? `${formatDecimal1(store.waitTimeHours)}時間` : "-");
 
   return (
-    <a
-      href={href}
+    <Link
+      to={href}
       className={`w-full rounded-2xl border border-pink-100/60 bg-gradient-to-br from-pink-50 to-rose-50 p-4 text-left shadow-sm transition-shadow hover:shadow-md ${className ?? ""}`}
       aria-label={`${store.storeName}${store.branchName ? ` ${store.branchName}` : ""} の詳細へ`}
     >
@@ -98,6 +99,6 @@ export function StoreCard({ store, className }: Props) {
         <FileText className="h-4 w-4 text-pink-500" />
         <span className="text-sm font-bold text-pink-600">{store.surveyCount}件</span>
       </div>
-    </a>
+    </Link>
   );
 }

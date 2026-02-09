@@ -1,0 +1,32 @@
+[
+  {
+    "session_id": "b1f8ab1c-810b-421f-88ab-b90e0cc7436e",
+    "attributed_at": "2026-02-08T22:05:36.635Z",
+    "attribution_source": "bsky.app",
+    "attribution_type": "referrer",
+    "referrer_host": "bsky.app",
+    "utm_source": null,
+    "utm_medium": null,
+    "utm_campaign": null
+  },
+  {
+    "session_id": "d7273ef3-f592-4150-b568-323113ca36c7",
+    "attributed_at": "2026-02-08T23:10:18.754Z",
+    "attribution_source": "t.co",
+    "attribution_type": "referrer",
+    "referrer_host": "t.co",
+    "utm_source": null,
+    "utm_medium": null,
+    "utm_campaign": null
+  },
+  {
+    "session_id": "6a61a9c6-9fbd-4424-a685-0dedafb86fc9",
+    "attributed_at": "2026-02-09T01:10:11.196Z",
+    "attribution_source": "t.co",
+    "attribution_type": "referrer",
+    "referrer_host": "t.co",
+    "utm_source": null,
+    "utm_medium": null,
+    "utm_campaign": null
+  }
+]

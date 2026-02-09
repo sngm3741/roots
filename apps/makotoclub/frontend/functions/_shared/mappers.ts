@@ -1,5 +1,20 @@
 import type { StoreCommentRow, StoreRow, StoreStats, SurveyRow } from "./types";
 
+const parseRecruitmentUrls = (value: string | null | undefined): string[] => {
+  if (typeof value !== "string" || !value.trim()) return [];
+  try {
+    const parsed = JSON.parse(value);
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter((item): item is string => typeof item === "string")
+      .map((item) => item.trim())
+      .filter(Boolean);
+  } catch {
+    const trimmed = value.trim();
+    return trimmed ? [trimmed] : [];
+  }
+};
+
 export const mapStore = (row: StoreRow, stats?: StoreStats) => {
   const averageEarning = stats?.averageEarning ?? row.avg_earning ?? 0;
   const averageRating = stats?.averageRating ?? row.avg_rating ?? 0;
@@ -14,8 +29,14 @@ export const mapStore = (row: StoreRow, stats?: StoreStats) => {
     area: row.area ?? undefined,
     category: row.industry,
     genre: row.genre ?? undefined,
+    phoneNumber: row.phone_number ?? undefined,
+    email: row.email ?? undefined,
+    lineUrl: row.line_url ?? undefined,
+    twitterUrl: row.twitter_url ?? undefined,
+    bskyUrl: row.bsky_url ?? undefined,
+    recruitmentUrls: parseRecruitmentUrls(row.recruitment_urls),
     businessHours: row.business_hours_open
-      ? { open: row.business_hours_open, close: row.business_hours_close ?? "" }
+      ? { open: row.business_hours_open, close: row.business_hours_close ?? undefined }
       : undefined,
     averageRating,
     averageEarning,

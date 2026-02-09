@@ -1,0 +1,47 @@
+[
+  {
+    "id": "ad4338b6-aa0a-4c17-8503-cf1e320e9489",
+    "name": "越後屋",
+    "branchName": "",
+    "prefecture": "福島県",
+    "area": "",
+    "industry": "DC",
+    "genre": "",
+    "existingRecruitmentUrls": [],
+    "officialUrlCurrent": null,
+    "officialUrlCandidate": null,
+    "candidateSource": "unresolved",
+    "confidence": 0,
+    "searchQuery": "越後屋  福島県  公式サイト 求人"
+  },
+  {
+    "id": "1f86850e-398c-4529-b0e1-96b6696bbc88",
+    "name": "リシャール",
+    "branchName": "",
+    "prefecture": "新潟県",
+    "area": "",
+    "industry": "デリヘル",
+    "genre": "",
+    "existingRecruitmentUrls": [],
+    "officialUrlCurrent": null,
+    "officialUrlCandidate": null,
+    "candidateSource": "unresolved",
+    "confidence": 0,
+    "searchQuery": "リシャール  新潟県  公式サイト 求人"
+  },
+  {
+    "id": "1aa2e5b4-e87f-4e87-8cc3-4ccbeedc57bf",
+    "name": "ニュースルガ",
+    "branchName": "",
+    "prefecture": "静岡県",
+    "area": "",
+    "industry": "ソープ",
+    "genre": "",
+    "existingRecruitmentUrls": [],
+    "officialUrlCurrent": null,
+    "officialUrlCandidate": null,
+    "candidateSource": "unresolved",
+    "confidence": 0,
+    "searchQuery": "ニュースルガ  静岡県  公式サイト 求人"
+  }
+]

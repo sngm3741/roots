@@ -1,12 +1,14 @@
-import { type LoaderFunctionArgs, useLoaderData } from "react-router";
+import { Form, Link, type LoaderFunctionArgs, useLoaderData } from "react-router";
 import { Button } from "../components/ui/button";
 import { fetchSurveys } from "../lib/surveys.server";
 import { getApiBaseUrl } from "../config.server";
 import type { SurveySummary } from "../types/survey";
-import { Form } from "react-router";
 import { Input } from "../components/ui/input";
 import { Select } from "../components/ui/select";
 import { SurveyCard } from "../components/cards/survey-card";
+import { GENRE_OPTIONS, INDUSTRY_OPTIONS, PREFECTURES } from "../lib/master-data";
+import { parseNumberParam } from "../lib/query-params";
+import { LIST_SORT_OPTIONS } from "../lib/sort-options";
 
 type LoaderData = {
   surveys: SurveySummary[];
@@ -57,7 +59,7 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
     surveys = res.items;
     total = res.total;
   } catch (error) {
-    console.error("Failed to load surveys", error);
+    console.error("アンケート一覧の取得に失敗しました", error);
   }
 
   return Response.json({ surveys, total, page, limit, sort, filters });
@@ -76,7 +78,7 @@ export default function Surveys() {
             <h1 className="text-2xl font-bold text-slate-900">アンケート一覧</h1>
           </div>
           <Button asChild className="shadow-sm shadow-pink-200">
-            <a href="/new">アンケートを投稿</a>
+            <Link to="/new">アンケートを投稿</Link>
           </Button>
         </header>
 
@@ -97,74 +99,6 @@ export default function Surveys() {
   );
 }
 
-const SORT_OPTIONS = [
-  { value: "newest", label: "新着順" },
-  { value: "earning", label: "稼ぎ順" },
-  { value: "rating", label: "満足度順" },
-];
-
-const PREFS = [
-  "北海道",
-  "青森県",
-  "岩手県",
-  "宮城県",
-  "秋田県",
-  "山形県",
-  "福島県",
-  "茨城県",
-  "栃木県",
-  "群馬県",
-  "埼玉県",
-  "千葉県",
-  "東京都",
-  "神奈川県",
-  "新潟県",
-  "富山県",
-  "石川県",
-  "福井県",
-  "山梨県",
-  "長野県",
-  "岐阜県",
-  "静岡県",
-  "愛知県",
-  "三重県",
-  "滋賀県",
-  "京都府",
-  "大阪府",
-  "兵庫県",
-  "奈良県",
-  "和歌山県",
-  "鳥取県",
-  "島根県",
-  "岡山県",
-  "広島県",
-  "山口県",
-  "徳島県",
-  "香川県",
-  "愛媛県",
-  "高知県",
-  "福岡県",
-  "佐賀県",
-  "長崎県",
-  "熊本県",
-  "大分県",
-  "宮崎県",
-  "鹿児島県",
-  "沖縄県",
-];
-
-const INDUSTRY_OPTIONS = [
-  "デリヘル",
-  "ホテヘル",
-  "箱ヘル",
-  "ソープ",
-  "DC",
-  "風エス",
-  "メンエス",
-];
-
-const GENRE_OPTIONS = ["熟女", "学園系", "スタンダード", "格安店", "高級店"];
-
 function SortBar({ sort, filters }: { sort: string; filters: Record<string, string> }) {
   const { name, prefecture, industry, genre, visitedPeriod, spec, age } = filters;
   return (
@@ -176,7 +110,7 @@ function SortBar({ sort, filters }: { sort: string; filters: Record<string, stri
       <div className="space-y-1">
         <p className="text-xs font-semibold text-slate-700">並び替え</p>
         <div className="flex flex-wrap gap-2">
-          {SORT_OPTIONS.map((opt) => (
+          {LIST_SORT_OPTIONS.map((opt) => (
             <Button
               key={opt.value}
               type="submit"
@@ -220,25 +154,31 @@ function Pagination({
   };
   return (
     <div className="flex items-center justify-center gap-3 text-sm text-slate-700">
-      <Button variant="ghost" size="sm" asChild disabled={!prev}>
-        <a href={prev ? buildHref(prev) : undefined}>前へ</a>
+      <Button
+        variant="ghost"
+        size="sm"
+        asChild
+        className={prev ? undefined : "pointer-events-none opacity-50"}
+      >
+        <Link to={prev ? buildHref(prev) : "?"} aria-disabled={!prev} tabIndex={prev ? undefined : -1}>
+          前へ
+        </Link>
       </Button>
       <span className="rounded-full bg-white/80 px-3 py-1 text-slate-800 shadow-sm border border-slate-100">
         {current} / {totalPages}
       </span>
-      <Button variant="ghost" size="sm" asChild disabled={!next}>
-        <a href={next ? buildHref(next) : undefined}>次へ</a>
+      <Button
+        variant="ghost"
+        size="sm"
+        asChild
+        className={next ? undefined : "pointer-events-none opacity-50"}
+      >
+        <Link to={next ? buildHref(next) : "?"} aria-disabled={!next} tabIndex={next ? undefined : -1}>
+          次へ
+        </Link>
       </Button>
     </div>
   );
-}
-
-function parseNumberParam(value: string | null) {
-  if (value === null) return null;
-  const trimmed = value.trim();
-  if (!trimmed) return null;
-  const num = Number(trimmed);
-  return Number.isFinite(num) ? num : null;
 }
 
 function SearchForm({ filters }: { filters: Record<string, string> }) {
@@ -278,7 +218,7 @@ function SearchForm({ filters }: { filters: Record<string, string> }) {
           </label>
           <Select id="prefecture" name="prefecture" defaultValue={filters.prefecture || ""}>
             <option value="">指定なし</option>
-            {PREFS.map((pref) => (
+            {PREFECTURES.map((pref) => (
               <option key={pref} value={pref}>
                 {pref}
               </option>
@@ -325,7 +265,7 @@ function SearchForm({ filters }: { filters: Record<string, string> }) {
       </div>
       <div className="flex justify-end gap-3">
         <Button variant="secondary" asChild>
-          <a href="/surveys">条件をクリア</a>
+          <Link to="/surveys">条件をクリア</Link>
         </Button>
         <Button type="submit">検索する</Button>
       </div>

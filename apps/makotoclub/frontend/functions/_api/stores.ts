@@ -2,6 +2,68 @@ import { computeSurveyStats, mapStore, mapSurvey } from "../_shared/mappers";
 import { parseNumberParam } from "../_shared/parsers";
 import type { Env } from "../_shared/types";
 
+const normalizeRecruitmentUrls = (input: unknown): string[] => {
+  const normalize = (items: unknown[]) =>
+    items
+      .filter((item): item is string => typeof item === "string")
+      .map((item) => item.trim())
+      .filter(Boolean);
+
+  if (Array.isArray(input)) {
+    return normalize(input);
+  }
+  if (typeof input === "string") {
+    const trimmed = input.trim();
+    if (!trimmed) return [];
+    try {
+      const parsed = JSON.parse(trimmed);
+      return Array.isArray(parsed) ? normalize(parsed) : [trimmed];
+    } catch {
+      return [trimmed];
+    }
+  }
+  return [];
+};
+
+const serializeRecruitmentUrls = (input: unknown) =>
+  JSON.stringify(normalizeRecruitmentUrls(input));
+
+const hasOwn = (value: unknown, key: string) =>
+  !!value && typeof value === "object" && Object.prototype.hasOwnProperty.call(value, key);
+
+const normalizeOptionalText = (value: unknown): string | null => {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  return trimmed ? trimmed : null;
+};
+
+const normalizeOptionalEmail = (value: unknown): { ok: boolean; value: string | null } => {
+  if (value === undefined || value === null || value === "") {
+    return { ok: true, value: null };
+  }
+  if (typeof value !== "string") return { ok: false, value: null };
+  const trimmed = value.trim();
+  if (!trimmed) return { ok: true, value: null };
+  const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed);
+  return valid ? { ok: true, value: trimmed } : { ok: false, value: null };
+};
+
+const normalizeOptionalHttpsUrl = (value: unknown): { ok: boolean; value: string | null } => {
+  if (value === undefined || value === null || value === "") {
+    return { ok: true, value: null };
+  }
+  if (typeof value !== "string") return { ok: false, value: null };
+  const trimmed = value.trim();
+  if (!trimmed) return { ok: true, value: null };
+  try {
+    const parsed = new URL(trimmed);
+    if (parsed.protocol !== "https:") return { ok: false, value: null };
+    return { ok: true, value: parsed.toString() };
+  } catch {
+    return { ok: false, value: null };
+  }
+};
+
 export const handleStoreRoutes = async (
   request: Request,
   url: URL,
@@ -173,7 +235,7 @@ export const handleStoreRoutes = async (
     try {
       payload = await request.json();
     } catch {
-      return new Response("Invalid JSON", { status: 400 });
+      return new Response("JSONの形式が不正です。", { status: 400 });
     }
     const id = payload.id || crypto.randomUUID();
     const now = new Date().toISOString();
@@ -185,18 +247,70 @@ export const handleStoreRoutes = async (
       area,
       industry,
       genre,
+      phoneNumber,
+      email,
+      lineUrl,
+      twitterUrl,
+      bskyUrl,
+      recruitmentUrls,
+      businessHoursText,
       businessHoursOpen,
       businessHoursClose,
     } = payload || {};
 
     if (!name || !prefecture || !industry) {
-      return new Response("Missing required fields", { status: 400 });
+      return new Response("必須項目が不足しています。", { status: 400 });
     }
+
+    const normalizedPhoneNumber = normalizeOptionalText(phoneNumber);
+    const normalizedEmail = normalizeOptionalEmail(email);
+    if (!normalizedEmail.ok) {
+      return new Response("Emailの形式が不正です。", { status: 400 });
+    }
+    const normalizedLineUrl = normalizeOptionalHttpsUrl(lineUrl);
+    if (!normalizedLineUrl.ok) {
+      return new Response("LINE URLは https のURLのみ登録できます。", { status: 400 });
+    }
+    const normalizedTwitterUrl = normalizeOptionalHttpsUrl(twitterUrl);
+    if (!normalizedTwitterUrl.ok) {
+      return new Response("X(Twitter) URLは https のURLのみ登録できます。", { status: 400 });
+    }
+    const normalizedBskyUrl = normalizeOptionalHttpsUrl(bskyUrl);
+    if (!normalizedBskyUrl.ok) {
+      return new Response("Bsky URLは https のURLのみ登録できます。", { status: 400 });
+    }
+    const normalizedBusinessHoursText = normalizeOptionalText(businessHoursText);
+    const normalizedBusinessHoursOpen = normalizeOptionalText(businessHoursOpen);
+    const normalizedBusinessHoursClose = normalizeOptionalText(businessHoursClose);
+    const finalBusinessHoursOpen = normalizedBusinessHoursText ?? normalizedBusinessHoursOpen;
+    const finalBusinessHoursClose = normalizedBusinessHoursText
+      ? null
+      : normalizedBusinessHoursClose;
+
+    const serializedRecruitmentUrls = serializeRecruitmentUrls(recruitmentUrls);
 
     await env.DB.prepare(
       `INSERT OR REPLACE INTO stores
-      (id, name, branch_name, prefecture, area, industry, genre, business_hours_open, business_hours_close, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE((SELECT created_at FROM stores WHERE id = ?), ?), ?)`,
+      (
+        id,
+        name,
+        branch_name,
+        prefecture,
+        area,
+        industry,
+        genre,
+        phone_number,
+        email,
+        line_url,
+        twitter_url,
+        bsky_url,
+        recruitment_urls,
+        business_hours_open,
+        business_hours_close,
+        created_at,
+        updated_at
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, COALESCE((SELECT created_at FROM stores WHERE id = ?), ?), ?)`,
     )
       .bind(
         id,
@@ -206,8 +320,14 @@ export const handleStoreRoutes = async (
         area ?? null,
         industry,
         genre ?? null,
-        businessHoursOpen ?? null,
-        businessHoursClose ?? null,
+        normalizedPhoneNumber,
+        normalizedEmail.value,
+        normalizedLineUrl.value,
+        normalizedTwitterUrl.value,
+        normalizedBskyUrl.value,
+        serializedRecruitmentUrls,
+        finalBusinessHoursOpen,
+        finalBusinessHoursClose,
         id,
         now,
         now,
@@ -230,10 +350,49 @@ export const handleStoreRoutes = async (
     try {
       payload = await request.json();
     } catch {
-      return new Response("Invalid JSON", { status: 400 });
+      return new Response("JSONの形式が不正です。", { status: 400 });
     }
 
     const now = new Date().toISOString();
+    const hasRecruitmentUrls =
+      hasOwn(payload, "recruitmentUrls") ||
+      hasOwn(payload, "recruitmentUrl") ||
+      hasOwn(payload, "officialUrl") ||
+      hasOwn(payload, "officialURL");
+    const recruitmentUrlsInput =
+      payload?.recruitmentUrls ??
+      payload?.recruitmentUrl ??
+      payload?.officialUrl ??
+      payload?.officialURL;
+    const serializedRecruitmentUrls = serializeRecruitmentUrls(recruitmentUrlsInput);
+    const hasPhoneNumber = hasOwn(payload, "phoneNumber");
+    const hasEmail = hasOwn(payload, "email");
+    const hasLineUrl = hasOwn(payload, "lineUrl");
+    const hasTwitterUrl = hasOwn(payload, "twitterUrl");
+    const hasBskyUrl = hasOwn(payload, "bskyUrl");
+    const normalizedPhoneNumber = normalizeOptionalText(payload?.phoneNumber);
+    const normalizedEmail = normalizeOptionalEmail(payload?.email);
+    if (hasEmail && !normalizedEmail.ok) {
+      return new Response("Emailの形式が不正です。", { status: 400 });
+    }
+    const normalizedLineUrl = normalizeOptionalHttpsUrl(payload?.lineUrl);
+    if (hasLineUrl && !normalizedLineUrl.ok) {
+      return new Response("LINE URLは https のURLのみ登録できます。", { status: 400 });
+    }
+    const normalizedTwitterUrl = normalizeOptionalHttpsUrl(payload?.twitterUrl);
+    if (hasTwitterUrl && !normalizedTwitterUrl.ok) {
+      return new Response("X(Twitter) URLは https のURLのみ登録できます。", { status: 400 });
+    }
+    const normalizedBskyUrl = normalizeOptionalHttpsUrl(payload?.bskyUrl);
+    if (hasBskyUrl && !normalizedBskyUrl.ok) {
+      return new Response("Bsky URLは https のURLのみ登録できます。", { status: 400 });
+    }
+    const hasBusinessHoursText = hasOwn(payload, "businessHoursText");
+    const normalizedBusinessHoursText = normalizeOptionalText(payload?.businessHoursText);
+    const normalizedBusinessHoursOpen = normalizeOptionalText(payload?.businessHoursOpen);
+    const normalizedBusinessHoursClose = normalizeOptionalText(payload?.businessHoursClose);
+    const businessHoursOpenForTextMode = normalizedBusinessHoursText;
+
     await env.DB.prepare(
       `UPDATE stores SET
         name = COALESCE(?, name),
@@ -242,8 +401,14 @@ export const handleStoreRoutes = async (
         area = COALESCE(?, area),
         industry = COALESCE(?, industry),
         genre = COALESCE(?, genre),
-        business_hours_open = COALESCE(?, business_hours_open),
-        business_hours_close = COALESCE(?, business_hours_close),
+        phone_number = CASE WHEN ? = 1 THEN ? ELSE phone_number END,
+        email = CASE WHEN ? = 1 THEN ? ELSE email END,
+        line_url = CASE WHEN ? = 1 THEN ? ELSE line_url END,
+        twitter_url = CASE WHEN ? = 1 THEN ? ELSE twitter_url END,
+        bsky_url = CASE WHEN ? = 1 THEN ? ELSE bsky_url END,
+        recruitment_urls = CASE WHEN ? = 1 THEN ? ELSE recruitment_urls END,
+        business_hours_open = CASE WHEN ? = 1 THEN ? ELSE COALESCE(?, business_hours_open) END,
+        business_hours_close = CASE WHEN ? = 1 THEN NULL ELSE COALESCE(?, business_hours_close) END,
         updated_at = ?
       WHERE id = ?`,
     )
@@ -254,8 +419,23 @@ export const handleStoreRoutes = async (
         payload.area ?? null,
         payload.industry ?? null,
         payload.genre ?? null,
-        payload.businessHoursOpen ?? null,
-        payload.businessHoursClose ?? null,
+        hasPhoneNumber ? 1 : 0,
+        normalizedPhoneNumber,
+        hasEmail ? 1 : 0,
+        normalizedEmail.value,
+        hasLineUrl ? 1 : 0,
+        normalizedLineUrl.value,
+        hasTwitterUrl ? 1 : 0,
+        normalizedTwitterUrl.value,
+        hasBskyUrl ? 1 : 0,
+        normalizedBskyUrl.value,
+        hasRecruitmentUrls ? 1 : 0,
+        serializedRecruitmentUrls,
+        hasBusinessHoursText ? 1 : 0,
+        businessHoursOpenForTextMode,
+        normalizedBusinessHoursOpen,
+        hasBusinessHoursText ? 1 : 0,
+        normalizedBusinessHoursClose,
         now,
         id,
       )

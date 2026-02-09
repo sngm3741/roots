@@ -43,6 +43,8 @@ export const AnalyticsPage = () => {
         todayUniqueVisitors: 0,
         averageStaySeconds: 0,
         bounceRate: 0,
+        totalOutboundClicks: 0,
+        todayOutboundClicks: 0,
       },
     [data],
   );
@@ -51,6 +53,8 @@ export const AnalyticsPage = () => {
   const landingReferrers = data?.landingReferrers ?? data?.referrers ?? [];
   const internalReferrers = data?.internalReferrers ?? [];
   const utmCampaigns = data?.utmCampaigns ?? [];
+  const outboundTopStores = data?.outboundTopStores ?? [];
+  const outboundRecentClicks = data?.outboundRecentClicks ?? [];
 
   return (
     <div className="space-y-5">
@@ -109,6 +113,8 @@ export const AnalyticsPage = () => {
         <MetricCard title="今日の訪問者数" value={formatNumber(summary.todayUniqueVisitors)} />
         <MetricCard title="平均滞在時間" value={`${summary.averageStaySeconds} 秒`} />
         <MetricCard title="直帰率" value={`${summary.bounceRate} %`} />
+        <MetricCard title="累計外部クリック" value={formatNumber(summary.totalOutboundClicks)} />
+        <MetricCard title="今日の外部クリック" value={formatNumber(summary.todayOutboundClicks)} />
       </div>
 
       <Card className="space-y-3">
@@ -264,6 +270,76 @@ export const AnalyticsPage = () => {
           <p className="text-sm text-slate-500">データがありません。</p>
         )}
       </Card>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Card className="space-y-3">
+          <h2 className="text-lg font-semibold">店舗別リンククリック（上位{limit}件）</h2>
+          {loading ? (
+            <p className="text-sm text-slate-500">読込中...</p>
+          ) : outboundTopStores.length ? (
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-sm">
+                <thead className="bg-pink-50 text-slate-600">
+                  <tr>
+                    <th className="px-3 py-2 text-left font-semibold">店舗</th>
+                    <th className="px-3 py-2 text-left font-semibold">総クリック</th>
+                    <th className="px-3 py-2 text-left font-semibold">求人/公式</th>
+                    <th className="px-3 py-2 text-left font-semibold">LINE</th>
+                    <th className="px-3 py-2 text-left font-semibold">X</th>
+                    <th className="px-3 py-2 text-left font-semibold">Bsky</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-pink-100">
+                  {outboundTopStores.map((row) => (
+                    <tr key={row.storeId}>
+                      <td className="px-3 py-2">{row.storeName}</td>
+                      <td className="px-3 py-2">{formatNumber(row.clicks)}</td>
+                      <td className="px-3 py-2">{formatNumber(row.recruitmentClicks)}</td>
+                      <td className="px-3 py-2">{formatNumber(row.lineClicks)}</td>
+                      <td className="px-3 py-2">{formatNumber(row.xClicks)}</td>
+                      <td className="px-3 py-2">{formatNumber(row.bskyClicks)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="text-sm text-slate-500">データがありません。</p>
+          )}
+        </Card>
+
+        <Card className="space-y-3">
+          <h2 className="text-lg font-semibold">外部クリック履歴（新しい順 / 上位{limit}件）</h2>
+          {loading ? (
+            <p className="text-sm text-slate-500">読込中...</p>
+          ) : outboundRecentClicks.length ? (
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-sm">
+                <thead className="bg-pink-50 text-slate-600">
+                  <tr>
+                    <th className="px-3 py-2 text-left font-semibold">時刻</th>
+                    <th className="px-3 py-2 text-left font-semibold">店舗</th>
+                    <th className="px-3 py-2 text-left font-semibold">リンク種別</th>
+                    <th className="px-3 py-2 text-left font-semibold">流入元</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-pink-100">
+                  {outboundRecentClicks.map((row, index) => (
+                    <tr key={`${row.occurredAt}-${row.storeId}-${row.linkType}-${index}`}>
+                      <td className="px-3 py-2">{new Date(row.occurredAt).toLocaleString("ja-JP")}</td>
+                      <td className="px-3 py-2">{row.storeName}</td>
+                      <td className="px-3 py-2">{row.linkType}</td>
+                      <td className="px-3 py-2">{row.inflowSource}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="text-sm text-slate-500">データがありません。</p>
+          )}
+        </Card>
+      </div>
     </div>
   );
 };

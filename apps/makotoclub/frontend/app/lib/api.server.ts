@@ -10,7 +10,7 @@ async function fetchJson<T>(path: string, env: { API_BASE_URL?: string }, opts: 
 
   const res = await fetch(url, { signal: opts.signal });
   if (!res.ok) {
-    throw new Error(`Request failed: ${res.status} ${res.statusText} (${url.toString()})`);
+    throw new Error(`APIリクエストに失敗しました (HTTP ${res.status}): ${url.toString()}`);
   }
   return (await res.json()) as T;
 }

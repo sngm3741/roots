@@ -11,6 +11,15 @@ import { PREFECTURES, INDUSTRY_OPTIONS, GENRE_OPTIONS } from "../../constants/op
 
 type Props = { mode: "create" | "edit" };
 
+const isHttpsUrl = (value: string) => {
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
+};
+
 const emptyStore: StorePayload = {
   id: "",
   storeName: "",
@@ -19,9 +28,15 @@ const emptyStore: StorePayload = {
   area: "",
   category: "",
   genre: "",
-  businessHours: { open: "", close: "" },
+  phoneNumber: "",
+  email: "",
+  lineUrl: "",
+  twitterUrl: "",
+  bskyUrl: "",
+  womenRecruitmentPageMissing: false,
+  businessHours: { open: "" },
   castBack: undefined,
-  recruitmentUrls: [],
+  recruitmentUrls: [""],
 };
 
 export const StoreFormPage = ({ mode }: Props) => {
@@ -38,7 +53,10 @@ export const StoreFormPage = ({ mode }: Props) => {
           const store = await adminApi.getStore(params.id);
           setForm({
             ...store,
-            businessHours: store.businessHours ?? { open: "", close: "" },
+            businessHours: store.businessHours ?? { open: "" },
+            recruitmentUrls:
+              (store.recruitmentUrls ?? []).length > 0 ? (store.recruitmentUrls ?? []) : [""],
+            womenRecruitmentPageMissing: Boolean(store.womenRecruitmentPageMissing),
           });
         } catch (err) {
           setError(err instanceof Error ? err.message : "取得に失敗しました");
@@ -70,29 +88,53 @@ export const StoreFormPage = ({ mode }: Props) => {
     setForm((prev) => {
       const next = [...(prev.recruitmentUrls ?? [])];
       next.splice(index, 1);
-      return { ...prev, recruitmentUrls: next };
+      return { ...prev, recruitmentUrls: next.length > 0 ? next : [""] };
     });
   };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     const urls = (form.recruitmentUrls ?? []).map((url) => url.trim()).filter(Boolean);
-    if (urls.some((url) => !url.startsWith("https://"))) {
+    if (urls.some((url) => !isHttpsUrl(url))) {
       setError("採用ページは https のURLのみ登録できます。");
       return;
     }
-    const open = form.businessHours?.open?.trim() ?? "";
-    const close = form.businessHours?.close?.trim() ?? "";
-    if ((open && !close) || (!open && close)) {
-      setError("営業時間は開始・終了の両方を入力してください。");
+    const lineUrl = form.lineUrl?.trim() ?? "";
+    if (lineUrl && !isHttpsUrl(lineUrl)) {
+      setError("LINE URLは https のURLのみ登録できます。");
       return;
     }
-    const businessHours = open && close ? { open, close } : undefined;
+    const twitterUrl = form.twitterUrl?.trim() ?? "";
+    if (twitterUrl && !isHttpsUrl(twitterUrl)) {
+      setError("X(Twitter) URLは https のURLのみ登録できます。");
+      return;
+    }
+    const bskyUrl = form.bskyUrl?.trim() ?? "";
+    if (bskyUrl && !isHttpsUrl(bskyUrl)) {
+      setError("Bsky URLは https のURLのみ登録できます。");
+      return;
+    }
+    const email = form.email?.trim() ?? "";
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError("Emailの形式が不正です。");
+      return;
+    }
+    const businessHoursText = form.businessHours?.open?.trim() ?? "";
+    const businessHours = businessHoursText ? { open: businessHoursText } : undefined;
+    const payload = {
+      ...form,
+      email: email || undefined,
+      lineUrl: lineUrl || undefined,
+      twitterUrl: twitterUrl || undefined,
+      bskyUrl: bskyUrl || undefined,
+      businessHours,
+      recruitmentUrls: urls,
+    };
     try {
       if (mode === "create") {
-        await adminApi.createStore({ ...form, businessHours, recruitmentUrls: urls });
+        await adminApi.createStore(payload);
       } else if (params.id) {
-        await adminApi.updateStore(params.id, { ...form, businessHours, recruitmentUrls: urls });
+        await adminApi.updateStore(params.id, payload);
       }
       navigate("/stores");
     } catch (err) {
@@ -176,6 +218,47 @@ export const StoreFormPage = ({ mode }: Props) => {
               placeholder="例: 7000"
             />
           </div>
+          <div className="space-y-2">
+            <Label>電話番号</Label>
+            <Input
+              value={form.phoneNumber ?? ""}
+              onChange={(e) => handleChange("phoneNumber", e.target.value)}
+              placeholder="例: 03-1234-5678"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Email</Label>
+            <Input
+              type="email"
+              value={form.email ?? ""}
+              onChange={(e) => handleChange("email", e.target.value)}
+              placeholder="例: info@example.com"
+            />
+          </div>
+          <div className="space-y-2 md:col-span-2">
+            <Label>LINE URL（連絡先）</Label>
+            <Input
+              value={form.lineUrl ?? ""}
+              onChange={(e) => handleChange("lineUrl", e.target.value)}
+              placeholder="https://line.me/..."
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>X(Twitter) URL（SNS）</Label>
+            <Input
+              value={form.twitterUrl ?? ""}
+              onChange={(e) => handleChange("twitterUrl", e.target.value)}
+              placeholder="https://x.com/..."
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Bsky URL（SNS）</Label>
+            <Input
+              value={form.bskyUrl ?? ""}
+              onChange={(e) => handleChange("bskyUrl", e.target.value)}
+              placeholder="https://bsky.app/..."
+            />
+          </div>
           <div className="space-y-2 md:col-span-2">
             <div className="flex items-center justify-between">
               <Label>採用ページ</Label>
@@ -200,18 +283,22 @@ export const StoreFormPage = ({ mode }: Props) => {
             </div>
             <p className="text-xs text-slate-600">任意。https URLのみ。空欄は削除してください。</p>
           </div>
-          <div className="space-y-2">
-            <Label>営業時間（開始）</Label>
+          <div className="space-y-2 md:col-span-2">
+            <label className="flex items-center gap-2 rounded-xl border border-slate-200/90 bg-white px-3.5 py-3 text-sm text-slate-800">
+              <input
+                type="checkbox"
+                checked={Boolean(form.womenRecruitmentPageMissing)}
+                onChange={(e) => handleChange("womenRecruitmentPageMissing", e.target.checked)}
+              />
+              公式HP先で女性求人ページが見当たらない
+            </label>
+          </div>
+          <div className="space-y-2 md:col-span-2">
+            <Label>営業時間（自由入力）</Label>
             <Input
               value={form.businessHours?.open ?? ""}
-              onChange={(e) => handleChange("businessHours", { ...form.businessHours, open: e.target.value })}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>営業時間（終了）</Label>
-            <Input
-              value={form.businessHours?.close ?? ""}
-              onChange={(e) => handleChange("businessHours", { ...form.businessHours, close: e.target.value })}
+              onChange={(e) => handleChange("businessHours", { open: e.target.value })}
+              placeholder="例: 24時間 / 24:00~4:00"
             />
           </div>
         </div>

@@ -1,18 +1,12 @@
+import { StaticPageLayout, StaticPageSection } from "../components/layout/static-page";
+
 export default function Tokushoho() {
   return (
-    <main className="mx-auto max-w-5xl px-4 pb-12 pt-6 space-y-6">
-      <header className="space-y-2">
-        <p className="text-xs uppercase text-slate-500 font-semibold">Static</p>
-        <h1 className="text-2xl font-bold text-slate-900">特定商取引法に基づく表記</h1>
-        <p className="text-sm text-slate-600">
-          本ページは暫定版です。運営者情報は確定後に更新します。
-        </p>
-        <p className="text-sm text-slate-600">
-          公開前に必ず最新情報へ差し替えてください。
-        </p>
-      </header>
-
-      <section className="card-surface space-y-4 rounded-3xl border border-pink-100/80 bg-white/95 p-6">
+    <StaticPageLayout
+      title="特定商取引法に基づく表記"
+      description="本ページは暫定版です。運営者情報は確定後に更新します。公開前に必ず最新情報へ差し替えてください。"
+    >
+      <StaticPageSection>
         <div className="grid gap-4 text-sm text-slate-700">
           <div>
             <p className="text-xs font-semibold text-slate-500">事業者名</p>
@@ -55,7 +49,7 @@ export default function Tokushoho() {
             <p>掲載開始後のキャンセル・返金は原則不可。</p>
           </div>
         </div>
-      </section>
-    </main>
+      </StaticPageSection>
+    </StaticPageLayout>
   );
 }

@@ -1,4 +1,10 @@
-import { type LoaderFunctionArgs, useLoaderData, useLocation, useNavigate } from "react-router";
+import {
+  Link,
+  type LoaderFunctionArgs,
+  useLoaderData,
+  useLocation,
+  useNavigate,
+} from "react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "../components/ui/button";
 import { Pagination } from "../components/ui/pagination";
@@ -17,12 +23,14 @@ import { formatDecimal1 } from "../lib/number-format";
 import { buildLimitedComment } from "../lib/comment-text";
 import { CommentComposer } from "../components/comments/comment-composer";
 import { CommentList } from "../components/comments/comment-list";
+import { BlueskyIcon, XIcon } from "../components/ui/social-icons";
 import {
   Briefcase,
   Building2,
   CircleDollarSign,
   Clock,
   Heart,
+  ImageIcon,
   MapPin,
   Mail,
   MessageCircle,
@@ -34,21 +42,38 @@ import {
 } from "lucide-react";
 import { SurveyCard } from "../components/cards/survey-card";
 import { useStoreBookmark } from "../lib/store-bookmarks";
+import { LIST_SORT_OPTIONS, type ListSortValue } from "../lib/sort-options";
+import { trackOutboundClick } from "../lib/outbound-click";
 
 type LoaderData = {
   store: StoreDetail | null;
   commentList: StoreCommentListResponse;
+  linkPreview: LinkPreview | null;
 };
 
 const COMMENT_PAGE_SIZE = 5;
 
-const SORT_OPTIONS = [
-  { value: "newest", label: "新着順" },
-  { value: "earning", label: "稼ぎ順" },
-  { value: "rating", label: "満足度順" },
-] as const;
+type LinkPreview = {
+  url: string;
+  image: string | null;
+  title: string | null;
+  siteName: string | null;
+};
 
-type SortKey = (typeof SORT_OPTIONS)[number]["value"];
+function normalizeExternalUrl(value: string) {
+  return /^https?:\/\//i.test(value) ? value : `https://${value}`;
+}
+
+function buildLineAppUrl(value: string): string | null {
+  const normalized = normalizeExternalUrl(value);
+  const match = normalized.match(/^https?:\/\/line\.me\/ti\/p\/([^/?#]+)/i);
+  if (!match?.[1]) return null;
+  return `line://ti/p/${match[1]}`;
+}
+
+function pickRecruitmentUrl(urls: string[] | undefined) {
+  return (urls ?? []).find((value) => typeof value === "string" && value.trim().length > 0);
+}
 
 export async function loader({ params, context, request }: LoaderFunctionArgs) {
   const requestUrl = new URL(request.url);
@@ -64,6 +89,7 @@ export async function loader({ params, context, request }: LoaderFunctionArgs) {
     page: commentPage,
     limit: COMMENT_PAGE_SIZE,
   };
+  let linkPreview: LinkPreview | null = null;
   try {
     store = await fetchStoreDetail({ API_BASE_URL: apiBaseUrl }, storeId);
     if (store?.id) {
@@ -72,18 +98,30 @@ export async function loader({ params, context, request }: LoaderFunctionArgs) {
         limit: COMMENT_PAGE_SIZE,
       });
     }
+    const recruitmentUrl = pickRecruitmentUrl(store?.recruitmentUrls);
+    if (recruitmentUrl) {
+      const previewRes = await fetch(
+        new URL(
+          `/api/link-preview?url=${encodeURIComponent(normalizeExternalUrl(recruitmentUrl))}`,
+          apiBaseUrl,
+        ),
+      );
+      if (previewRes.ok) {
+        linkPreview = (await previewRes.json()) as LinkPreview;
+      }
+    }
   } catch (error) {
-    console.error("Failed to load store detail", error);
+    console.error("店舗詳細の取得に失敗しました", error);
   }
 
-  return Response.json({ store, commentList });
+  return Response.json({ store, commentList, linkPreview });
 }
 
 export default function StoreDetailPage() {
-  const { store, commentList: initialCommentList } = useLoaderData() as LoaderData;
+  const { store, commentList: initialCommentList, linkPreview } = useLoaderData() as LoaderData;
   const navigate = useNavigate();
   const location = useLocation();
-  const [sort, setSort] = useState<SortKey>("newest");
+  const [sort, setSort] = useState<ListSortValue>("newest");
   const [page, setPage] = useState(1);
   const pageSize = 5;
   const [comments, setComments] = useState<StoreComment[]>(initialCommentList.items);
@@ -100,6 +138,7 @@ export default function StoreDetailPage() {
   const commentPageSize = initialCommentList.limit;
   const totalCommentPages = Math.max(1, Math.ceil(commentTotal / commentPageSize));
   const commentMaxChars = 1000;
+  const [isLinkPreviewImageError, setIsLinkPreviewImageError] = useState(false);
   const { isBookmarked, toggle } = useStoreBookmark(store?.id ?? "");
 
   if (!store) {
@@ -115,9 +154,20 @@ export default function StoreDetailPage() {
     setCommentTotal(initialCommentList.total);
   }, [initialCommentList.items, initialCommentList.total]);
 
+  useEffect(() => {
+    setIsLinkPreviewImageError(false);
+  }, [linkPreview?.image]);
+
   const waitLabel =
     store.waitTimeLabel ??
     (Number.isFinite(store.waitTimeHours) ? `${formatDecimal1(store.waitTimeHours)}時間` : "-");
+  const recruitmentUrl = pickRecruitmentUrl(store.recruitmentUrls);
+  const normalizedRecruitmentUrl = recruitmentUrl ? normalizeExternalUrl(recruitmentUrl) : null;
+  const normalizedLineUrl = store.lineUrl ? normalizeExternalUrl(store.lineUrl) : null;
+  const lineAppUrl = store.lineUrl ? buildLineAppUrl(store.lineUrl) : null;
+  const normalizedTwitterUrl = store.twitterUrl ? normalizeExternalUrl(store.twitterUrl) : null;
+  const normalizedBskyUrl = store.bskyUrl ? normalizeExternalUrl(store.bskyUrl) : null;
+  const hasLinkPreviewImage = Boolean(linkPreview?.image) && !isLinkPreviewImageError;
 
   const photoItems: ImageGalleryItem[] = (store.surveys ?? []).flatMap((survey) => {
     const comment = buildLimitedComment(
@@ -272,7 +322,7 @@ export default function StoreDetailPage() {
     }
   };
 
-  const handleSortChange = (value: SortKey) => {
+  const handleSortChange = (value: ListSortValue) => {
     setSort(value);
     setPage(1);
   };
@@ -282,6 +332,46 @@ export default function StoreDetailPage() {
     setReplyName("");
     setReplyBody("");
     setCommentError(null);
+  };
+
+  const trackStoreLink = (
+    linkType: "recruitment" | "official" | "line" | "x" | "bsky" | "phone" | "email",
+    targetUrl: string,
+  ) => {
+    trackOutboundClick({
+      storeId: store.id,
+      storeName: store.storeName,
+      linkType,
+      targetUrl,
+    });
+  };
+
+  const handleLineClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    if (!normalizedLineUrl) return;
+    if (!lineAppUrl) {
+      trackStoreLink("line", normalizedLineUrl);
+      return;
+    }
+
+    event.preventDefault();
+    trackStoreLink("line", normalizedLineUrl);
+
+    let appOpened = false;
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        appOpened = true;
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.location.href = lineAppUrl;
+
+    window.setTimeout(() => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      if (!appOpened) {
+        window.location.href = normalizedLineUrl;
+      }
+    }, 900);
   };
 
   const renderReplyForm = (comment: StoreComment) => (
@@ -313,6 +403,43 @@ export default function StoreDetailPage() {
 
       <div className="space-y-6">
         <section className="rounded-2xl border border-pink-100/60 bg-gradient-to-br from-pink-50 to-rose-50 p-4 shadow-sm">
+          {normalizedRecruitmentUrl ? (
+            <a
+              href={normalizedRecruitmentUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => trackStoreLink("recruitment", normalizedRecruitmentUrl)}
+              className="mb-3 block overflow-hidden rounded-xl border border-pink-100/80 bg-white/80"
+            >
+              <div className="relative aspect-[16/9]">
+                {hasLinkPreviewImage ? (
+                  <img
+                    src={linkPreview?.image ?? ""}
+                    alt={`${store.storeName} 公式HPのプレビュー画像`}
+                    className="h-full w-full object-cover"
+                    loading="lazy"
+                    onError={() => setIsLinkPreviewImageError(true)}
+                  />
+                ) : (
+                  <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-gradient-to-br from-slate-200 to-slate-300">
+                    <ImageIcon className="h-7 w-7 text-slate-500" />
+                    <span className="text-sm font-semibold tracking-[0.2em] text-slate-600">
+                      NO IMAGE
+                    </span>
+                  </div>
+                )}
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-black/0 p-3 text-white">
+                  <p className="text-[11px] font-medium text-white/85">
+                    {linkPreview?.siteName ?? "公式サイト"}
+                  </p>
+                  <p className="mt-0.5 text-sm font-semibold leading-snug">
+                    {linkPreview?.title ?? "採用ページを見る"}
+                  </p>
+                </div>
+              </div>
+            </a>
+          ) : null}
+
           <div className="mb-3 flex items-center justify-between">
             <div className="flex items-center gap-1.5">
               <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-pink-500 text-white">
@@ -339,17 +466,6 @@ export default function StoreDetailPage() {
             {store.storeName}
             {store.branchName ? ` ${store.branchName}` : ""}
           </h1>
-          <div className="flex items-center gap-1 text-xs text-gray-600">
-            <MapPin className="h-3.5 w-3.5" />
-            <span>{store.prefecture}</span>
-            {store.area ? <span className="text-gray-400">・</span> : null}
-            {store.area ? <span>{store.area}</span> : null}
-          </div>
-          {store.category ? (
-            <span className="mt-2 inline-flex rounded-full bg-pink-500/10 px-2.5 py-1 text-xs font-semibold text-pink-700">
-              {store.category}
-            </span>
-          ) : null}
 
           <div className="mt-4 rounded-xl bg-white/70 p-3">
             <div className="flex items-center justify-between">
@@ -384,8 +500,8 @@ export default function StoreDetailPage() {
           <div className="mt-3 flex items-center justify-between border-t border-pink-200/60 pt-2.5">
             <SurveyCount count={store.surveys?.length ?? 0} />
             <Button asChild size="sm" className="rounded-full px-4">
-              <a
-                href={`/new?${new URLSearchParams({
+              <Link
+                to={`/new?${new URLSearchParams({
                   storeName: store.storeName,
                   branchName: store.branchName ?? "",
                   prefecture: store.prefecture,
@@ -396,7 +512,7 @@ export default function StoreDetailPage() {
               >
                 <PostIcon className="h-4 w-4" />
                 投稿する
-              </a>
+              </Link>
             </Button>
           </div>
         </section>
@@ -423,13 +539,120 @@ export default function StoreDetailPage() {
               label="営業時間"
               value={
                 store.businessHours
-                  ? `${store.businessHours.open} - ${store.businessHours.close}`
+                  ? store.businessHours.close
+                    ? `${store.businessHours.open} - ${store.businessHours.close}`
+                    : store.businessHours.open
                   : "-"
               }
             />
-            <InfoRow icon={<Phone className="h-5 w-5" />} label="TEL" value="-" />
-            <InfoRow icon={<Mail className="h-5 w-5" />} label="Email" value="-" />
-            <InfoRow icon={<Globe className="h-5 w-5" />} label="公式HP" value="-" />
+            <InfoRow
+              icon={<Phone className="h-5 w-5" />}
+              label="TEL"
+              value={
+                store.phoneNumber ? (
+                  <a
+                    href={`tel:${store.phoneNumber}`}
+                    onClick={() => trackStoreLink("phone", `tel:${store.phoneNumber}`)}
+                    className="text-pink-600 underline underline-offset-2 hover:text-pink-700"
+                  >
+                    {store.phoneNumber}
+                  </a>
+                ) : (
+                  "-"
+                )
+              }
+            />
+            <InfoRow
+              icon={<Mail className="h-5 w-5" />}
+              label="Email"
+              value={
+                store.email ? (
+                  <a
+                    href={`mailto:${store.email}`}
+                    onClick={() => trackStoreLink("email", `mailto:${store.email}`)}
+                    className="break-all text-pink-600 underline underline-offset-2 hover:text-pink-700"
+                  >
+                    {store.email}
+                  </a>
+                ) : (
+                  "-"
+                )
+              }
+            />
+            <InfoRow
+              icon={<LineBrandIcon className="h-5 w-5" />}
+              label="LINE"
+              value={
+                normalizedLineUrl ? (
+                  <a
+                    href={normalizedLineUrl}
+                    onClick={handleLineClick}
+                    className="break-all text-pink-600 underline underline-offset-2 hover:text-pink-700"
+                  >
+                    連絡する
+                  </a>
+                ) : (
+                  "-"
+                )
+              }
+            />
+            <InfoRow
+              icon={<XIcon className="h-5 w-5" />}
+              label="X"
+              value={
+                normalizedTwitterUrl ? (
+                  <a
+                    href={normalizedTwitterUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => trackStoreLink("x", normalizedTwitterUrl)}
+                    className="text-pink-600 underline underline-offset-2 hover:text-pink-700"
+                  >
+                    Xを見る
+                  </a>
+                ) : (
+                  "-"
+                )
+              }
+            />
+            <InfoRow
+              icon={<BlueskyIcon className="h-5 w-5" />}
+              label="Bsky"
+              value={
+                normalizedBskyUrl ? (
+                  <a
+                    href={normalizedBskyUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => trackStoreLink("bsky", normalizedBskyUrl)}
+                    className="text-pink-600 underline underline-offset-2 hover:text-pink-700"
+                  >
+                    Bskyを見る
+                  </a>
+                ) : (
+                  "-"
+                )
+              }
+            />
+            <InfoRow
+              icon={<Globe className="h-5 w-5" />}
+              label="公式HP"
+              value={
+                recruitmentUrl ? (
+                  <a
+                    href={normalizeExternalUrl(recruitmentUrl)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => trackStoreLink("official", normalizeExternalUrl(recruitmentUrl))}
+                    className="break-all text-pink-600 underline underline-offset-2 hover:text-pink-700"
+                  >
+                    {recruitmentUrl}
+                  </a>
+                ) : (
+                  "-"
+                )
+              }
+            />
             <InfoRow icon={<MessageCircle className="h-5 w-5" />} label="お店からのコメント" value="-" />
           </div>
         </section>
@@ -441,7 +664,7 @@ export default function StoreDetailPage() {
             {totalSurveys.toLocaleString("ja-JP")} 件
           </div>
           <div className="flex flex-wrap items-center gap-2 text-sm text-slate-700">
-            {SORT_OPTIONS.map((opt) => (
+            {LIST_SORT_OPTIONS.map((opt) => (
               <Button
                 key={opt.value}
                 type="button"
@@ -468,7 +691,7 @@ export default function StoreDetailPage() {
             <div className="space-y-3 rounded-2xl border border-pink-100 bg-white/95 p-4 shadow-sm">
               <p className="text-sm text-slate-600">アンケートがありません。</p>
               <Button asChild>
-                <a href="/new">アンケートを追加する</a>
+                <Link to="/new">アンケートを追加する</Link>
               </Button>
             </div>
           )}
@@ -552,6 +775,17 @@ export default function StoreDetailPage() {
   );
 }
 
+function LineBrandIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="10 11 28 26" className={className} aria-hidden="true">
+      <path
+        fill="currentColor"
+        d="M37.113 22.417c0-5.865-5.88-10.637-13.107-10.637-7.227 0-13.108 4.772-13.108 10.637 0 5.258 4.663 9.662 10.962 10.495.427.092 1.008.282 1.155.646.132.331.086.85.042 1.185 0 0-.153.925-.187 1.122-.057.331-.263 1.296 1.135.707 1.399-.589 7.548-4.445 10.298-7.611h-.001c1.901-2.082 2.811-4.197 2.811-6.544zM18.875 25.907h-2.604a.688.688 0 0 1-.687-.688V20.01a.687.687 0 1 1 1.374 0v4.521h1.917a.688.688 0 1 1 0 1.376zM21.568 25.219a.688.688 0 1 1-1.374 0V20.01a.687.687 0 1 1 1.374 0zM27.838 25.219a.688.688 0 0 1-1.237.413l-2.669-3.635v3.222a.688.688 0 1 1-1.376 0V20.01a.688.688 0 0 1 1.237-.412l2.67 3.635V20.01a.687.687 0 1 1 1.375 0zM32.052 21.927a.688.688 0 1 1 0 1.375h-1.917v1.23h1.917a.687.687 0 1 1 0 1.375h-2.604a.688.688 0 0 1-.687-.688v-5.21a.687.687 0 0 1 .687-.686h2.604a.687.687 0 1 1 0 1.374h-1.917v1.23z"
+      />
+    </svg>
+  );
+}
+
 function InfoRow({
   icon,
   label,
@@ -559,7 +793,7 @@ function InfoRow({
 }: {
   icon: React.ReactNode;
   label: string;
-  value: string;
+  value: React.ReactNode;
 }) {
   return (
     <div className="group flex items-start gap-3 px-5 py-4 transition-all hover:bg-pink-50/60">

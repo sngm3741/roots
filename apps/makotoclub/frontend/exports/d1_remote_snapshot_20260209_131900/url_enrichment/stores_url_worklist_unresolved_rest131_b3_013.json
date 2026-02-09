@@ -1,0 +1,47 @@
+[
+  {
+    "id": "e60b8c58-c2fe-484d-adb5-b5b910efa13e",
+    "name": "タレント",
+    "branchName": "",
+    "prefecture": "愛媛県",
+    "area": "",
+    "industry": "ソープ",
+    "genre": "",
+    "existingRecruitmentUrls": [],
+    "officialUrlCurrent": null,
+    "officialUrlCandidate": null,
+    "candidateSource": "unresolved",
+    "confidence": 0,
+    "searchQuery": "タレント  愛媛県  公式サイト 求人"
+  },
+  {
+    "id": "3d764b09-bda0-4c86-a401-de5461608cdd",
+    "name": "大人のゴシャール",
+    "branchName": "",
+    "prefecture": "福岡県",
+    "area": "小倉",
+    "industry": "ソープ",
+    "genre": "",
+    "existingRecruitmentUrls": [],
+    "officialUrlCurrent": null,
+    "officialUrlCandidate": null,
+    "candidateSource": "unresolved",
+    "confidence": 0,
+    "searchQuery": "大人のゴシャール  福岡県 小倉 公式サイト 求人"
+  },
+  {
+    "id": "37d996bb-e479-4ad7-9d36-7592644de051",
+    "name": "グランドオペラ",
+    "branchName": "",
+    "prefecture": "愛知県",
+    "area": "",
+    "industry": "デリヘル",
+    "genre": "",
+    "existingRecruitmentUrls": [],
+    "officialUrlCurrent": null,
+    "officialUrlCandidate": null,
+    "candidateSource": "unresolved",
+    "confidence": 0,
+    "searchQuery": "グランドオペラ  愛知県  公式サイト 求人"
+  }
+]

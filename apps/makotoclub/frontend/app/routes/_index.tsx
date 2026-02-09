@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { type LoaderFunctionArgs, Form, useLoaderData } from "react-router";
+import { AnimatePresence, motion } from "motion/react";
 import { Button } from "../components/ui/button";
 import { fetchStores } from "../lib/stores.server";
 import { fetchSurveys } from "../lib/surveys.server";
@@ -81,6 +82,14 @@ const PREFS = [
 const INDUSTRY_OPTIONS = ["デリヘル", "ホテヘル", "箱ヘル", "ソープ", "DC", "風エス", "メンエス"];
 
 const GENRE_OPTIONS = ["熟女", "学園系", "スタンダード", "格安店", "高級店"];
+const STACK_DEPTH = 4;
+const SWIPE_CONFIDENCE_THRESHOLD = 10_000;
+const STACK_X = [0, 24, 38, 50];
+const STACK_Y = [0, -10, 0, 10];
+const STACK_SCALE = [1, 0.95, 0.91, 0.87];
+const STACK_ROTATE = [0, 2, 4, 6];
+const STACK_Z = [40, 30, 20, 10];
+type StackCustom = { depth: number; direction: 1 | -1 };
 
 export async function loader({ context, request }: LoaderFunctionArgs) {
   const apiBaseUrl = getApiBaseUrl(context.cloudflare?.env ?? {}, new URL(request.url).origin);
@@ -671,29 +680,130 @@ function ResultsSection({
   const totalPages = Math.max(1, Math.ceil(total / limit));
   const isSurvey = target === "surveys";
   const itemsEmpty = isSurvey ? surveys.length === 0 : stores.length === 0;
-  const title = isSurvey ? "アンケート" : "店舗情報";
-  // const countLabel = hasFilters ? "検索結果" : "新着";
   return (
     <section className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="text-sm font-semibold text-slate-700">
-          {/* {countLabel}  */}
           {total.toLocaleString("ja-JP")} 件
         </div>
         <SortBar target={target} filters={filters} sort={sort} />
       </div>
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {isSurvey
-          ? surveys.map((survey) => <SurveyCard key={survey.id} survey={survey} />)
-          : stores.map((store) => <StoreCard key={store.id} store={store} />)}
-        {itemsEmpty && (
-          <div className="text-sm text-slate-600">
-            {isSurvey ? "条件に合うアンケートがありません。" : "条件に合う店舗情報がありません。"}
-          </div>
-        )}
-      </div>
+      {isSurvey ? (
+        <SurveyStackDeck surveys={surveys} />
+      ) : (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {stores.map((store) => (
+            <StoreCard key={store.id} store={store} />
+          ))}
+          {itemsEmpty && (
+            <div className="text-sm text-slate-600">条件に合う店舗情報がありません。</div>
+          )}
+        </div>
+      )}
+      {isSurvey && itemsEmpty ? (
+        <div className="text-sm text-slate-600">条件に合うアンケートがありません。</div>
+      ) : null}
       <Pagination current={page} totalPages={totalPages} target={target} filters={filters} sort={sort} />
     </section>
+  );
+}
+
+function SurveyStackDeck({ surveys }: { surveys: SurveySummary[] }) {
+  const [startIndex, setStartIndex] = useState(0);
+  const [direction, setDirection] = useState<1 | -1>(1);
+
+  useEffect(() => {
+    setStartIndex(0);
+    setDirection(1);
+  }, [surveys]);
+
+  const swipePower = (offset: number, velocity: number) => Math.abs(offset) * velocity;
+  const paginate = (nextDirection: 1 | -1) => {
+    if (surveys.length <= 1) return;
+    setDirection(nextDirection);
+    setStartIndex((current) => {
+      const moved = current + (nextDirection === 1 ? 1 : -1);
+      return (moved + surveys.length) % surveys.length;
+    });
+  };
+
+  const stackVariants = {
+    initial: ({ depth, direction: dir }: StackCustom) => ({
+      opacity: depth === 0 ? 0.85 : 1,
+      scale: STACK_SCALE[depth] ?? 0.87,
+      y: STACK_Y[depth] ?? 0,
+      rotate: STACK_ROTATE[depth] ?? 6,
+      x: depth === 0 ? (dir === 1 ? 120 : -120) : STACK_X[depth] ?? 50,
+    }),
+    animate: ({ depth }: StackCustom) => ({
+      opacity: 1,
+      zIndex: STACK_Z[depth] ?? 1,
+      scale: STACK_SCALE[depth] ?? 0.87,
+      y: STACK_Y[depth] ?? 0,
+      rotate: STACK_ROTATE[depth] ?? 6,
+      x: STACK_X[depth] ?? 50,
+      transition: {
+        type: "spring" as const,
+        stiffness: 300,
+        damping: 28,
+        mass: 0.9,
+      },
+    }),
+    exit: ({ depth, direction: dir }: StackCustom) =>
+      depth === 0
+        ? {
+            opacity: 0,
+            x: dir === 1 ? -220 : 220,
+            y: 20,
+            rotate: dir === 1 ? -12 : 12,
+            transition: { duration: 0.2, ease: "easeOut" as const },
+          }
+        : { opacity: 1 },
+  };
+
+  const visibleCount = Math.min(STACK_DEPTH, surveys.length);
+  const visibleIndices = Array.from({ length: visibleCount }, (_, depth) => {
+    return (startIndex + depth) % surveys.length;
+  });
+
+  return (
+    <div className="mx-auto w-full max-w-[360px]">
+      <div className="relative grid min-h-[560px] [grid-template-areas:'stack']">
+        <AnimatePresence initial={false} mode="popLayout">
+          {visibleIndices.map((index, depth) => {
+            const survey = surveys[index];
+            return (
+              <motion.div
+                key={`survey-stack-${survey.id}`}
+                className="[grid-area:stack] will-change-transform"
+                custom={{ depth, direction }}
+                variants={stackVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                drag={depth === 0 && surveys.length > 1 ? "x" : false}
+                dragConstraints={{ left: 0, right: 0 }}
+                dragElastic={0.45}
+                onDragEnd={(_event, info) => {
+                  if (depth !== 0) return;
+                  const swipe = swipePower(info.offset.x, info.velocity.x);
+                  if (swipe < -SWIPE_CONFIDENCE_THRESHOLD) {
+                    paginate(1);
+                    return;
+                  }
+                  if (swipe > SWIPE_CONFIDENCE_THRESHOLD) {
+                    paginate(-1);
+                  }
+                }}
+                style={{ pointerEvents: depth === 0 ? "auto" : "none" }}
+              >
+                <SurveyCard survey={survey} />
+              </motion.div>
+            );
+          })}
+        </AnimatePresence>
+      </div>
+    </div>
   );
 }
 

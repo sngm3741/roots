@@ -1,3 +1,5 @@
+import { StaticPageLayout, StaticPageSection } from "../components/layout/static-page";
+
 const faqs = [
   {
     question: "アンケートは誰でも投稿できますか？",
@@ -23,25 +25,17 @@ const faqs = [
 
 export default function FaqPage() {
   return (
-    <main className="mx-auto w-full max-w-4xl px-4 pb-16 pt-24">
-      <header className="space-y-2">
-        <h1 className="text-2xl font-semibold text-slate-900">よくある質問</h1>
-        <p className="text-sm text-slate-600">
-          アンケートやサイトの使い方についての質問をまとめています。
-        </p>
-      </header>
-
-      <section className="mt-8 space-y-4">
+    <StaticPageLayout
+      title="よくある質問"
+      description="アンケートやサイトの使い方についての質問をまとめています。"
+    >
+      <div className="space-y-4">
         {faqs.map((faq) => (
-          <div
-            key={faq.question}
-            className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
-          >
-            <h2 className="text-sm font-semibold text-slate-900">{faq.question}</h2>
+          <StaticPageSection key={faq.question} title={faq.question}>
             <p className="mt-2 text-sm leading-relaxed text-slate-600">{faq.answer}</p>
-          </div>
+          </StaticPageSection>
         ))}
-      </section>
-    </main>
+      </div>
+    </StaticPageLayout>
   );
 }

@@ -2,7 +2,7 @@ import type { SurveyInput, StoreInput } from "@makotoclub/shared";
 
 export type BusinessHours = {
   open: string;
-  close: string;
+  close?: string;
 };
 
 export type Store = StoreInput & {
@@ -44,6 +44,8 @@ export type AnalyticsSummary = {
   todayUniqueVisitors: number;
   averageStaySeconds: number;
   bounceRate: number;
+  totalOutboundClicks: number;
+  todayOutboundClicks: number;
 };
 
 export type AnalyticsDailyPoint = {
@@ -72,6 +74,27 @@ export type AnalyticsUtmPoint = {
   pageViews: number;
 };
 
+export type AnalyticsOutboundStorePoint = {
+  storeId: string;
+  storeName: string;
+  clicks: number;
+  recruitmentClicks: number;
+  lineClicks: number;
+  xClicks: number;
+  bskyClicks: number;
+  lastClickedAt: string | null;
+};
+
+export type AnalyticsOutboundRecentPoint = {
+  occurredAt: string;
+  storeId: string;
+  storeName: string;
+  linkType: string;
+  sourcePath: string;
+  targetUrl: string;
+  inflowSource: string;
+};
+
 export type AnalyticsSnapshot = {
   generatedAt: string;
   rangeDays: number;
@@ -82,10 +105,13 @@ export type AnalyticsSnapshot = {
   landingReferrers: AnalyticsReferrerPoint[];
   internalReferrers: AnalyticsReferrerPoint[];
   utmCampaigns: AnalyticsUtmPoint[];
+  outboundTopStores: AnalyticsOutboundStorePoint[];
+  outboundRecentClicks: AnalyticsOutboundRecentPoint[];
   coverage: {
     hasAccessHits: boolean;
     hasPageViews: boolean;
     hasSessionAttribution: boolean;
+    hasLinkClicks: boolean;
     note: string | null;
   };
 };

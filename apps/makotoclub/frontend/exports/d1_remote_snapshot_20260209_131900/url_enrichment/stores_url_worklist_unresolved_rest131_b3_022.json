@@ -1,0 +1,47 @@
+[
+  {
+    "id": "8a5654f1-d3ad-443e-912f-e5da0ce19d35",
+    "name": "クラブニューヨーク",
+    "branchName": "",
+    "prefecture": "神奈川県",
+    "area": "川崎",
+    "industry": "ソープ",
+    "genre": "",
+    "existingRecruitmentUrls": [],
+    "officialUrlCurrent": null,
+    "officialUrlCandidate": null,
+    "candidateSource": "unresolved",
+    "confidence": 0,
+    "searchQuery": "クラブニューヨーク  神奈川県 川崎 公式サイト 求人"
+  },
+  {
+    "id": "245f0d0d-9df7-4f53-add0-3171c45750c5",
+    "name": "ワンナイト",
+    "branchName": "",
+    "prefecture": "山形県",
+    "area": "",
+    "industry": "デリヘル",
+    "genre": "",
+    "existingRecruitmentUrls": [],
+    "officialUrlCurrent": null,
+    "officialUrlCandidate": null,
+    "candidateSource": "unresolved",
+    "confidence": 0,
+    "searchQuery": "ワンナイト  山形県  公式サイト 求人"
+  },
+  {
+    "id": "d6341ac7-766f-41d1-9661-3a0909c4d35f",
+    "name": "グロス",
+    "branchName": "松山店",
+    "prefecture": "愛媛県",
+    "area": "",
+    "industry": "デリヘル",
+    "genre": "",
+    "existingRecruitmentUrls": [],
+    "officialUrlCurrent": null,
+    "officialUrlCandidate": null,
+    "candidateSource": "unresolved",
+    "confidence": 0,
+    "searchQuery": "グロス 松山店 愛媛県  公式サイト 求人"
+  }
+]

@@ -1,0 +1,71 @@
+[
+  {
+    "id": "23ca6fe7-95c6-4492-b60b-c3ae5105572e",
+    "name": "風俗王",
+    "branchName": "小倉店",
+    "prefecture": "福岡県",
+    "area": "",
+    "industry": "ソープ",
+    "genre": "",
+    "existingRecruitmentUrls": [],
+    "officialUrlCurrent": null,
+    "officialUrlCandidate": null,
+    "candidateSource": "unresolved",
+    "confidence": 0,
+    "searchQuery": "風俗王 小倉店 福岡県  公式サイト 求人",
+    "evidence": {
+      "searchUrl": null,
+      "searchQuery": null,
+      "cityheavenUrl": null,
+      "externalCandidate": null
+    },
+    "enrichedAt": "2026-02-09T05:31:53.462Z",
+    "error": null
+  },
+  {
+    "id": "e7551f95-24db-4482-ab88-d88a6aeff42e",
+    "name": "新潟ソープランド",
+    "branchName": "",
+    "prefecture": "新潟県",
+    "area": "",
+    "industry": "ソープ",
+    "genre": "",
+    "existingRecruitmentUrls": [],
+    "officialUrlCurrent": null,
+    "officialUrlCandidate": null,
+    "candidateSource": "unresolved",
+    "confidence": 0,
+    "searchQuery": "新潟ソープランド  新潟県  公式サイト 求人",
+    "evidence": {
+      "searchUrl": null,
+      "searchQuery": null,
+      "cityheavenUrl": null,
+      "externalCandidate": null
+    },
+    "enrichedAt": "2026-02-09T05:32:32.023Z",
+    "error": null
+  },
+  {
+    "id": "6c708d9a-136d-483c-a9f1-404ca899cd93",
+    "name": "クラブルミネ",
+    "branchName": "中津店",
+    "prefecture": "大分県",
+    "area": "",
+    "industry": "デリヘル",
+    "genre": "",
+    "existingRecruitmentUrls": [],
+    "officialUrlCurrent": null,
+    "officialUrlCandidate": null,
+    "candidateSource": "unresolved",
+    "confidence": 0,
+    "searchQuery": "クラブルミネ 中津店 大分県  公式サイト 求人",
+    "evidence": {
+      "searchUrl": null,
+      "searchQuery": null,
+      "cityheavenUrl": null,
+      "externalCandidate": null
+    },
+    "enrichedAt": "2026-02-09T05:33:29.343Z",
+    "error": null
+  }
+]

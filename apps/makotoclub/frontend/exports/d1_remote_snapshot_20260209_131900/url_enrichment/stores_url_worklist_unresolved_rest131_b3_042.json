@@ -1,0 +1,47 @@
+[
+  {
+    "id": "3dcc3728-6927-42f5-8aaa-e33c3b360b89",
+    "name": "それいけヤリスギ学園",
+    "branchName": "横浜校",
+    "prefecture": "神奈川県",
+    "area": "",
+    "industry": "デリヘル",
+    "genre": "",
+    "existingRecruitmentUrls": [],
+    "officialUrlCurrent": null,
+    "officialUrlCandidate": null,
+    "candidateSource": "unresolved",
+    "confidence": 0,
+    "searchQuery": "それいけヤリスギ学園 横浜校 神奈川県  公式サイト 求人"
+  },
+  {
+    "id": "cc3d3a00-6924-49b0-8f16-847bbf4d3b52",
+    "name": "萌えラブスクール",
+    "branchName": "",
+    "prefecture": "香川県",
+    "area": "",
+    "industry": "ソープ",
+    "genre": "",
+    "existingRecruitmentUrls": [],
+    "officialUrlCurrent": null,
+    "officialUrlCandidate": null,
+    "candidateSource": "unresolved",
+    "confidence": 0,
+    "searchQuery": "萌えラブスクール  香川県  公式サイト 求人"
+  },
+  {
+    "id": "b2609ee6-f136-4923-95be-e0ef0d4b396f",
+    "name": "バッドガールズ",
+    "branchName": "",
+    "prefecture": "沖縄県",
+    "area": "",
+    "industry": "ソープ",
+    "genre": "",
+    "existingRecruitmentUrls": [],
+    "officialUrlCurrent": null,
+    "officialUrlCandidate": null,
+    "candidateSource": "unresolved",
+    "confidence": 0,
+    "searchQuery": "バッドガールズ  沖縄県  公式サイト 求人"
+  }
+]

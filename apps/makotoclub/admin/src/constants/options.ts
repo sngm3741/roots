@@ -60,4 +60,4 @@ export const INDUSTRY_OPTIONS = [
 ];
 
 // ジャンル（docs/screens/survey-new.md より）
-export const GENRE_OPTIONS = ["熟女", "学園系", "スタンダード", "格安店", "高級店"];
+export const GENRE_OPTIONS = ["人妻・熟女", "学園系", "スタンダード", "格安店", "高級店"];

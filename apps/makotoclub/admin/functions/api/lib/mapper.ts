@@ -14,6 +14,12 @@ export type StoreRow = {
   industry: string;
   genre?: string | null;
   cast_back?: string | null;
+  phone_number?: string | null;
+  email?: string | null;
+  line_url?: string | null;
+  twitter_url?: string | null;
+  bsky_url?: string | null;
+  women_recruitment_page_missing?: number | null;
   recruitment_urls?: string | null;
   business_hours_open?: string | null;
   business_hours_close?: string | null;
@@ -84,9 +90,15 @@ export const mapStore = (row: StoreRow, stats?: Partial<StoreRow>) => {
     category: row.industry,
     genre: row.genre ?? undefined,
     castBack: row.cast_back ? Number(row.cast_back) : undefined,
+    phoneNumber: row.phone_number ?? undefined,
+    email: row.email ?? undefined,
+    lineUrl: row.line_url ?? undefined,
+    twitterUrl: row.twitter_url ?? undefined,
+    bskyUrl: row.bsky_url ?? undefined,
+    womenRecruitmentPageMissing: (row.women_recruitment_page_missing ?? 0) === 1,
     recruitmentUrls,
     businessHours: row.business_hours_open
-      ? { open: row.business_hours_open, close: row.business_hours_close ?? "" }
+      ? { open: row.business_hours_open, close: row.business_hours_close ?? undefined }
       : undefined,
     averageRating,
     averageEarning,

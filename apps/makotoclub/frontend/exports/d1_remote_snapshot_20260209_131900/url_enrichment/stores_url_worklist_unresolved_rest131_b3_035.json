@@ -1,0 +1,47 @@
+[
+  {
+    "id": "396410d2-f087-4712-9978-ad7bb2ea290c",
+    "name": "パーティー",
+    "branchName": "",
+    "prefecture": "熊本県",
+    "area": "",
+    "industry": "ソープ",
+    "genre": "",
+    "existingRecruitmentUrls": [],
+    "officialUrlCurrent": null,
+    "officialUrlCandidate": null,
+    "candidateSource": "unresolved",
+    "confidence": 0,
+    "searchQuery": "パーティー  熊本県  公式サイト 求人"
+  },
+  {
+    "id": "c806757f-1956-49f6-adfa-8594acc2a863",
+    "name": "アイドル",
+    "branchName": "",
+    "prefecture": "福島県",
+    "area": "",
+    "industry": "ソープ",
+    "genre": "",
+    "existingRecruitmentUrls": [],
+    "officialUrlCurrent": null,
+    "officialUrlCandidate": null,
+    "candidateSource": "unresolved",
+    "confidence": 0,
+    "searchQuery": "アイドル  福島県  公式サイト 求人"
+  },
+  {
+    "id": "a0b2f12d-8bc5-47a7-b97b-3bed3b491152",
+    "name": "萌えカワ",
+    "branchName": "",
+    "prefecture": "埼玉県",
+    "area": "",
+    "industry": "ソープ",
+    "genre": "",
+    "existingRecruitmentUrls": [],
+    "officialUrlCurrent": null,
+    "officialUrlCandidate": null,
+    "candidateSource": "unresolved",
+    "confidence": 0,
+    "searchQuery": "萌えカワ  埼玉県  公式サイト 求人"
+  }
+]

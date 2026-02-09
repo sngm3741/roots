@@ -1,0 +1,47 @@
+[
+  {
+    "id": "72677453-e4d0-4774-bd6a-1a57f1b5f4e4",
+    "name": "アロー",
+    "branchName": "横浜店",
+    "prefecture": "神奈川県",
+    "area": "",
+    "industry": "ソープ",
+    "genre": "学園系",
+    "existingRecruitmentUrls": [],
+    "officialUrlCurrent": null,
+    "officialUrlCandidate": null,
+    "candidateSource": "unresolved",
+    "confidence": 0,
+    "searchQuery": "アロー 横浜店 神奈川県  公式サイト 求人"
+  },
+  {
+    "id": "c0d90c66-9ff6-42c5-8e69-8e0dbdfb3ceb",
+    "name": "リゼクシー",
+    "branchName": "",
+    "prefecture": "富山県",
+    "area": "",
+    "industry": "デリヘル",
+    "genre": "",
+    "existingRecruitmentUrls": [],
+    "officialUrlCurrent": null,
+    "officialUrlCandidate": null,
+    "candidateSource": "unresolved",
+    "confidence": 0,
+    "searchQuery": "リゼクシー  富山県  公式サイト 求人"
+  },
+  {
+    "id": "179573ff-ca1f-4170-9098-0a9f02f84141",
+    "name": "ミネット",
+    "branchName": "高崎店",
+    "prefecture": "群馬県",
+    "area": "",
+    "industry": "デリヘル",
+    "genre": "",
+    "existingRecruitmentUrls": [],
+    "officialUrlCurrent": null,
+    "officialUrlCandidate": null,
+    "candidateSource": "unresolved",
+    "confidence": 0,
+    "searchQuery": "ミネット 高崎店 群馬県  公式サイト 求人"
+  }
+]

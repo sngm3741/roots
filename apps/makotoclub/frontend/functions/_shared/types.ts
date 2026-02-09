@@ -17,6 +17,12 @@ export type StoreRow = {
   area?: string | null;
   industry: string;
   genre?: string | null;
+  phone_number?: string | null;
+  email?: string | null;
+  line_url?: string | null;
+  twitter_url?: string | null;
+  bsky_url?: string | null;
+  recruitment_urls?: string | null;
   business_hours_open?: string | null;
   business_hours_close?: string | null;
   created_at?: string | null;

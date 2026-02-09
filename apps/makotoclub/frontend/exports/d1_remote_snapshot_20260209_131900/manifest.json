@@ -1,0 +1,21 @@
+{
+  "generatedAt": "2026-02-09T04:18:13Z",
+  "database": "makotoclub",
+  "source": "remote",
+  "tables": [
+    "access_logs",
+    "analytics_access_hits",
+    "analytics_page_views",
+    "analytics_session_attribution",
+    "api_rate_limits",
+    "page_view_counts",
+    "page_view_counts_daily",
+    "store_comment_votes",
+    "store_comments",
+    "store_stats",
+    "stores",
+    "survey_drafts",
+    "survey_helpful_votes",
+    "surveys"
+  ]
+}

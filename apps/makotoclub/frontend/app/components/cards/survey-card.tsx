@@ -1,3 +1,4 @@
+import { Link } from "react-router";
 import type { SurveySummary } from "../../types/survey";
 import { BarChart3, CircleDollarSign, Clock, Heart, MapPin, ThumbsUp, User } from "lucide-react";
 import { RatingStars } from "../ui/rating-stars";
@@ -48,8 +49,8 @@ export function SurveyCard({
     <div
       className={`w-full rounded-2xl border border-pink-100/50 bg-gradient-to-br from-pink-50 to-rose-50 p-4 text-left shadow-sm transition-shadow hover:shadow-md ${className ?? ""}`}
     >
-      <a
-        href={href}
+      <Link
+        to={href}
         className="block"
         aria-label={showStoreInfo ? `${survey.storeName}のアンケート詳細へ` : "アンケート詳細へ"}
       >
@@ -117,9 +118,9 @@ export function SurveyCard({
             </div>
           </div>
         </div>
-      </a>
+      </Link>
 
-      <a href={href} className="block" aria-hidden="true">
+      <Link to={href} className="block" aria-hidden="true">
         <div className="mb-3 grid grid-cols-2 gap-2.5">
           <div className="flex flex-col items-start rounded-xl bg-white/70 p-3">
             <div className="mb-1.5 flex items-center gap-1.5">
@@ -175,9 +176,9 @@ export function SurveyCard({
             ) : null}
           </p>
         </div>
-      </a>
+      </Link>
 
-      <a href={href} className="block" aria-hidden="true">
+      <Link to={href} className="block" aria-hidden="true">
         <div className="flex w-full items-center justify-between rounded-xl bg-white/70 px-4 py-2.5 text-sm font-medium text-gray-700">
           <div className="flex items-center gap-1.5">
             <ThumbsUp className="h-4 w-4" />
@@ -185,7 +186,7 @@ export function SurveyCard({
           </div>
           <span className="text-xs text-gray-500">{visitedPeriodLabel}</span>
         </div>
-      </a>
+      </Link>
     </div>
   );
 }

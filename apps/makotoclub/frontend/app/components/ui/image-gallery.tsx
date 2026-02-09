@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router";
 import { Button } from "./button";
 
 export type ImageGalleryItem = {
@@ -91,7 +92,7 @@ export function ImageGallery({ items, hideCaption = false, hideModalDetails = fa
                 <p className="text-sm text-slate-700">{activeSummary}</p>
                 <div className="flex justify-end">
                   <Button asChild>
-                    <a href={`/surveys/${activeItem.surveyId}`}>このアンケートを見る</a>
+                    <Link to={`/surveys/${activeItem.surveyId}`}>このアンケートを見る</Link>
                   </Button>
                 </div>
               </div>

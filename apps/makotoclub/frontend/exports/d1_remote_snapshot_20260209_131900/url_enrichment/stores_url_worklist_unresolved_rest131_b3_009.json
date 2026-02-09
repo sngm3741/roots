@@ -1,0 +1,47 @@
+[
+  {
+    "id": "729beeef-b77a-4068-886e-c7b504dd91e9",
+    "name": "ピュアコス学園",
+    "branchName": "",
+    "prefecture": "茨城県",
+    "area": "",
+    "industry": "ソープ",
+    "genre": "学園系",
+    "existingRecruitmentUrls": [],
+    "officialUrlCurrent": null,
+    "officialUrlCandidate": null,
+    "candidateSource": "unresolved",
+    "confidence": 0,
+    "searchQuery": "ピュアコス学園  茨城県  公式サイト 求人"
+  },
+  {
+    "id": "5a337a97-38e9-4be8-9abc-f6f0d4e01ad5",
+    "name": "ドルチェ",
+    "branchName": "成田店",
+    "prefecture": "千葉県",
+    "area": "",
+    "industry": "デリヘル",
+    "genre": "",
+    "existingRecruitmentUrls": [],
+    "officialUrlCurrent": null,
+    "officialUrlCandidate": null,
+    "candidateSource": "unresolved",
+    "confidence": 0,
+    "searchQuery": "ドルチェ 成田店 千葉県  公式サイト 求人"
+  },
+  {
+    "id": "d5089517-ed54-44ce-ab32-f40fbde4232e",
+    "name": "SK",
+    "branchName": "",
+    "prefecture": "和歌山県",
+    "area": "",
+    "industry": "ソープ",
+    "genre": "",
+    "existingRecruitmentUrls": [],
+    "officialUrlCurrent": null,
+    "officialUrlCandidate": null,
+    "candidateSource": "unresolved",
+    "confidence": 0,
+    "searchQuery": "SK  和歌山県  公式サイト 求人"
+  }
+]

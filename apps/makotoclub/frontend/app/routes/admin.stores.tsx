@@ -1,4 +1,4 @@
-import { Form, useActionData, useLoaderData, useNavigation } from "react-router";
+import { Form, Link, useActionData, useLoaderData, useNavigation } from "react-router";
 import { type ActionFunctionArgs, type LoaderFunctionArgs, redirect } from "react-router";
 import { getApiBaseUrl } from "../config.server";
 import { Button } from "../components/ui/button";
@@ -20,7 +20,7 @@ export async function loader({ context, request }: LoaderFunctionArgs) {
       stores = data.items ?? [];
     }
   } catch (error) {
-    console.error("Failed to load admin stores", error);
+    console.error("管理画面の店舗一覧取得に失敗しました", error);
   }
   return Response.json({ stores });
 }
@@ -28,6 +28,11 @@ export async function loader({ context, request }: LoaderFunctionArgs) {
 export async function action({ request, context }: ActionFunctionArgs) {
   const apiBaseUrl = getApiBaseUrl(context.cloudflare?.env ?? {}, new URL(request.url).origin);
   const formData = await request.formData();
+  const recruitmentUrl = String(formData.get("recruitmentUrl") ?? "").trim();
+  const businessHoursText = String(formData.get("businessHoursText") ?? "").trim();
+  const lineUrl = String(formData.get("lineUrl") ?? "").trim();
+  const twitterUrl = String(formData.get("twitterUrl") ?? "").trim();
+  const bskyUrl = String(formData.get("bskyUrl") ?? "").trim();
 
   const payload = {
     id: formData.get("id") || undefined,
@@ -37,8 +42,13 @@ export async function action({ request, context }: ActionFunctionArgs) {
     area: formData.get("area") || undefined,
     industry: formData.get("industry"),
     genre: formData.get("genre") || undefined,
-    businessHoursOpen: formData.get("businessHoursOpen") || undefined,
-    businessHoursClose: formData.get("businessHoursClose") || undefined,
+    phoneNumber: formData.get("phoneNumber") || undefined,
+    email: formData.get("email") || undefined,
+    lineUrl: lineUrl || undefined,
+    twitterUrl: twitterUrl || undefined,
+    bskyUrl: bskyUrl || undefined,
+    recruitmentUrls: recruitmentUrl ? [recruitmentUrl] : [],
+    businessHoursText: businessHoursText || undefined,
   };
 
   try {
@@ -56,7 +66,7 @@ export async function action({ request, context }: ActionFunctionArgs) {
     }
   } catch (error) {
     return Response.json(
-      { error: error instanceof Error ? error.message : "failed to create store" },
+      { error: "店舗の作成に失敗しました。時間をおいて再度お試しください。" },
       { status: 500 },
     );
   }
@@ -93,8 +103,21 @@ export default function AdminStores() {
         <Field label="エリア" name="area" placeholder="例: 新宿" />
         <Field label="業種" name="industry" required placeholder="例: 風俗 / キャバ" />
         <Field label="ジャンル" name="genre" placeholder="例: ソープ / キャバクラ" />
-        <Field label="営業時間(開始)" name="businessHoursOpen" placeholder="10:00" />
-        <Field label="営業時間(終了)" name="businessHoursClose" placeholder="24:00" />
+        <Field label="電話番号" name="phoneNumber" placeholder="例: 03-1234-5678" />
+        <Field label="Email" name="email" type="email" placeholder="例: info@example.com" />
+        <Field label="LINE URL" name="lineUrl" placeholder="https://line.me/..." />
+        <Field label="X(Twitter) URL" name="twitterUrl" placeholder="https://x.com/..." />
+        <Field label="Bsky URL" name="bskyUrl" placeholder="https://bsky.app/..." />
+        <Field
+          label="採用URL"
+          name="recruitmentUrl"
+          placeholder="https://example.com/recruit"
+        />
+        <Field
+          label="営業時間(自由入力)"
+          name="businessHoursText"
+          placeholder="例: 24時間 / 24:00~4:00"
+        />
 
         <div className="md:col-span-2">
           <Button type="submit" disabled={submitting} className="w-full shadow-sm shadow-pink-200">
@@ -125,7 +148,7 @@ export default function AdminStores() {
                 {store.averageEarningLabel ?? "-"}
               </div>
               <Button variant="ghost" size="sm" asChild>
-                <a href={`/stores/${store.id}`}>店舗ページ</a>
+                <Link to={`/stores/${store.id}`}>店舗ページ</Link>
               </Button>
             </article>
           ))}

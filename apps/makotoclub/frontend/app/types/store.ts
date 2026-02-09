@@ -1,3 +1,5 @@
+import type { SurveySummary } from "./survey";
+
 export interface StoreSummary {
   id: string;
   storeName: string;
@@ -6,6 +8,12 @@ export interface StoreSummary {
   area?: string;
   category: string;
   genre?: string;
+  phoneNumber?: string;
+  email?: string;
+  lineUrl?: string;
+  twitterUrl?: string;
+  bskyUrl?: string;
+  recruitmentUrls?: string[];
   createdAt?: string;
   updatedAt?: string;
   averageRating: number;
@@ -21,38 +29,9 @@ export interface StoreSummary {
 export interface StoreDetail extends StoreSummary {
   businessHours?: {
     open: string;
-    close: string;
+    close?: string;
   };
   surveys: SurveySummary[];
-}
-
-// 循環参照を避けるため一部を再宣言
-export interface SurveySummary {
-  id: string;
-  storeId: string;
-  storeName: string;
-  storeBranch?: string;
-  storePrefecture: string;
-  storeArea?: string;
-  storeIndustry: string;
-  storeGenre?: string;
-  visitedPeriod: string;
-  workType: string;
-  age: number;
-  specScore: number;
-  waitTimeHours: number;
-  averageEarning: number;
-  rating: number;
-  createdAt: string;
-  updatedAt: string;
-  helpfulCount?: number;
-  customerComment?: string;
-  staffComment?: string;
-  workEnvironmentComment?: string;
-  castBack?: string;
-  etcComment?: string;
-  emailAddress?: string;
-  imageUrls?: string[];
 }
 
 export interface StoreListResponse {

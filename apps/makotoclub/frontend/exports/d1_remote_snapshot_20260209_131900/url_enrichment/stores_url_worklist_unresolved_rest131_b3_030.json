@@ -1,0 +1,47 @@
+[
+  {
+    "id": "bb74ec8b-d300-4a6f-b9a9-44ba3da64ed1",
+    "name": "サマンサ",
+    "branchName": "堺店",
+    "prefecture": "大阪府",
+    "area": "",
+    "industry": "デリヘル",
+    "genre": "",
+    "existingRecruitmentUrls": [],
+    "officialUrlCurrent": null,
+    "officialUrlCandidate": null,
+    "candidateSource": "unresolved",
+    "confidence": 0,
+    "searchQuery": "サマンサ 堺店 大阪府  公式サイト 求人"
+  },
+  {
+    "id": "3cb7444b-42bd-4f40-aa31-cf3e5af7a664",
+    "name": "アリス",
+    "branchName": "",
+    "prefecture": "沖縄県",
+    "area": "",
+    "industry": "ソープ",
+    "genre": "",
+    "existingRecruitmentUrls": [],
+    "officialUrlCurrent": null,
+    "officialUrlCandidate": null,
+    "candidateSource": "unresolved",
+    "confidence": 0,
+    "searchQuery": "アリス  沖縄県  公式サイト 求人"
+  },
+  {
+    "id": "074bc68a-646f-4ac3-a276-a738db99cc03",
+    "name": "スクリィーン",
+    "branchName": "",
+    "prefecture": "徳島県",
+    "area": "",
+    "industry": "デリヘル",
+    "genre": "",
+    "existingRecruitmentUrls": [],
+    "officialUrlCurrent": null,
+    "officialUrlCandidate": null,
+    "candidateSource": "unresolved",
+    "confidence": 0,
+    "searchQuery": "スクリィーン  徳島県  公式サイト 求人"
+  }
+]

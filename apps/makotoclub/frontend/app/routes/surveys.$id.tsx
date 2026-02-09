@@ -1,4 +1,4 @@
-import { type LoaderFunctionArgs, useLoaderData } from "react-router";
+import { Link, type LoaderFunctionArgs, useLoaderData } from "react-router";
 import { useEffect, useState } from "react";
 import { getApiBaseUrl } from "../config.server";
 import { fetchSurveyDetail } from "../lib/surveys.server";
@@ -71,7 +71,7 @@ export async function loader({ params, context, request }: LoaderFunctionArgs) {
   try {
     survey = await fetchSurveyDetail({ API_BASE_URL: apiBaseUrl }, id);
   } catch (error) {
-    console.error("Failed to load survey detail", error);
+    console.error("アンケート詳細の取得に失敗しました", error);
   }
 
   return Response.json({ survey });
@@ -217,13 +217,13 @@ export default function SurveyDetailPage() {
             </button>
           </div>
 
-          <a
-            href={`/stores/${survey.storeId}`}
+          <Link
+            to={`/stores/${survey.storeId}`}
             className="mb-1.5 block text-xl font-bold leading-tight text-gray-900 transition hover:text-pink-600"
           >
             {survey.storeName}
             {survey.storeBranch ? ` ${survey.storeBranch}` : ""}
-          </a>
+          </Link>
 
           <div className="mb-4 flex items-center gap-1 text-xs text-gray-600">
             <MapPin className="h-3.5 w-3.5" />

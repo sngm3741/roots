@@ -1,0 +1,47 @@
+[
+  {
+    "id": "5745c326-0110-47df-a7fa-9ae2ecccffe5",
+    "name": "神戸妻",
+    "branchName": "",
+    "prefecture": "兵庫県",
+    "area": "",
+    "industry": "ソープ",
+    "genre": "",
+    "existingRecruitmentUrls": [],
+    "officialUrlCurrent": null,
+    "officialUrlCandidate": null,
+    "candidateSource": "unresolved",
+    "confidence": 0,
+    "searchQuery": "神戸妻  兵庫県  公式サイト 求人"
+  },
+  {
+    "id": "ae9ff238-f319-48b0-be99-0a4ff27f2d7b",
+    "name": "イープラス",
+    "branchName": "",
+    "prefecture": "兵庫県",
+    "area": "福原",
+    "industry": "ソープ",
+    "genre": "",
+    "existingRecruitmentUrls": [],
+    "officialUrlCurrent": null,
+    "officialUrlCandidate": null,
+    "candidateSource": "unresolved",
+    "confidence": 0,
+    "searchQuery": "イープラス  兵庫県 福原 公式サイト 求人"
+  },
+  {
+    "id": "90382db3-bc81-40dc-affd-dd0d62ccb9fd",
+    "name": "ドマーニ",
+    "branchName": "",
+    "prefecture": "愛知県",
+    "area": "",
+    "industry": "ソープ",
+    "genre": "",
+    "existingRecruitmentUrls": [],
+    "officialUrlCurrent": null,
+    "officialUrlCandidate": null,
+    "candidateSource": "unresolved",
+    "confidence": 0,
+    "searchQuery": "ドマーニ  愛知県  公式サイト 求人"
+  }
+]

@@ -1,0 +1,47 @@
+[
+  {
+    "id": "fc80e0ae-5fa0-4d21-af92-0f02bfa6a95c",
+    "name": "アクアレアル",
+    "branchName": "",
+    "prefecture": "福井県",
+    "area": "",
+    "industry": "デリヘル",
+    "genre": "",
+    "existingRecruitmentUrls": [],
+    "officialUrlCurrent": null,
+    "officialUrlCandidate": null,
+    "candidateSource": "unresolved",
+    "confidence": 0,
+    "searchQuery": "アクアレアル  福井県  公式サイト 求人"
+  },
+  {
+    "id": "b7f7ed54-7adc-4c95-9e58-9e4d10de06a0",
+    "name": "ハピネス&ドリーム",
+    "branchName": "",
+    "prefecture": "島根県",
+    "area": "",
+    "industry": "ソープ",
+    "genre": "",
+    "existingRecruitmentUrls": [],
+    "officialUrlCurrent": null,
+    "officialUrlCandidate": null,
+    "candidateSource": "unresolved",
+    "confidence": 0,
+    "searchQuery": "ハピネス&ドリーム  島根県  公式サイト 求人"
+  },
+  {
+    "id": "60380404-b64a-4abd-8eba-f9c0041814e1",
+    "name": "ミスターダンディパート2",
+    "branchName": "",
+    "prefecture": "東京都",
+    "area": "吉原",
+    "industry": "ソープ",
+    "genre": "",
+    "existingRecruitmentUrls": [],
+    "officialUrlCurrent": null,
+    "officialUrlCandidate": null,
+    "candidateSource": "unresolved",
+    "confidence": 0,
+    "searchQuery": "ミスターダンディパート2  東京都 吉原 公式サイト 求人"
+  }
+]

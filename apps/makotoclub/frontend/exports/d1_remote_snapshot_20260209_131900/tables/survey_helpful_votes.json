@@ -1,0 +1,52 @@
+[
+  {
+    "survey_id": "111181af-d458-42c0-b171-01f722ae9188",
+    "voter_hash": "d89cab6c87c487ca798ddd483e1b2653debd9735c9513e28867fe1991d65341f",
+    "created_at": "2026-01-10T06:40:25.399Z"
+  },
+  {
+    "survey_id": "8671c6e6-b0d3-458c-b16b-cb4299c00a1a",
+    "voter_hash": "52e2483969d293b4c5967c1ba33476a4751dda8dd611f88ab8c3c5772dd5fb6b",
+    "created_at": "2026-01-10T09:56:04.946Z"
+  },
+  {
+    "survey_id": "322c2dff-ab3b-4816-96e3-98929a9bdcf3",
+    "voter_hash": "76dc42a2ee5e3216808ae8c6301b452accb15cd338445d1a696ad14cf150ce2d",
+    "created_at": "2026-01-10T12:48:53.655Z"
+  },
+  {
+    "survey_id": "9351ccde-21de-4976-be0c-9cad43f7459e",
+    "voter_hash": "76dc42a2ee5e3216808ae8c6301b452accb15cd338445d1a696ad14cf150ce2d",
+    "created_at": "2026-01-10T12:51:06.975Z"
+  },
+  {
+    "survey_id": "91cd960e-946b-48e0-bb59-39a455a8cb5c",
+    "voter_hash": "269b14f2d9be97f31289565558349db54e4da4b7879c3a502ae768312609f8e4",
+    "created_at": "2026-01-11T09:27:42.610Z"
+  },
+  {
+    "survey_id": "9351ccde-21de-4976-be0c-9cad43f7459e",
+    "voter_hash": "7ab0d72f64788d0d9360d7ee0149e2f56a3325135fad685e41186e35e8a670d5",
+    "created_at": "2026-01-12T15:39:32.634Z"
+  },
+  {
+    "survey_id": "90f3ee12-16d0-4034-8880-55802dd0c244",
+    "voter_hash": "3d45ba53beccd66439daae3a7536ef54e119b60c850e6015bd4aa92a1e87cade",
+    "created_at": "2026-01-13T14:24:17.732Z"
+  },
+  {
+    "survey_id": "fec6294a-4eed-4822-85b3-33e103dd0483",
+    "voter_hash": "56d73fee029196f6d7946096784f14fb0837315a9141481dfbb80dd200828e50",
+    "created_at": "2026-01-18T06:42:27.866Z"
+  },
+  {
+    "survey_id": "5b0af80e-6fd6-4b5a-96ad-d2800f0425f2",
+    "voter_hash": "56d73fee029196f6d7946096784f14fb0837315a9141481dfbb80dd200828e50",
+    "created_at": "2026-01-18T06:42:35.972Z"
+  },
+  {
+    "survey_id": "c1647287-05c1-40bb-8808-e658237d44cc",
+    "voter_hash": "56d73fee029196f6d7946096784f14fb0837315a9141481dfbb80dd200828e50",
+    "created_at": "2026-01-18T06:45:44.348Z"
+  }
+]

@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
+import { Link, useLocation } from "react-router";
 import { Button } from "../ui/button";
 import { PostIcon } from "../ui/post-icon";
-import { Brain, Heart } from "lucide-react";
-import { BlueskyIcon, XIcon } from "../ui/social-icons";
+import { ChevronUp } from "lucide-react";
 
 const sitemapSections = [
   {
@@ -53,17 +53,12 @@ function MenuIcon() {
   );
 }
 
-function CloseIcon() {
-  return (
-    <div className="relative h-5 w-5">
-      <span className="absolute left-0 top-2 h-0.5 w-5 rotate-45 rounded-full bg-slate-800" />
-      <span className="absolute left-0 top-2 h-0.5 w-5 -rotate-45 rounded-full bg-slate-800" />
-    </div>
-  );
-}
-
 export function Header() {
+  const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isFloatingButtonVisible, setIsFloatingButtonVisible] = useState(true);
+  const [currentScrollY, setCurrentScrollY] = useState(0);
+  const [isTallPage, setIsTallPage] = useState(false);
 
   useEffect(() => {
     document.body.style.overflow = mobileMenuOpen ? "hidden" : "unset";
@@ -72,88 +67,109 @@ export function Header() {
     };
   }, [mobileMenuOpen]);
 
+  useEffect(() => {
+    const updateScrollableState = () => {
+      const scrollableHeight = Math.max(
+        document.documentElement.scrollHeight - window.innerHeight,
+        0,
+      );
+      // ある程度の縦長ページだけ「最上部へ」ボタンを対象にする
+      setIsTallPage(scrollableHeight > 900);
+    };
+
+    updateScrollableState();
+    window.addEventListener("resize", updateScrollableState);
+
+    let resizeObserver: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== "undefined" && document.body) {
+      resizeObserver = new ResizeObserver(updateScrollableState);
+      resizeObserver.observe(document.body);
+    }
+
+    return () => {
+      window.removeEventListener("resize", updateScrollableState);
+      resizeObserver?.disconnect();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      setIsFloatingButtonVisible(false);
+      return;
+    }
+
+    setIsFloatingButtonVisible(true);
+    let lastScrollY = window.scrollY;
+    setCurrentScrollY(lastScrollY);
+    let stopTimer: number | null = null;
+    const threshold = 6;
+
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      const delta = Math.abs(currentScrollY - lastScrollY);
+      setCurrentScrollY(currentScrollY);
+
+      if (delta > threshold) {
+        setIsFloatingButtonVisible(false);
+      }
+
+      lastScrollY = currentScrollY;
+
+      if (stopTimer !== null) {
+        window.clearTimeout(stopTimer);
+      }
+      stopTimer = window.setTimeout(() => {
+        setIsFloatingButtonVisible(true);
+      }, 120);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      if (stopTimer !== null) {
+        window.clearTimeout(stopTimer);
+      }
+    };
+  }, [mobileMenuOpen]);
+
+  useEffect(() => {
+    if (mobileMenuOpen) return;
+    // ルート遷移後に非表示状態を引きずらない
+    setIsFloatingButtonVisible(true);
+    setCurrentScrollY(window.scrollY);
+  }, [location.key, mobileMenuOpen]);
+
+  const shouldShowBackToTop = !mobileMenuOpen && isTallPage && currentScrollY > 280;
+
   return (
     <>
-      <header className="fixed top-4 left-1/2 z-50 w-[calc(100%-2rem)] max-w-5xl -translate-x-1/2 bg-white/60 backdrop-blur-2xl border border-gray-200/50 rounded-2xl shadow-lg shadow-black/5">
-        <div className="px-4">
-          <div className="relative flex items-center h-14">
-            {/* Menu Button - Left */}
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 text-gray-600 hover:text-gray-900 relative z-[60] -ml-2 mr-3"
-              aria-label="メニューを開く"
-            >
-              {mobileMenuOpen ? <CloseIcon /> : <MenuIcon />}
-            </button>
+      {!mobileMenuOpen ? (
+        <button
+          type="button"
+          onClick={() => setMobileMenuOpen(true)}
+          className={`fixed left-4 top-4 z-[70] inline-flex h-11 w-11 items-center justify-center rounded-xl border border-gray-200/70 bg-white/90 text-gray-700 shadow-lg shadow-black/10 backdrop-blur-xl transition-all duration-150 hover:border-gray-300 hover:text-gray-900 ${
+            isFloatingButtonVisible
+              ? "translate-y-0 opacity-100"
+              : "-translate-y-4 opacity-0 pointer-events-none"
+          }`}
+          aria-label="メニューを開く"
+        >
+          <MenuIcon />
+        </button>
+      ) : null}
 
-            {/* Actions */}
-            <div className="flex flex-1 items-center overflow-x-auto">
-              <div className="flex w-max items-center gap-6">
-                <a
-                  href="/"
-                  className="inline-flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:border-slate-300"
-                  aria-label="ホーム"
-                >
-                  <img
-                    src="/logo.jpeg"
-                    alt="MakotoClub"
-                    className="h-full w-full object-cover scale-110"
-                  />
-                </a>
-                <a
-                  href="/rag"
-                  className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 shadow-sm transition hover:bg-emerald-100"
-                  aria-label="AI"
-                >
-                  <Brain className="h-5 w-5" />
-                </a>
-                <a
-                  href="/bookmarks"
-                  className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-pink-200 bg-pink-50 text-pink-600 shadow-sm transition hover:bg-pink-100"
-                  aria-label="気になる店舗"
-                >
-                  <Heart className="h-5 w-5 fill-current" />
-                </a>
-                <Button
-                  asChild
-                  variant="secondary"
-                  className="h-10 w-10 shrink-0 p-0 border-pink-200 bg-pink-50 text-pink-600 hover:bg-pink-100"
-                >
-                  <a
-                    href="/new"
-                    onClick={() => {
-                      setMobileMenuOpen(false);
-                    }}
-                    className="flex items-center justify-center"
-                  >
-                    <span className="flex items-center justify-center">
-                      <PostIcon className="h-5 w-5" />
-                    </span>
-                  </a>
-                </Button>
-                <a
-                  href="https://twitter.com/makoto_club3"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-black bg-black text-white shadow-sm transition hover:bg-black/90"
-                  aria-label="X"
-                >
-                  <XIcon className="h-5 w-5" />
-                </a>
-                <a
-                  href="https://bsky.app/profile/makoto-club.com"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#1185fe] bg-[#1185fe] text-white shadow-sm transition hover:bg-[#0f73db]"
-                  aria-label="Bluesky"
-                >
-                  <BlueskyIcon className="h-5 w-5" />
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
+      <button
+        type="button"
+        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        className={`fixed bottom-5 right-4 z-[70] inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200/60 bg-white/70 text-slate-500 shadow-md shadow-black/10 backdrop-blur-xl transition-all duration-150 hover:border-gray-300 hover:bg-white/85 hover:text-slate-700 ${
+          shouldShowBackToTop && isFloatingButtonVisible
+            ? "translate-y-0 opacity-100"
+            : "translate-y-3 opacity-0 pointer-events-none"
+        }`}
+        aria-label="ページ先頭へ移動"
+      >
+        <ChevronUp className="h-5 w-5" />
+      </button>
 
       {/* Menu Overlay - Outside header */}
       <div
@@ -202,9 +218,9 @@ export function Header() {
                 <p className="text-xs font-semibold tracking-wide text-pink-500">{section.title}</p>
                 <div className="mt-3 grid gap-2">
                   {section.items.map((item) => (
-                    <a
+                    <Link
                       key={item.href}
-                      href={item.href}
+                      to={item.href}
                       onClick={() => {
                         setMobileMenuOpen(false);
                       }}
@@ -212,7 +228,7 @@ export function Header() {
                     >
                       <span>{item.label}</span>
                       <span className="text-xs text-slate-400">→</span>
-                    </a>
+                    </Link>
                   ))}
                 </div>
               </div>
@@ -246,8 +262,8 @@ export function Header() {
                   asChild
                   className="w-full bg-gradient-to-r from-pink-400 to-purple-500 text-white rounded-xl text-center shadow-lg hover:shadow-xl transition-all duration-200"
                 >
-                  <a
-                    href="/new"
+                  <Link
+                    to="/new"
                     onClick={() => {
                       setMobileMenuOpen(false);
                     }}
@@ -255,7 +271,7 @@ export function Header() {
                   >
                     アンケートを投稿する
                     <PostIcon className="h-4 w-4" />
-                  </a>
+                  </Link>
                 </Button>
             </div>
             </div>
